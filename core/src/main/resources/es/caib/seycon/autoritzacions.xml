@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- IMPORTANT NOTE: -->
+<!-- Any changes made to the "codi" to add new authorizations or authorizations 
+	must also modify "Security.java" (constant authorizations) and "AutoritzacionsUsuari" 
+	to get them (new Capabilities). Also must be updated AndroMDA roles (if you 
+	change the code or add new) - codi: authorization code. - descripcio: textual 
+	description. - tipusDomini: domain type. ALWAYS include "SENSE_DOMINI"(!!) 
+	- scope: for "tipusDomini", groups indicates whether to include the group 
+	(one), the parents (parents), children (children), both (both). By default 
+	is the same group only - ambit: field information to sort the columns in 
+	the authorization window. - hereta: the inherits authorization code [using 
+	the corresponding domain values types using domain]. If its value is *, it 
+	inherits ALL permissions. NOTE: inheritance is not transitive (first level 
+	only) [IMPORTANT] -->
+
+<autoritzacions>
+	<autoritzacio>
+		<codi>seu:bpmeditor:show</codi>
+		<descripcio>Access to BPM editor</descripcio>
+		<ambit>Soffid</ambit>
+	</autoritzacio>
+
+	<autoritzacio>
+		<codi>bpm:edit</codi>
+		<descripcio>Design workflows</descripcio>
+		<ambit>BPM Editor</ambit>
+	</autoritzacio>
+
+	<autoritzacio>
+		<codi>bpm:publish</codi>
+		<descripcio>Publish designed workflows</descripcio>
+		<ambit>BPM Editor</ambit>
+	</autoritzacio>
+</autoritzacions>

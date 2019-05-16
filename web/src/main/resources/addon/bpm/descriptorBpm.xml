@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<zkib-model>
+	<datanode name="root">
+		<finder name="process" type="process">
+			<ejb-finder
+				jndi="openejb:/local/soffid.ejb.com.soffid.iam.addons.bpm.core.BpmEditorService"
+				method="findAll" >
+			</ejb-finder>
+		</finder>
+		
+		<finder name="stepType" type="stepType">
+			<script-finder>
+				import com.soffid.iam.addons.bpm.common.NodeType;
+				statusList = new java.util.LinkedList();
+				
+				statusList.add("");
+				statusList.add(NodeType.NT_START);
+				statusList.add(NodeType.NT_SCREEN);
+				statusList.add(NodeType.NT_GRANT_SCREEN);
+				statusList.add(NodeType.NT_MAIL);
+				statusList.add(NodeType.NT_CUSTOM);
+				statusList.add(NodeType.NT_APPLY);
+				statusList.add(NodeType.NT_END);
+
+				return statusList;
+			</script-finder>
+		</finder>
+
+		<finder name="processType" type="processType">
+			<script-finder>
+				import com.soffid.iam.addons.bpm.common.WorkflowType;
+				statusList = new java.util.LinkedList();
+				
+				statusList.add("");
+				statusList.add(WorkflowType.WT_USER);
+				statusList.add(WorkflowType.WT_PERMISSION);
+
+				return statusList;
+			</script-finder>
+		</finder>
+	</datanode>
+
+	<datanode name="processType" transient="true">
+		<custom-attribute name="literal">
+			return org.zkoss.util.resource.Labels.getLabel ("bpm.type."+instance);
+		</custom-attribute>
+		<custom-attribute name="value">
+			return instance;
+		</custom-attribute>
+	</datanode>
+	
+	<datanode name="stepType" transient="true">
+		<custom-attribute name="literal">
+			return org.zkoss.util.resource.Labels.getLabel ("bpm.stepType."+instance);
+		</custom-attribute>
+		<custom-attribute name="value">
+			return instance;
+		</custom-attribute>
+	</datanode>
+
+	<datanode name="attributesCombo" transient="true">
+	</datanode>
+
+
+	<datanode name="process">
+		<custom-attribute name="statusLiteral">
+			if (instance.status ==
+				com.soffid.iam.addons.recertification.common.ProcessStatus.ACTIVE)
+				return "Active";
+
+			if (instance.status ==
+				com.soffid.iam.addons.recertification.common.ProcessStatus.FINISHED)
+				return "Finished";
+
+			if (instance.status ==
+				com.soffid.iam.addons.recertification.common.ProcessStatus.CANCELLED)
+				return "Cancelled";
+
+			if (instance.status ==
+				com.soffid.iam.addons.recertification.common.ProcessStatus.PREPARATION)
+				return "Preparation";
+		</custom-attribute>
+		<ejb-handler 				
+			jndi="openejb:/local/soffid.ejb.com.soffid.iam.addons.bpm.core.BpmEditorService">
+			<insert-method method="create"  returnBean="true" > <!-- user:metadata:update -->
+				<parameter value="${instance}" />
+			</insert-method>
+			<delete-method method="remove">   
+				<parameter value="${instance}" />
+			</delete-method>
+			<update-method method="update"  returnBean="true"> <!-- user:metadata:update -->
+				<parameter value="${instance}" />
+			</update-method>
+		</ejb-handler>
+	</datanode>
+
+</zkib-model>

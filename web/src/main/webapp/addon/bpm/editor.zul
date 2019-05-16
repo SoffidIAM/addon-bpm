@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?taglib uri="/WEB-INF/tld/web/core.dsp.tld" prefix="c" ?>
+<?page id="bpm-editor" title="${c:l('bpm.title')}"?>
+
+<frame id="p_bpm_editor" saveContent="true"
+		title="${c:l('bpm.title')}" width="100%" >
+	<zscript>
+	</zscript>
+	
+	<style>
+		div.processListbox tr:hover td, tr.odd.processRow:hover td.gc {
+			background-color: #F0F0F0;
+		}
+		
+		div.processListbox tr td div.actions {
+			margin-left: 24px;
+			visibility: hidden;
+			display: inline-block;
+		}
+		div.processListbox tr:hover td div.actions {
+			visibility: visible;
+		}
+
+		div.processListbox tr td div.actions img {
+			width: 16px;
+			height: 16px;
+		}		
+	</style>
+	
+ 	<datamodel id="model" rootNode="root" src="addon/bpm/descriptorBpm.xml" />
+
+	<listbox dataPath="/model:/process" fixedLayout="true" id="processListbox" sclass="processListbox" use="com.soffid.iam.addons.bpm.web.ProcessListbox">
+		<listhead>
+			<listheader label="Process"/>
+		</listhead>
+		<dataitem >
+			<listcell>
+				<label bind="@name"/>
+				<div sclass="actions">
+					<imageclic src="/img/pencil.png" onClick="processListbox.onEdit(event)" style="margin-left: 8px" title="${c:l('bpm.editProcess') }"/>
+					<imageclic src="~./img/remove.png"  onClick="processListbox.onRemove(event)"  style="margin-left: 8px" title="${c:l('bpm.removeProcess') }"/>
+					<imageclic src="~./img/exporta.gif" onClick="processListbox.export(event)"  style="margin-left: 8px" title="${c:l('bpm.export') }"/>
+				</div>
+			</listcell>
+		</dataitem>
+	</listbox>
+	<div>
+		<button image="~./img/list-add.gif" label="${c:l('bpm.newProcess') }"
+			style="margin-top: 16px"
+			onClick='Events.postEvent("onDisplay", newProcessWindow, null)'/>
+			
+		<button image="~./img/list-add.gif" label="${c:l('bpm.importProcess') }"
+			style="margin-top: 16px; margin-left:16px"
+			onClick='processListbox.importProcess()'/>
+	</div>
+		
+	<embed src="/addon/bpm/process.zul" id="editor"/>		
+		
+	<window visible="false" id="newProcessWindow" title="${c:l('bpm.newProcess') }" width="500px"
+		use="com.soffid.iam.addons.bpm.web.NewProcessWindow">
+		<attribute name="onDisplay"><![CDATA[
+			name.setValue ("");
+			type.setSelectedIndex(0);
+			newProcessWindow.doHighlighted();
+			name.focus();
+		]]></attribute>
+		<grid sclass="noBorderGrid">
+			<rows>
+				<row>
+					<label value="${c:l('bpm.processName') }:" />
+					<textbox id="name"/>
+				</row>
+				<row>
+					<label value="${c:l('bpm.processType') }:" />
+					<listbox id="type" dataPath="/model:/processType" mold="select">
+						<dataitem bind="value"><listcell bind="literal"/> </dataitem>
+					</listbox>
+				</row>
+			</rows>
+		</grid>
+		<div style="text-align:right" width="100%">
+			<button label="${c:l('agentsllista.zul.Accepta') }" onClick="newProcessWindow.createProcess()"/>
+			<button label="${c:l('agentsllista.zul.Cancel·la') }" onClick="newProcessWindow.setVisible(false)"/>
+		</div>
+	</window>
+</frame>

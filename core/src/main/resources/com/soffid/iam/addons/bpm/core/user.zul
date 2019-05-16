@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zk xmlns="http://www.zkoss.org/2005/zul"
+	xmlns:h="http://www.w3.org/1999/xhtml"
+	xmlns:zk="http://www.zkoss.org/2005/zk"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.zkoss.org/2005/zul http://www.zkoss.org/2005/zul/zul.xsd">
+	<task id="window"
+		use="com.soffid.iam.addons.bpm.ui.StandardUserWindow">
+		<style>
+			.grantsGrid tr, .grantsGrid td { verticalAlign: top; }
+		</style>
+		<style>
+			/* Customize the label (the container) */ .custom-checkbox {
+			display: block; position: relative; padding-left: 35px;
+			margin-bottom: 12px; cursor: pointer; font-size: 22px;
+			height: 18px; -webkit-user-select: none; -moz-user-select:
+			none; -ms-user-select: none; user-select: none; }
+
+			/* Hide the browser's default checkbox */ .custom-checkbox
+			input { position: absolute; opacity: 0; cursor: pointer;
+			height: 0; width: 0; }
+
+			/* Create a custom checkbox */ .custom-checkbox > label {
+			position: absolute; top: 0; left: 0; height: 25px; width:
+			25px; background-color: #eee; }
+
+			/* On mouse-over, add a grey background color */
+			.custom-checkbox:hover input ~ label { background-color:
+			#ccc; }
+
+			/* When the checkbox is checked, add a blue background */
+			.custom-checkbox-green input:checked ~ label {
+			background-color: lightgreen; }
+
+			/* When the checkbox is checked, add a blue background */
+			.custom-checkbox-red input:checked ~ label {
+				background-color: #e00000; 
+				background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4wQOFBgWJLs02wAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAAA/ElEQVQ4y43TQUoDQRCF4S9eQDdCmGyMxIAaQw6QrV5WvICokEWIoCAICSFugwuvIKibamya6WhD0Yuqv/pVzRt+zzlu0Fc/+7jHRZk4wTu+Ma80OcA6arYY5y8n+CvuBwwyuItV5FK8YSpk53C6b0PJMV4LOMWdKJpXmlxjWYEfMUkS+yG7rUlbPGFULmkQsv+CXzAMplM26YfsGjxDkwN7RYMOznb44BSftWR3x7bz2JQqkklW/4BTLNHL7bneMfNHJfeMI+Ht2rYbHIbstpqF+DG2Ld95mI3YtBhqg6tUMA5vJ4eNWpbcC9kJviwLpuHtSc0kMfMie7nzAzAUjZ0bw7t3AAAAAElFTkSuQmCC);
+    			background-repeat: no-repeat;
+    			background-position: center;
+    		}
+
+			/* Create the checkmark/indicator (hidden when not checked)
+			*/ .custom-checkbox label:after { content: ""; position:
+			absolute; display: none; }
+
+			/* Show the checkmark when checked */ .custom-checkbox
+			input:checked ~ label:after { display: block; }
+
+			/* Style the checkmark/indicator */ .custom-checkbox-green
+			label:after { left: 9px; top: 5px; width: 5px; height: 10px;
+			border: solid white; border-width: 0 3px 3px 0;
+			-webkit-transform: rotate(45deg); -ms-transform:
+			rotate(45deg); transform: rotate(45deg); }
+		</style>
+		<window visible="false" id="searchApp"
+			title="${c:l('bpm.addApplication') }" width="80%" closable="false">
+			<div>
+				<label value="${c:l('aplicacions.zul.Codi-2') } :"
+					style="width: 10em; display: inline-block" />
+				<textbox id="txtCodigoAplicacion" value="" width="350px"
+					onOK="window.buscarAplicaciones()" />
+			</div>
+			<button id="btnBuscarAplicaciones"
+				label="${c:l('seleccionUsuario.zul.Cercar') }"
+				onClick="window.buscarAplicaciones()"
+				style="margin-top: 5px; loat: right" />
+			<listbox id="lstAplicaciones" style="margin-top: 10px;"
+				mold="paging" pageSize="20" bind="aplicacion" width="100%"
+				visible="false">
+				<listhead>
+					<listheader
+						label="${c:l('aplicacions.zul.Codi-2') }" width="200px" />
+					<listheader
+						label="${c:l('aplicacions.zul.Descripcia') }" width="500px" />
+				</listhead>
+			</listbox>
+			<div height="60px" style="margin-top: 20px">
+				<div style="float:right">
+					<button label="${c:l('bpm.select') }"
+						onClick="window.addPermission()" />
+					<button
+						label="${c:l('usuaris.zul.selectAccount.cancel') }"
+						onClick="window.cancelPermission()" />
+				</div>
+			</div>
+		</window>
+	</task>
+</zk>

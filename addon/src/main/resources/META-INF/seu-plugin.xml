@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<SoffidIAMPlugin xmlns="http://www.soffid.com/schema/iam-plugin-v1"> 
+	<name>Soffid BPM Addon</name>
+	<version>${pom.version}</version>
+	<core name="BPM common classes" resource="bpm-common-${pom.version}.jar"/>
+	<core name="BPM core classes" resource="bpm-core-${pom.version}.jar"/>
+	<web name="BPM web files" resource="bpm-web-${pom.version}.war"/>
+	<selfservice name="BPM self service files" resource="bpm-selfservice-${pom.version}.war"/>
+</SoffidIAMPlugin>

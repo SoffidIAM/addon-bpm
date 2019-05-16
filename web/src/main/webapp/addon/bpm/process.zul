@@ -1,0 +1,506 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?taglib uri="/WEB-INF/tld/web/core.dsp.tld" prefix="c" ?>
+<?page id="bpm-editor" title="${c:l('bpm.title')}"?>
+<?component name="input_dada" macro-uri="/comu/input_dada.zul"?>
+<?component name="input_etiqueta" macro-uri="/comu/input_etiqueta.zul"?>
+
+<form xmlns:h="http://www.w3.org/1999/xhtml"
+	xmlns="http://www.zkoss.org/2005/zul" 
+	id="form" dataPath="/processListbox:/" width="100%">
+	<style>
+		tr.item:hover > td.action > div > img{
+			visibility: visible;
+		}
+
+		tr.item >  td.action > div > img {
+			visibility: hidden;
+		}
+		
+		tr.grid td.gc span{
+			vertical-align: top;
+			display: inline-block;
+			min-width: 100px;
+		}
+		
+		div.fieldsGrid tr:hover td {
+			background-color: #F0F0F0;
+		}
+		
+		div.fieldsGrid tr:hover td  img.removeIcon {
+			visibility: visible;
+		}
+
+		img.removeIcon {
+			visibility: hidden;
+		}
+		
+		span.bpmLabel {
+			display: inline-block;
+			width: 150px;
+		}
+	</style>
+	<window id="w" visible="false" title="${c:l('bpm.processEditor') }" width="90%" use="com.soffid.iam.addons.bpm.web.ProcessWindow">
+		<div style="float: right">
+			<button label="${c:l('bpm.save') }" id="save"/>
+			<button label="${c:l('bpm.saveAndPublish') }" id="saveAndPublish"/>
+			<button label="${c:l('bpm.cancel') }" id="cancel"/>
+		</div>
+		<div style="width:100%; margin-bottom: 16px">
+			<div>
+				<label value="${c:l('bpm.processName') }:" sclass="bpmLabel"/>
+				<textbox bind="@name" onChange=""/>
+				${c:l('bpm.processType') }:
+				<listbox bind="type" dataPath="/model:/processType" mold="select" onSelect=""> 
+					<dataitem bind="value"><listcell bind="literal"/> </dataitem>
+				</listbox>
+			</div>
+			<div>
+				<label value="${c:l('bpm.initiators') }:" sclass="bpmLabel"/>
+				<textbox bind="@initiators" onChange=""/>
+			</div>
+			<div>
+				<label value="${c:l('bpm.managers') }:" sclass="bpmLabel"/>
+				<textbox bind="@managers" onChange=""/>
+			</div>
+			<div>
+				<label value="${c:l('bpm.observers') }:"  sclass="bpmLabel"/>
+				<textbox bind="@observers" onChange=""/>
+			</div>
+		</div>
+		<tabbox>
+			<tabs>
+				<tab label="${c:l('bpm.steps') }"> </tab>
+				<tab label="${c:l('bpm.attributes') }"/>
+			</tabs>
+			<tabpanels>
+				<tabpanel>
+					<div style="width:30%; min-width: 100px; display: inline-block; padding-right:15px; vertical-align: top">
+						<listbox dataPath="nodes" id="nodes" fixedLayout="true">
+							<listhead>
+								<listheader label="${c:l('bpm.step') }"/>
+								<listheader width="24px"/>
+							</listhead>
+							<dataitem bind="/" >
+								<listcell bind="@name"/>
+								<listcell sclass="action" >
+									<imageclic width="16px" src="~./img/remove.png" onClick="w.onRemoveNode(event)"/>
+								</listcell>
+							</dataitem>
+						</listbox>
+						<button image="~./img/list-add.gif" label="${c:l('bpm.newStep') }"
+							style="margin-top: 16px"
+							id="newNodeButton"/>
+					</div>
+					<div id="container" use="com.soffid.iam.addons.bpm.web.ContainerDiv" dataPath="nodes:/" style="display:inline-block; width:70%; vertical-align: top">
+						<grid>
+							<columns>
+								<column label="${c:l('bpm.details') }"/>
+							</columns>
+							<rows>
+								<row>
+									<div>
+										${c:l('bpm.stepName') }: <textbox bind="@name" onChange=""/>
+									</div>
+								</row>
+								<row>
+									<div>
+										${c:l('bpm.stepType') }:
+										<listbox bind="type" dataPath="/model:/stepType" mold="select" onSelect="" id="type">
+											<dataitem bind="value"><listcell bind="literal"/> </dataitem>
+										</listbox>
+									</div>
+								</row>
+								<row>
+									<div>
+										${c:l('bpm.description') }: <textbox bind="description" multiline="true" rows="4" width="400px" onChange=""/>
+									</div>
+								</row>
+								<row id="customType">
+									<div>
+										${c:l('bpm.customScript') }: <textbox bind="customScript" multiline="true" rows="4" width="400px" onChange=""/>
+										<imageclic src="/img/pencil.png" id="editScriptButton"/>
+									</div>
+								</row>
+							</rows>
+						</grid>
+						<tabbox>
+							<tabs>
+								<tab label="${c:l('bpm.taskDetails') }" selected="true"></tab>
+								<tab label="${c:l('bpm.fields') }" id="fieldsTab"></tab>
+								<tab label="${c:l('bpm.triggers') }" id="triggersTab"></tab>
+								<tab label="${c:l('bpm.incomingTransitions') }"></tab>
+								<tab label="${c:l('bpm.outgoingTransitions') }" ></tab>
+							</tabs>
+							<tabpanels>
+								<tabpanel>
+									<div id="screenType">
+										<grid  id="actorRow">
+											<columns>
+												<column/>
+											</columns>
+											<rows>
+												<row>
+													<div>
+														<div  style="width:100%; padding-bottom: 32px; padding-top:32px">
+															Write an expression to identify the actor depending on the requested role.
+															One can use EL expressions based on role and application attributes.<h:br/>
+															For instance: SOFFID_MANAGER/${"${primaryGroup}"}
+														</div>
+														${c:l('bpm.actor') }: <textbox bind="mailActor" width="300px" onChange=""/>
+													</div>
+												</row>
+												<row>
+													<div>
+														<div  style="width:100%; padding-bottom: 32px; padding-top:32px">
+														Alternatively, write a Beanshell script to return the actor depending on the process varilabels.<h:br/>
+														For instance: return primaryGroup.attributes{"owner"};
+														</div>
+														${c:l('bpm.actorScript') }: <textbox bind="customScript" multiline="true" rows="4" width="400px" onChange=""/>
+													</div>
+												</row>
+											</rows>
+										</grid>
+									
+									</div>
+									<div id="grantScreenType">
+										<grid  id="actorRow2">
+											<columns>
+												<column label="${c:l('bpm.taskDetails') }"/>
+											</columns>
+											<rows>
+												<row >
+													<div  style="width:100%; padding-bottom: 32px; padding-top:32px">
+													Write an expression to identify the actor depending on the requested role.
+													One can use EL expressions based on role and application attributes.
+													Additionally any process variable is available<h:br/>
+													For instance: ${"$"}{role.attributes['owner']} or APPLICATION_OWNER/${"$"}{application.name}
+													</div>
+													<div>
+														${c:l('bpm.actor') }: <textbox bind="mailActor" width="300px" onChange=""/>
+													</div>
+												</row>
+												<row>
+													<div  style="width:100%; padding-bottom: 32px; padding-top:32px">
+													Alternatively, write a Beanshell script to return the actor depending on the requested role. Additionally to task variables, role and application objects are available<h:br/>
+													For instance: return role.attributes{"owner"};  or return "APPLICATION_OWNER/"+application.name;
+													</div>
+													<div>
+														${c:l('bpm.actorScript') }: <textbox bind="customScript" multiline="true" rows="4" width="400px" onChange=""/>
+													</div>
+												</row>
+											</rows>
+										</grid>
+									
+										<grid dataPath="/fields" fixedLayout="true" id="fields2" sclass="fieldsGrid">
+											<columns>
+												<column label="${c:l('bpm.field.order') }" width="80px"/>
+												<column label="${c:l('bpm.field.label') }" width="150px"/>
+												<column label="${c:l('bpm.field.name') }" width="300px"/>
+												<column label="${c:l('bpm.field.readOnly') }" width="80px"/>
+												<column label="${c:l('bpm.field.validationScript') }" width="80px"/>
+												<column label="${c:l('bpm.field.visibilityScript') }" width="80px"/>
+												<column label="." width="32px"/>
+											</columns>
+											<datarow droppable="true"  onDrop="w.renumAttributes(event)">
+												<div>
+													<image src="/img/move_hint.png" draggable="true" style="margin-left: 8px; cursor: move"/>
+												</div>
+												<textbox bind="@label" width="150px"></textbox>
+												<combobox use="com.soffid.iam.addons.bpm.web.AttributesCombo" bind="@name" width="300px"/>
+												<checkbox bind="@readOnly"/>
+												<div>
+													<textbox bind="@validationScript" visible="false" multiline="true"/>
+													<imageclic src="/img/pencil.png" onClick="w.editValidationScript(event)"/>
+												</div>
+												<div>
+													<textbox bind="@visibilityScript" visible="false" multiline="true" />
+													<imageclic src="/img/pencil.png" onClick="w.editVisibilityScript(event)"/>
+												</div>
+												<imageclic class="removeIcon" src="~./img/remove.png" width="16px" onClick="w.onRemoveField(event)"/>
+											</datarow>
+										</grid>
+										<button image="~./img/list-add.gif" label="${c:l('bpm.field.new') }"
+											style="margin-top: 16px"
+											id="newFieldButton2"/>
+									</div>
+									<div id="mailType">
+										<grid>
+											<columns>
+												<column label="${c:l('bpm.mailDetails') }"/>
+											</columns>
+											<rows>
+												<row>
+													<div>
+														${c:l('bpm.mailActor') }: <textbox bind="mailActor" width="300px" onChange=""/>
+													</div>
+												</row>
+												<row>
+													<div>
+														${c:l('bpm.mailAddress') }: <textbox bind="mailAddress" width="300px" onChange=""/>
+													</div>
+												</row>
+												<row>
+													<div>
+														${c:l('bpm.mailSubject') }: <textbox bind="mailSubject" width="400px" onChange=""/>
+													</div>
+												</row>
+												<row>
+													<div>
+														${c:l('bpm.mailMessage') }: <textbox bind="mailMessage" multiline="true" rows="4" width="400px" onChange=""/>
+													</div>
+												</row>
+											</rows>
+										</grid>
+									
+									</div>
+									<div id="applyType">
+										<grid>
+											<columns>
+												<column label="${c:l('bpm.mailDetails') }"/>
+											</columns>
+											<rows>
+												<row>
+													<div>
+														${c:l('bpm.applyUser') }: <checkbox bind="applyUserChanges" onCheck=""/>
+													</div>
+												</row>
+												<row>
+													<div>
+														${c:l('bpm.applyEntitlements') }: <checkbox bind="applyEntitlements" onCheck=""/>
+													</div>
+												</row>
+											</rows>
+										</grid>
+									
+									</div>
+								</tabpanel>
+								<tabpanel>
+									<grid dataPath="/fields" fixedLayout="true" id="fields" sclass="fieldsGrid">
+										<columns>
+											<column label="${c:l('bpm.field.order') }" width="80px"/>
+											<column label="${c:l('bpm.field.label') }" width="150px"/>
+											<column label="${c:l('bpm.field.name') }" width="300px"/>
+											<column label="${c:l('bpm.field.readOnly') }" width="80px"/>
+											<column label="${c:l('bpm.field.validationScript') }" width="80px"/>
+											<column label="${c:l('bpm.field.visibilityScript') }" width="80px"/>
+											<column label="." width="32px"/>
+										</columns>
+										<datarow droppable="true"  onDrop="w.renumAttributes(event)">
+											<div>
+												<image src="/img/move_hint.png" draggable="true" style="margin-left: 8px; cursor: move"/>
+											</div>
+											<textbox bind="@label" width="150px"></textbox>
+											<combobox use="com.soffid.iam.addons.bpm.web.AttributesCombo" bind="@name" width="300px"/>
+											<checkbox bind="@readOnly"/>
+											<div>
+												<textbox bind="@validationScript" visible="false" multiline="true"/>
+												<imageclic src="/img/pencil.png" onClick="w.editValidationScript(event)"/>
+											</div>
+											<div>
+												<textbox bind="@visibilityScript" visible="false" multiline="true" />
+												<imageclic src="/img/pencil.png" onClick="w.editVisibilityScript(event)"/>
+											</div>
+											<imageclic class="removeIcon" src="~./img/remove.png" width="16px" onClick="w.onRemoveField(event)"/>
+										</datarow>
+									</grid>
+									<button image="~./img/list-add.gif" label="${c:l('bpm.field.new') }"
+										style="margin-top: 16px"
+										id="newFieldButton"/>
+								</tabpanel>
+								<tabpanel>
+									<grid dataPath="/triggers" fixedLayout="true" id="triggers" sclass="fieldsGrid"
+										onNewRow="w.onChangeTriggerType(event)">
+										<columns>
+											<column label="${c:l('bpm.trigger.name') }" width="150px"/>
+											<column label="${c:l('bpm.trigger.field') }" width="300px"/>
+											<column label="${c:l('bpm.trigger.action') }" width="80px"/>
+											<column label="." width="32px"/>
+										</columns>
+										<datarow >
+											<listbox bind="name" width="150px" mold="select" onSelect="w.onChangeTriggerType(event)">
+												<listitem value="" label=""/>
+												<listitem value="onLoad" label="onLoad"/>
+												<listitem value="onPrepareTransition" label="onPrepareTransition"/>
+												<listitem value="onChange" label="onChange"/>
+											</listbox>
+											<combobox use="com.soffid.iam.addons.bpm.web.AttributesCombo" bind="@field" width="300px"/>
+											<div>
+												<textbox bind="@action" visible="false" multiline="true"/>
+												<imageclic src="/img/pencil.png" onClick="w.editTriggerScript(event)"/>
+											</div>
+											<imageclic class="removeIcon" src="~./img/remove.png" width="16px" onClick="w.onRemoveTrigger(event)"/>
+										</datarow>
+									</grid>
+									<button image="~./img/list-add.gif" label="${c:l('bpm.trigger.new') }"
+										style="margin-top: 16px"
+										id="newTriggerButton"/>
+								</tabpanel>
+								<tabpanel>
+									<grid dataPath="inTransitions" fixedLayout="true" use="com.soffid.iam.addons.bpm.web.TransitionsGrid" 
+										sclass="fieldsGrid" id="inTransitions">
+										<columns>
+											<column label="${c:l('bpm.fromNode') }" width="100px"/>
+											<column label="${c:l('bpm.incomingTransition') }" width="100px"/>
+											<column label="${c:l('bpm.toNode') }" width="100px"/>
+											<column label="${c:l('bpm.script') }" width="24px"/>
+											<column label="." width="32px"/>
+										</columns>
+										<datarow>
+											<listbox mold="select" >
+												<dataitem bind=".">
+													<listcell bind="@name"/>
+												</dataitem>
+											</listbox>
+											<textbox bind="@name"  onChange=""/>
+											<listbox mold="select" >
+												<dataitem bind=".">
+													<listcell bind="@name"/>
+												</dataitem>
+											</listbox>
+											<div>
+												<textbox bind="@script" multiline="true" visible="false"/>
+												<imageclic src="/img/pencil.png"/>
+											</div>
+											<imageclic class="removeIcon" src="~./img/remove.png" width="16px" onClick="w.onRemoveField(event)"/>
+										</datarow>
+									</grid>
+									<button image="~./img/list-add.gif" label="${c:l('bpm.transition.new') }"
+										style="margin-top: 16px"
+										id="newInTransitionButton"/>
+								</tabpanel>
+								<tabpanel>
+									<grid dataPath="outTransitions" fixedLayout="true" use="com.soffid.iam.addons.bpm.web.TransitionsGrid" sclass="fieldsGrid"
+										id="outTransitions">
+										<columns>
+											<column label="${c:l('bpm.fromNode') }" width="100px"/>
+											<column label="${c:l('bpm.outgoingTransition') }" width="100px"/>
+											<column label="${c:l('bpm.toNode') }" width="100px"/>
+											<column label="${c:l('bpm.script') }" width="24px"/>
+											<column label="." width="32px"/>
+										</columns>
+										<datarow>
+											<listbox mold="select">
+												<dataitem bind=".">
+													<listcell bind="@name"/>
+												</dataitem>
+											</listbox>
+											<textbox bind="@name"  onChange=""/>
+											<listbox mold="select">
+												<dataitem bind=".">
+													<listcell bind="@name"/>
+												</dataitem>
+											</listbox>
+											<div>
+												<textbox bind="@script" multiline="true" visible="false"/>
+												<imageclic src="/img/pencil.png"/>
+											</div>
+											<imageclic class="removeIcon" src="~./img/remove.png" width="16px" onClick="w.onRemoveField(event)"/>
+										</datarow>
+									</grid>
+									<button image="~./img/list-add.gif" label="${c:l('bpm.transition.new') }"
+										style="margin-top: 16px"
+										id="newOutTransitionButton"/>
+								</tabpanel>
+							</tabpanels>
+						</tabbox>
+					</div>
+				</tabpanel>
+				<tabpanel>
+					<grid dataPath="/attributes" id="metadataGrid" fixedLayout="true">
+						<columns>
+							<column label="${c:l('dadesAddicionals.zul.Codi-2')}" width="10em"></column>
+							<column width="*"></column>
+							<column width="40px"></column>
+						</columns>
+						<datarow valign="top">
+							<div>
+								<input_dada bind="@name" id="detall_codi" width_custom="7em"
+									maxim="25" mascara="no empty" />
+								<label value="*" />
+							</div>
+							<grid width="100%" sclass="noBorderGrid">
+								<columns>
+									<column width="15%"></column>
+									<column width="85%" />
+								</columns>
+								<rows>
+									<row>
+										<input_etiqueta value="${c:l('dadesAddicionals.zul.Label')}" />
+										<textbox bind="@label" maxlength="50" sclass="textbox"
+											width="80%" onChange="" />
+									</row>
+									<row>
+										<input_etiqueta value="${c:l('dadesAddicionals.zul.Type')} ::" />
+										<listbox width="99%" visible="true" bind="." mold="select"
+											use="com.soffid.iam.addons.bpm.web.CustomDataTypeListbox"
+											style="font-size: 10px"
+											onChange='checkListboxCustomObjectTypes(this)'>
+											<dataitem bind="@value">
+												<listcell bind="@literal" />
+											</dataitem>
+										</listbox>
+									</row>
+									<row >
+										<input_etiqueta value="${c:l('dadesAddicionals.zul.Multivalued')}" />
+										<checkbox bind="@multiValued" onClick="" onCheck="" />
+									</row>
+									<row >
+										<input_etiqueta value="${c:l('dadesAddicionals.zul.Size')}" />
+										<textbox bind="@size" id="detail_size" maxlength="50" sclass="textbox"
+											width="8em" onChange="" />
+									</row>
+									<row id="valuesRow">
+										<input_etiqueta value="" />
+										<grid dataPath="/values" id="gridValues">
+											<columns>
+												<column label="${c:l('dadesAddicionals.zul.Values')}"></column>
+												<column  width="2em">
+													<imageclic align="center" src="~./img/list-add.gif">
+														<attribute name="onClick"><![CDATA[
+																es.caib.zkib.binder.BindContext ctx = es.caib.zkib.datasource.XPathUtils.getComponentContext(self);
+																es.caib.zkib.datasource.XPathUtils.createPath(ctx.getDataSource(), ctx.getXPath(), "");
+															]]>
+														</attribute>
+													</imageclic>
+												</column>
+											</columns>
+											<datarow>
+												<textbox bind="." maxlength="50" sclass="textbox" readonly="false"
+													width="80%" onChange="" />
+												<imageclic align="center" src="~./img/list-remove.gif">
+													<attribute name="onClick"><![CDATA[
+															es.caib.zkib.binder.BindContext ctx = es.caib.zkib.datasource.XPathUtils.getComponentContext(self);
+															es.caib.zkib.datasource.XPathUtils.removePath(ctx.getDataSource(), ctx.getXPath());
+													]]></attribute>
+												</imageclic>
+											</datarow>
+										</grid>
+									</row>
+								</rows>
+							</grid>
+							<imageclic align="right" src="~./img/list-remove.gif" visible="${canModifyMetadata}">
+								<attribute name="onClick"><![CDATA[
+									es.caib.zkib.binder.BindContext ctx = es.caib.zkib.datasource.XPathUtils.getComponentContext(event.target);
+									es.caib.zkib.datasource.XPathUtils.removePath(ctx.getDataSource(), ctx.getXPath());
+								]]>
+								</attribute>
+							</imageclic>
+						</datarow>
+					</grid>
+					<button image="~./img/list-add.gif" label="${c:l('bpm.addAttribute') }"
+						style="margin-top: 16px"
+						>
+						<attribute name="onClick"><![CDATA[
+							es.caib.zkib.binder.BindContext ctx = es.caib.zkib.datasource.XPathUtils.getComponentContext(metadataGrid);
+							es.caib.zkib.datasource.DataSource ds = ctx.getDataSource();
+							String path = ctx.getXPath();
+							es.caib.zkib.datasource.XPathUtils.createPath(ds, path, new com.soffid.iam.addons.bpm.common.Attribute());
+						]]></attribute>
+					</button>
+				</tabpanel>
+			</tabpanels>
+		</tabbox>
+	</window>
+	<script src='~./js/codemirror/java-classes-bpm.js' />
+ 	<include src="/finestres/editor.zul"/>
+</form>
