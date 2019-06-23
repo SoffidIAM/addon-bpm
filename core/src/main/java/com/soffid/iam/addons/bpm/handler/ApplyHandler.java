@@ -135,7 +135,7 @@ public class ApplyHandler implements ActionHandler {
 		}
 		else if ("A".equals(action))
 		{
-			User u = new User();
+			user = new User();
 			user.setActive(true);
 			attributes = new HashMap<String, Object>();
 			updateAttributes (user, attributes, executionContext);
