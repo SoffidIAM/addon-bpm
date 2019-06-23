@@ -10,7 +10,7 @@
     <maven>2.0.1</maven>
   </prerequisites>
   <scm>
-	<connection>scm:git:ssh://git@github.com/SoffidIAM/addon-bpm.git</connection>
+	<connection>scm:git:ssh://git@stash.dev.lab:7999/iam2/addon-bpm.git</connection>
   </scm>
   <licenses>
     <license>
