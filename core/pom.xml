@@ -245,14 +245,14 @@
 		<dependency>
 			<groupId>com.soffid.iam.console</groupId>
 			<artifactId>iam-core</artifactId>
-			<version xmlns:maven="http://maven.apache.org/POM/4.0.0">2.5.5-SNAPSHOT</version>
+			<version xmlns:maven="http://maven.apache.org/POM/4.0.0">2.6.0</version>
 			<scope>provided</scope>
 			<type>ejb</type>
 		</dependency>
 		<dependency>
 			<groupId>com.soffid.iam.console</groupId>
 			<artifactId>iam-common</artifactId>
-			<version xmlns:maven="http://maven.apache.org/POM/4.0.0">2.5.5-SNAPSHOT</version>
+			<version xmlns:maven="http://maven.apache.org/POM/4.0.0">2.6.0</version>
 			<scope>provided</scope>
 			<type>ejb</type>
 		</dependency>
