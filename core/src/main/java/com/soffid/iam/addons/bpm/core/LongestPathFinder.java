@@ -7,13 +7,18 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import com.soffid.iam.addons.bpm.common.Node;
 import com.soffid.iam.addons.bpm.common.NodeType;
 import com.soffid.iam.addons.bpm.common.Transition;
 
 public class LongestPathFinder {
-
+	static Log log = LogFactory.getLog(LongestPathFinder.class);
+	
 	public static Node find(Node current, Set<Node> next, Collection<Node> nodesList) {
+		log.info ("Searching for "+current.getName());
 		Set<Node> visited = new HashSet<Node>();
 		LinkedList<Trip> trips = new LinkedList<Trip>();
 		for ( Node n: next)
@@ -32,8 +37,9 @@ public class LongestPathFinder {
 			trips.removeFirst();
 			for (Transition n: trip.node.getOutTransitions())
 			{
+				log.info(" >> Transition : "+ n.getSource()+ " -> " +  n.getName()+" -> " + n.getTarget());
 				Node nextNode = n.getTarget();
-				if ( nodesList.contains(nextNode)) // a node not painted yet
+				if ( nodesList.contains(nextNode) && nextNode != trip.node) // a node not painted yet
 				{
 					for ( Iterator<Trip> it = trips.iterator(); it.hasNext(); )
 					{
