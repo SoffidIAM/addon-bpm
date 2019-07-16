@@ -15,6 +15,7 @@ public class Attribute {
 	public java.lang.String name;
 
 	@Nullable
+	@com.soffid.mda.annotation.Attribute(defaultValue="0L")
 	public java.lang.Long order;
 
 	public es.caib.seycon.ng.comu.TypeEnumeration type;
