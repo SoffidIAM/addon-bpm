@@ -478,7 +478,7 @@
 									</row>
 								</rows>
 							</grid>
-							<imageclic align="right" src="~./img/list-remove.gif" visible="${canModifyMetadata}">
+							<imageclic align="right" src="~./img/list-remove.gif">
 								<attribute name="onClick"><![CDATA[
 									es.caib.zkib.binder.BindContext ctx = es.caib.zkib.datasource.XPathUtils.getComponentContext(event.target);
 									es.caib.zkib.datasource.XPathUtils.removePath(ctx.getDataSource(), ctx.getXPath());
