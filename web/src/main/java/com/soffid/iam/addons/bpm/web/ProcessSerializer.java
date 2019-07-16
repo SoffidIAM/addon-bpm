@@ -21,6 +21,8 @@ import com.soffid.iam.addons.bpm.common.Transition;
 import com.soffid.iam.addons.bpm.common.Trigger;
 import com.soffid.iam.addons.bpm.common.WorkflowType;
 
+import es.caib.seycon.ng.comu.TypeEnumeration;
+
 
 public class ProcessSerializer {
 	public static JsonObject toJson (com.soffid.iam.addons.bpm.common.Process def)
@@ -28,7 +30,7 @@ public class ProcessSerializer {
 		JsonObjectBuilder builder = Json.createObjectBuilder();
 		if (def.getAttributes() != null) builder.add("attributes", toJson(def.getAttributes()));
 		if (def.getDescription() != null) builder.add("description", def.getDescription());
-		if (def.getInitiators() != null) builder.add("initators", def.getInitiators());
+		if (def.getInitiators() != null) builder.add("initiators", def.getInitiators());
 		if (def.getManagers() != null) builder.add("managers", def.getManagers());
 		if (def.getName() != null) builder.add("name", def.getName());
 		if (def.getObservers() != null) builder.add("observers", def.getObservers());
@@ -186,7 +188,7 @@ public class ProcessSerializer {
 				target.setMailSubject(src.getString("mailSubject", null));
 				target.setName(src.getString("name", null));
 				target.setTriggers(loadTriggers ( src.getJsonArray("triggers")));
-				target.setType( NodeType.fromString( src.getString("nodeType", NodeType.NT_END.toString())));
+				target.setType( NodeType.fromString( src.getString("type", NodeType.NT_END.toString())));
 				l.add(target);
 			}
 		}
@@ -214,7 +216,7 @@ public class ProcessSerializer {
 			if (obj instanceof JsonObject) {
 				JsonObject src = (JsonObject) obj;
 				Transition t = new Transition();
-				t.setName(src.getString("name", null));
+				t.setName(src.getString("action", null));
 				t.setScript(src.getString("script", null));
 				Node source = findNode (l, src.getString("source", null));
 				if (source != null)
@@ -225,7 +227,7 @@ public class ProcessSerializer {
 				Node target = findNode (l, src.getString("target", null));
 				if (target != null)
 				{
-					target.getOutTransitions().add(t);
+					target.getInTransitions().add(t);
 					t.setTarget(target);
 				}
 			}
@@ -292,6 +294,7 @@ public class ProcessSerializer {
 				target.setMultiValued(src.getBoolean("multiValued", false));
 				target.setName(src.getString("name", null));
 				target.setOrder( new Long( src.getInt("order", 1)));
+				target.setType(TypeEnumeration.fromString(src.getString("type")));
 				if (src.containsKey("size"))
 				target.setSize( src.getJsonNumber("size").intValue());
 				target.setValues(loadStringList(src.getJsonArray("values")));
