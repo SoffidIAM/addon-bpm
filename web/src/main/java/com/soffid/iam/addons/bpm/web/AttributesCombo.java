@@ -53,7 +53,14 @@ public class AttributesCombo extends DataCombobox {
 		Collections.sort(attributes, new Comparator<Attribute>() {
 			@Override
 			public int compare(Attribute o1, Attribute o2) {
-				return o1.getOrder().compareTo(o2.getOrder());
+				if (o1.getOrder() == null && o2.getOrder() == null)
+					return 0;
+				else if (o1.getOrder() == null)
+					return 1;
+				else if (o2.getOrder() == null)
+					return -1;
+				else
+					return o1.getOrder().compareTo(o2.getOrder());
 			}
 		});
 		for (Attribute attribute: attributes)
