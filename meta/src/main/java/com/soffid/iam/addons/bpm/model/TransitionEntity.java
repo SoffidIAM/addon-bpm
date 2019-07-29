@@ -26,7 +26,7 @@ public class TransitionEntity {
 	@Nullable
 	String name;
 	
-	@Column(name="TRA_SCRIPT")
+	@Column(name="TRA_SCRIPT", length=64000)
 	@Nullable
 	String script;
 	
