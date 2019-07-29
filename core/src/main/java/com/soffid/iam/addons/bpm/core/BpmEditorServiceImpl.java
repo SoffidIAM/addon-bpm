@@ -79,6 +79,7 @@ public class BpmEditorServiceImpl extends BpmEditorServiceBase {
 				fieldEntity.setNode(nodeEntity);
 				getFieldEntityDao().create(fieldEntity);
 				f.setId(fieldEntity.getId());
+				nodeEntity.getFields().add(fieldEntity);
 			}
 			
 			for (Trigger t: node.getTriggers())
@@ -87,6 +88,7 @@ public class BpmEditorServiceImpl extends BpmEditorServiceBase {
 				triggerEntity.setNode(nodeEntity);
 				getTriggerEntityDao().create(triggerEntity);
 				t.setId(triggerEntity.getId());
+				nodeEntity.getTriggers().add(triggerEntity);
 			}
 			
 		}
@@ -295,6 +297,7 @@ public class BpmEditorServiceImpl extends BpmEditorServiceBase {
 			getTransitionEntityDao().remove(ne.getOutTransitions());
 			getFieldEntityDao().remove(ne.getFields());
 		}
+		getAttributeEntityDao().remove(procEntity.getAttributes());
 		getNodeEntityDao().remove(procEntity.getNodes());
 		getProcessEntityDao().remove(procEntity);
 	}

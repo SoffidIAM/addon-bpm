@@ -27,19 +27,25 @@ public class CustomActionHandler implements ActionHandler {
 		interpreter.set(Constants.USER_VAR, executionContext.getVariable(Constants.USER_VAR)); //$NON-NLS-1$
 		interpreter.set(Constants.ROLES_VAR, executionContext.getVariable(Constants.ROLES_VAR)); //$NON-NLS-1$
 				
+		String label = executionContext.getNode() != null ? executionContext.getNode().getName():
+					executionContext.getTransition() != null ? executionContext.getTransition().getName():
+				"";
 		try {
 			Object o = interpreter.eval(script);
-			if (o != null && o instanceof String &&
-					executionContext.getNode().getLeavingTransitionsMap().get(o.toString()) != null )
+			if (executionContext.getNode() != null)
+			{
+				if (o != null && o instanceof String &&
+						executionContext.getNode().getLeavingTransitionsMap().get(o.toString()) != null )
 				{
 					executionContext.leaveNode(o.toString());
 				}
 				else
 					executionContext.leaveNode();
+			}
 		} catch (ParseException e) {
-			throw new SystemWorkflowException("Error parsing custom script "+executionContext.getNode().getName()+": "+e.getMessage());
+			throw new SystemWorkflowException("Error parsing custom script "+label+": "+e.getMessage());
 		} catch (TargetError e) {
-			throw new InternalErrorException ("Error executing custom script "+executionContext.getNode().getName()+" at "+e.getScriptStackTrace(),
+			throw new InternalErrorException ("Error executing custom script "+label+" at "+e.getScriptStackTrace(),
 					e.getTarget());
 		} catch (EvalError e) {
 			String msg;
@@ -48,7 +54,7 @@ public class CustomActionHandler implements ActionHandler {
 			} catch (Exception e2) {
 				msg = e.getMessage();
 			}
-			throw new InternalErrorException ("Error parsing custom script "+executionContext.getNode().getName()+": "+msg);
+			throw new InternalErrorException ("Error parsing custom script "+label+": "+msg);
 		}
 	}
 
