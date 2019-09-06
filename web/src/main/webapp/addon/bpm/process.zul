@@ -55,6 +55,10 @@
 				</listbox>
 			</div>
 			<div>
+				<label value="${c:l('bpm.processDescription') }:" sclass="bpmLabel"/>
+				<textbox bind="@description" onChange="" width="200px" multiline="true" rows="4"/>
+			</div>
+			<div>
 				<label value="${c:l('bpm.initiators') }:" sclass="bpmLabel"/>
 				<textbox bind="@initiators" onChange=""/>
 			</div>

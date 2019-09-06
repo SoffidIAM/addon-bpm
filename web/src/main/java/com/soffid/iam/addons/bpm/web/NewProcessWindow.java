@@ -54,6 +54,8 @@ public class NewProcessWindow extends Window {
 		
 		if (t == WorkflowType.WT_USER)
 			createUserTemplate(p);
+		else
+			createPermissionsTemplate(p);
 		
 		DataModel model = (DataModel) getParent().getFellow("model");
 		String path = XPathUtils.createPath(model, "/process", p);
@@ -70,15 +72,14 @@ public class NewProcessWindow extends Window {
 
 	private void createUserTemplate(Process p) throws InternalErrorException, NamingException, CreateException {
 		Node nodeStart = new Node();
-		Node nodeRequest = new Node();
 		Node nodeApprove = new Node();
 		Node nodeApply = new Node();
 		Node nodeEnd = new Node();
 		
 		nodeStart.setName("Start");
-		nodeRequest.setDescription("Request new user management process");
+		nodeStart.setDescription("Request new user management process");
 		nodeStart.setType(NodeType.NT_START);
-		addFields (nodeRequest, false);
+		addFields (nodeStart, false);
 		p.getNodes().add(nodeStart);
 		
 		nodeApprove.setName("Approve");
@@ -90,6 +91,7 @@ public class NewProcessWindow extends Window {
 		nodeApply.setName("Apply changes");
 		nodeApply.setType(NodeType.NT_APPLY);
 		nodeApply.setDescription("Apply changes");
+		nodeApply.setApplyUserChanges(true);
 		p.getNodes().add(nodeApply);
 		
 		nodeEnd.setName("End");
@@ -97,9 +99,45 @@ public class NewProcessWindow extends Window {
 		nodeEnd.setType(NodeType.NT_END);
 		p.getNodes().add(nodeEnd);
 		
-		addTransition (nodeStart, nodeRequest, "");
-		addTransition (nodeRequest, nodeApprove, "Request");
-		addTransition (nodeRequest, nodeEnd, "Cancel");
+		addTransition (nodeStart, nodeApprove, "Request");
+		addTransition (nodeApprove, nodeApply, "Approve");
+		addTransition (nodeApprove, nodeEnd, "Reject");
+		addTransition (nodeApply, nodeEnd, "");
+	}
+
+	private void createPermissionsTemplate(Process p) throws InternalErrorException, NamingException, CreateException {
+		Node nodeStart = new Node();
+		Node nodeApprove = new Node();
+		Node nodeApply = new Node();
+		Node nodeEnd = new Node();
+		
+		nodeStart.setName("Start");
+		nodeStart.setDescription( p.getType() == WorkflowType.WT_PERMISSION?
+				"Request permisson changes": "Request permissions");
+		nodeStart.setType(NodeType.NT_START);
+		addPermFields (nodeStart, false);
+		p.getNodes().add(nodeStart);
+		
+		nodeApprove.setName("Approve");
+		nodeApprove.setDescription("Approve ");
+		nodeApprove.setType(NodeType.NT_GRANT_SCREEN);
+		nodeApprove.setMailActor("admin");
+		addPermFields (nodeApprove, false);
+		p.getNodes().add(nodeApprove);
+		
+		nodeApply.setName("Apply changes");
+		nodeApply.setType(NodeType.NT_APPLY);
+		nodeApply.setDescription("Apply changes");
+		nodeApply.setApplyEntitlements(true);
+		p.getNodes().add(nodeApply);
+		
+		nodeEnd.setName("End");
+		nodeEnd.setDescription("End");
+		nodeEnd.setType(NodeType.NT_END);
+		p.getNodes().add(nodeEnd);
+		
+		addTransition (nodeStart, nodeApprove, "Request");
+		addTransition (nodeStart, nodeEnd, "Cancel");
 		addTransition (nodeApprove, nodeApply, "Approve");
 		addTransition (nodeApprove, nodeEnd, "Reject");
 		addTransition (nodeApply, nodeEnd, "");
@@ -125,6 +163,7 @@ public class NewProcessWindow extends Window {
 		"mailDomain",
 		"comments"
 	};
+	
 	private void addFields(Node node, boolean readOnly) throws InternalErrorException, NamingException, CreateException {
 		int order = 1;
 		for (String field: defaultFields)
@@ -147,6 +186,17 @@ public class NewProcessWindow extends Window {
 			f.setVisibilityScript(ad.getVisibilityExpression());
 			node.getFields().add(f);
 		}
+	}
+
+	private void addPermFields(Node node, boolean readOnly) throws InternalErrorException, NamingException, CreateException {
+		int order = 1;
+		Field f = new Field();
+		f.setLabel( "Permissions" );
+		f.setName( "grants");
+		f.setOrder( new Long (order ++));
+		f.setReadOnly(readOnly);
+		node.getFields().add(f);
+		
 	}
 
 }

@@ -35,6 +35,7 @@
 				statusList.add("");
 				statusList.add(WorkflowType.WT_USER);
 				statusList.add(WorkflowType.WT_PERMISSION);
+				statusList.add(WorkflowType.WT_REQUEST);
 
 				return statusList;
 			</script-finder>

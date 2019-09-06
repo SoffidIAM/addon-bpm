@@ -37,6 +37,7 @@ import com.soffid.iam.addons.bpm.common.Field;
 import com.soffid.iam.addons.bpm.common.NodeType;
 import com.soffid.iam.addons.bpm.common.PageInfo;
 import com.soffid.iam.addons.bpm.common.Trigger;
+import com.soffid.iam.addons.bpm.common.WorkflowType;
 import com.soffid.iam.addons.bpm.handler.ApplyHandler;
 import com.soffid.iam.addons.bpm.handler.AssignmentHandler;
 import com.soffid.iam.addons.bpm.handler.CustomActionHandler;
@@ -116,7 +117,11 @@ public class Deployer {
 
 	private void generateZuls(FileDefinition fd, ProcessEntity procEntity, ProcessDefinition def) {
 		generateDefaultZul(fd, "ui/default.zul");
-		generateDefaultZul(fd, "ui/start.zul");
+		if ( procEntity.getType() == WorkflowType.WT_PERMISSION ||
+				 procEntity.getType() == WorkflowType.WT_USER )
+			generateDefaultZul(fd, "ui/start.zul");
+		else
+			generateZul(fd, "ui/start.zul", "request.zul");
 		for ( NodeEntity node: procEntity.getNodes())
 		{
 			if (node.getType().equals(NodeType.NT_SCREEN) ||
@@ -420,7 +425,12 @@ public class Deployer {
 
 	private void generateDefaultZul (FileDefinition def, String fileName)
 	{
-		InputStream in = getClass().getResourceAsStream("user.zul");
+		generateZul (def, fileName, "user.zul");
+	}
+
+	private void generateZul (FileDefinition def, String fileName, String resource)
+	{
+		InputStream in = getClass().getResourceAsStream(resource);
 		def.addFile(fileName, in);
 	}
 	

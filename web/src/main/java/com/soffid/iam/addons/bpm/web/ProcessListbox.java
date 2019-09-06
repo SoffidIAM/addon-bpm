@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.StringReader;
+import java.util.List;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -16,9 +17,12 @@ import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zul.Filedownload;
 import org.zkoss.zul.Fileupload;
+import org.zkoss.zul.Label;
+import org.zkoss.zul.Listcell;
 import org.zkoss.zul.Listitem;
 import org.zkoss.zul.Window;
 
+import com.soffid.iam.EJBLocator;
 import com.soffid.iam.addons.bpm.common.Process;
 
 import es.caib.zkib.binder.BindContext;
@@ -72,7 +76,34 @@ public class ProcessListbox extends DataListbox {
 			 
 		JsonObject object = reader.readObject();
 		reader.close();
-		Process p = ProcessSerializer.processFromJson(object);
+		final Process p = ProcessSerializer.processFromJson(object);
+		final String name = p.getName();
+		final List<Process> old = com.soffid.iam.addons.bpm.common.EJBLocator.getBpmEditorService().findByName(name);
+		if ( old == null || old.isEmpty() ) {
+			openProcessWindow(p);			
+		} else {
+			Missatgebox.confirmaYES_NO(String.format("The process %s already exists. Do you want to overwrite it?", name), 
+					new EventListener() {
+						public void onEvent(Event ev) throws Exception {
+							if (ev.getData().equals( Missatgebox.YES ))
+							{
+								for ( Object item: getItems())
+								{
+									Listitem listitem = ((Listitem) item);
+									Label cell = (Label) listitem.getFirstChild().getFirstChild();
+									String cellName = cell.getValue();
+									if (cellName != null && cellName.equals(name))
+										listitem.setVisible(false);
+								}
+								p.setId(old.iterator().next().getId());
+								openProcessWindow(p);
+							}
+						}
+					});
+		}
+	}
+
+	public void openProcessWindow(Process p) throws Exception {
 		String path = XPathUtils.createPath(getDataSource(), "/process", p);
 		setSelectedItem( getItemAtIndex(getItemCount()-1) );
 		Window processEditor = (Window) getParent().getFellow("editor").getFellow("w");

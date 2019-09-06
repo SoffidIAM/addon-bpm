@@ -44,6 +44,7 @@ import org.zkoss.zul.Window;
 
 import com.soffid.iam.ServiceLocator;
 import com.soffid.iam.addons.bpm.common.Attribute;
+import com.soffid.iam.addons.bpm.common.Constants;
 import com.soffid.iam.addons.bpm.common.EJBLocator;
 import com.soffid.iam.addons.bpm.common.Field;
 import com.soffid.iam.addons.bpm.common.NodeType;
@@ -104,7 +105,12 @@ public class StandardUserWindow extends WorkflowWindow {
 	@Override
 	protected void load() {
 		readonly = getTask() == null || getTask().getStart() == null ;
-				
+
+		if (getTask() != null && ! getTask().getVariables().containsKey(Constants.REQUESTER_VAR)) {
+			getTask().getVariables().put(Constants.REQUESTER_VAR, Security.getCurrentUser());
+			getTask().getVariables().put(Constants.REQUESTER_NAME_VAR, Security.getSoffidPrincipal().getFullName());
+		}
+
 		grid = new Div();
 		grid.setStyle("display: table; width: 100%; table-layout: fixed");
 		appendChild(grid);
@@ -203,7 +209,7 @@ public class StandardUserWindow extends WorkflowWindow {
 		d.appendChild(label);
 		Div data = new Div();
 		data.setSclass("inputField_input");
-		data.setWidth("100%");
+		// data.setWidth("100%");
 		d.appendChild(data);
 		grantsGrid = new Grid();
 		data.appendChild(grantsGrid);
@@ -297,6 +303,7 @@ public class StandardUserWindow extends WorkflowWindow {
 					if (att.getValues() != null)
 						f.setListOfValues(att.getValues().toArray(new String[0]));
 					f.setAttribute("standardAttributeDefinition", att);
+					f.setFilterExpression(att.getFilterExpression());
 					break ;
 				}
 			}
@@ -953,6 +960,7 @@ public class StandardUserWindow extends WorkflowWindow {
 		approveGrantsGrid.setSclass("grantsGrid");
 		approveGrantsGrid.setFixedLayout(true);
 		approveGrantsGrid.setWidth("100%");
+		approveGrantsGrid.setStyle("margin-top: 25px");
 		approveGrantsGrid.setRows(15);
 		Listhead h = new Listhead();
 		approveGrantsGrid.appendChild(h);
@@ -1000,7 +1008,8 @@ public class StandardUserWindow extends WorkflowWindow {
 			
 			User u = ServiceLocator.instance().getUserService().findUserByUserName(user);
 			
-			
+			if (u == null)
+				return;
 			
 			Listitem item = new Listitem();
 			item.appendChild( new Listcell(u.getUserName()));

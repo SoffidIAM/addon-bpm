@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zk xmlns="http://www.zkoss.org/2005/zul"
+	xmlns:h="http://www.w3.org/1999/xhtml"
+	xmlns:zk="http://www.zkoss.org/2005/zk"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.zkoss.org/2005/zul http://www.zkoss.org/2005/zul/zul.xsd">
+    <zscript><![CDATA[
+//       com.soffid.bpm.authoritativechange.ui.ZulMessages msg = new com.soffid.bpm.authoritativechange.ui.ZulMessages();
+    ]]></zscript>
+	<task id="window" use="com.soffid.iam.addons.bpm.ui.RequestWindow">
+		<style>
+			div.app { background: #ffffc0;
+				width: 120px; 
+				height: 90px;
+				margin: 16px;
+				display: inline-block;
+				padding: 8px;
+				border-radius: 6px;
+				cursor: pointer; 
+				vertical-align: top}
+			div.app:hover {background: #c0c0ff; margin: 8px; width: 136px; height: 106px; }
+			div.app span.appName { font-size: 10px; font-weight: bold; display: block; text-align: center}
+			div.app:hover span.appName { color:white; }
+			div.app span.appDescription { font-size: 8px; font-weight: normal;}
+			div.app img.cancel {display: none;}
+			
+			div.appSelected { background: #c0c0ff;
+				width: 120px; 
+				height: 30px;
+				margin: 16px;
+				display: inline-block;
+				padding: 8px;
+				border-radius: 6px;
+				cursor: pointer}
+			div.appSelected span.appName { color: white; font-size: 10px; font-weight: bold; display: block; text-align: center}
+			div.appSelected span.appDescription { display: none}
+			div.appSelected img.cancel {display: none;}
+			div.appSelected:hover img.cancel {width: 16px; height: 16px; float: right; z-index: 2; display: block;}
+
+			div.role { background: #f0fff0;
+				width: 120px; 
+				height: 90px;
+				margin: 16px;
+				display: inline-block;
+				padding: 8px;
+				border-radius: 6px;
+				cursor: pointer;
+				vertical-align:top;}
+			div.role:hover {background: #c0ffc0; margin: 8px; width: 136px; height: 106px; }
+			div.role span.roleName { font-size: 10px; font-weight: bold; display: block; text-align: center}
+			div.role span.roleDescription { font-size: 8px; font-weight: normal;}
+			div.role img.cancel {display: none;}
+
+			div.selected { background: #80ff80;
+				width: 120px; 
+				height: 30px;
+				margin: 16px;
+				display: block;
+				padding: 8px;
+				border-radius: 6px;
+				cursor: pointer}
+			div.selected img.cancel {display: none;}
+			div.selected:hover img.cancel {width: 16px; height: 16px; float: right;  z-index: 2; display: block;}
+			div.selected span.roleName { font-size: 10px; font-weight: bold; display: block; text-align: center}
+			div.selected span.roleDescription { display: none;}
+
+		</style>
+		<div id="selected" style="float: right; background-color: #e0e0e0">
+			Shopping cart
+		</div>
+		<div>
+			<label value="Requester " style="width: 10em; display: inline-block" ></label>
+			<label bind="@solicitante"/>
+			<label id="fullNameSolicitante"></label>
+		</div>
+		<div id="appSelectorDiv">
+			Select application: <textbox width="250px" id="appSelector" onChanging="window.onChangingAppSelector(event)"/>
+		</div>
+		<div id="apps">
+		</div>
+		<div id="roleSelectorDiv" visible="false">
+			Select role: <textbox width="250px" id="roleSelector"  onChanging="window.onChangingRoleSelector(event)"/>
+		</div>
+		<div id="roles">
+		</div>
+				
+	</task>
+	<include src="usuarisllista.zul"/>
+	
+</zk>
