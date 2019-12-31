@@ -85,5 +85,17 @@
 				</div>
 			</div>
 		</window>
+		<window id="currentPermissions" title="${c:l('bpm.currentPermissions') }" width="80%" closable="false" visible="false">
+			<grid>
+				<columns>
+					<column label="-" width="48px"></column>
+					<column label="${c:l('aplica_rolsllista.zul.Aplicacia-2') }"></column>
+					<column label="${c:l('aplicacions.zul.NomRol-2') }"></column>
+				</columns>
+				<rows>
+				</rows>
+			</grid>
+			<button label="${c:l('error.zul.Tancar') }" id="closeButton" onClick="currentPermissions.setVisible(false);"/>
+		</window>
 	</task>
 </zk>

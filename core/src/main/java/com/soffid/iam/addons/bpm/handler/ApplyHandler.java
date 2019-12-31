@@ -10,10 +10,12 @@ import org.apache.commons.beanutils.PropertyUtils;
 import org.jbpm.context.exe.ContextInstance;
 import org.jbpm.graph.def.ActionHandler;
 import org.jbpm.graph.exe.ExecutionContext;
+import org.jbpm.module.exe.ModuleInstance;
 
 import com.soffid.iam.ServiceLocator;
 import com.soffid.iam.addons.bpm.common.Constants;
 import com.soffid.iam.addons.bpm.common.RoleRequestInfo;
+import com.soffid.iam.api.BpmUserProcess;
 import com.soffid.iam.api.DataType;
 import com.soffid.iam.api.MetadataScope;
 import com.soffid.iam.api.Role;
@@ -61,6 +63,15 @@ public class ApplyHandler implements ActionHandler {
 			{
 				applyEntitlements(executionContext);
 			}
+			String userName = (String) executionContext.getVariable("userName");
+			if (userName != null)
+			{
+				BpmUserProcess proc = new BpmUserProcess();
+				proc.setProcessId(executionContext.getProcessInstance().getId());
+				proc.setUserCode(userName);
+				proc.setTerminated(false);
+				ServiceLocator.instance().getUserService().create(proc);
+			}
 			executionContext.leaveNode();
 		} finally {
 			Security.nestedLogoff();
@@ -73,49 +84,107 @@ public class ApplyHandler implements ActionHandler {
 		{
 			if (grant.getUserName() == null)
 				grant.setUserName( (String) executionContext.getVariable("UserName"));
-			if (grant.getUserName() != null && !grant.isDenied() && grant.getParentRole() == null)
+			if (grant.getUserName() != null && grant.getParentRole() == null)
 			{
-				if (grant.getPreviousRoleId() != null && grant.getPreviousRoleId().equals(grant.getRoleId()))
+				if (grant.isApproved())
 				{
-					// Do nothing
+					if (grant.getPreviousRoleId() != null && grant.getPreviousRoleId().equals(grant.getRoleId()))
+					{
+						// Do nothing
+					}
+					else if ( grant.getRoleId() == null )
+					{
+						revoke (grant, executionContext);
+					}
+					else if ( grant.getPreviousRoleId() == null)
+					{
+						grant (grant, executionContext);
+					}
+					else
+					{
+						revoke(grant, executionContext);
+						grant(grant, executionContext);
+					}
 				}
-				else if ( grant.getRoleId() == null )
+				else if (grant.isDenied() && grant.getRoleAccount() != null)
 				{
-					revoke (grant);
-				}
-				else if ( grant.getPreviousRoleId() == null)
-				{
-					grant (grant);
-				}
-				else
-				{
-					revoke(grant);
-					grant(grant);
+					reject(grant);
 				}
 			}
 		}
 	}
 
-	private void grant(RoleRequestInfo grant) throws InternalErrorException, UserWorkflowException {
+	private void grant(RoleRequestInfo grant, ExecutionContext executionContext) throws InternalErrorException, UserWorkflowException {
 		Role role = appService.findRoleById(grant.getRoleId());
-		if (role == null)
-			throw new UserWorkflowException("Unable to find role with id "+grant.getRoleId());
-		RoleAccount ra = new RoleAccount();
-		ra.setUserCode(grant.getUserName());
-		ra.setRoleName(role.getName());
-		ra.setSystem(role.getSystem());
-		ra.setStartDate(new Date());
-		appService.create(ra);
+		if ( grant.getRoleAccount() != null)
+		{
+			for ( RoleAccount ra: appService.findUserRolesByUserNameNoSoD(grant.getUserName()))
+			{
+				if (ra.getId().equals(grant.getRoleAccount().getId()))
+				{
+					ra.setApprovalPending(false);
+					ra.setEnabled(true);
+					ra.setRemovalPending(false);
+					appService.update(ra);
+				}
+			}
+		}
+		else
+		{
+			if (role == null)
+				throw new UserWorkflowException("Unable to find role with id "+grant.getRoleId());
+			RoleAccount ra = new RoleAccount();
+			ra.setUserCode(grant.getUserName());
+			ra.setRoleName(role.getName());
+			ra.setSystem(role.getSystem());
+			ra.setStartDate(new Date());
+			appService.create(ra);
+		}
+		String userName = grant.getUserName();
+		if (userName != null)
+		{
+			BpmUserProcess proc = new BpmUserProcess();
+			proc.setProcessId(executionContext.getProcessInstance().getId());
+			proc.setUserCode(userName);
+			proc.setTerminated(false);
+			ServiceLocator.instance().getUserService().create(proc);
+		}
+
 	}
 
-	private void revoke(RoleRequestInfo grant) throws InternalErrorException, UserWorkflowException {
+	private void revoke(RoleRequestInfo grant, ExecutionContext executionContext) throws InternalErrorException, UserWorkflowException {
 		Role role = appService.findRoleById(grant.getPreviousRoleId());
 		if (role == null)
 			throw new UserWorkflowException("Unable to find role with id "+grant.getRoleId());
+		
 		for ( RoleAccount ra: appService.findUserRolesByUserNameNoSoD(grant.getUserName()))
 		{
 			if (ra.getRoleName().equals(role.getName()) && ra.getSystem().equals(role.getSystem()))
-				appService.delete(ra);
+			{
+				if (ra.getRemovalPending() != null)
+					appService.approveDelete(ra);
+				else
+					appService.delete(ra);
+				String userName = grant.getUserName();
+				if (userName != null)
+				{
+					BpmUserProcess proc = new BpmUserProcess();
+					proc.setProcessId(executionContext.getProcessInstance().getId());
+					proc.setUserCode(userName);
+					proc.setTerminated(false);
+					ServiceLocator.instance().getUserService().create(proc);
+				}
+			}
+		}
+	}
+
+	private void reject(RoleRequestInfo grant) throws InternalErrorException, UserWorkflowException {
+		for ( RoleAccount ra: appService.findUserRolesByUserNameNoSoD(grant.getUserName()))
+		{
+			if (ra.getId().equals(grant.getRoleAccount().getId()))
+			{
+				appService.denyDelete(ra);
+			}
 		}
 	}
 

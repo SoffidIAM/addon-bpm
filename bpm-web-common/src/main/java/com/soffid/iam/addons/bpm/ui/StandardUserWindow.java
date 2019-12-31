@@ -1,7 +1,6 @@
 package com.soffid.iam.addons.bpm.ui;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.rmi.RemoteException;
 import java.util.Arrays;
 import java.util.Collection;
@@ -19,7 +18,6 @@ import javax.security.auth.login.LoginException;
 import javax.transaction.NotSupportedException;
 import javax.transaction.SystemException;
 
-import org.apache.commons.beanutils.PropertyUtils;
 import org.zkoss.util.resource.Labels;
 import org.zkoss.zk.ui.Component;
 import org.zkoss.zk.ui.UiException;
@@ -31,6 +29,7 @@ import org.zkoss.zul.Column;
 import org.zkoss.zul.Columns;
 import org.zkoss.zul.Div;
 import org.zkoss.zul.Grid;
+import org.zkoss.zul.Image;
 import org.zkoss.zul.Label;
 import org.zkoss.zul.Listbox;
 import org.zkoss.zul.Listcell;
@@ -52,31 +51,26 @@ import com.soffid.iam.addons.bpm.common.PageInfo;
 import com.soffid.iam.addons.bpm.common.RoleRequestInfo;
 import com.soffid.iam.addons.bpm.common.Trigger;
 import com.soffid.iam.addons.bpm.common.WorkflowType;
+import com.soffid.iam.addons.bpm.tools.TaskUtils;
 import com.soffid.iam.api.Application;
 import com.soffid.iam.api.DataType;
-import com.soffid.iam.api.Group;
 import com.soffid.iam.api.MetadataScope;
 import com.soffid.iam.api.Role;
 import com.soffid.iam.api.RoleAccount;
-import com.soffid.iam.api.RoleGrant;
 import com.soffid.iam.api.User;
 import com.soffid.iam.bpm.api.ProcessInstance;
 import com.soffid.iam.bpm.api.TaskInstance;
-import com.soffid.iam.model.SystemEntity;
-import com.soffid.iam.model.UserDataEntity;
-import com.soffid.iam.model.UserGroupEntity;
 import com.soffid.iam.service.ApplicationService;
 import com.soffid.iam.service.impl.bshjail.SecureInterpreter;
 import com.soffid.iam.web.users.additionalData.CustomField;
 
 import bsh.EvalError;
-import bsh.ParseException;
 import bsh.TargetError;
 import es.caib.bpm.toolkit.WorkflowWindow;
 import es.caib.bpm.toolkit.exception.SystemWorkflowException;
 import es.caib.bpm.toolkit.exception.UserWorkflowException;
 import es.caib.bpm.toolkit.exception.WorkflowException;
-import es.caib.seycon.ng.comu.Rol;
+import es.caib.seycon.ng.comu.TypeEnumeration;
 import es.caib.seycon.ng.exception.InternalErrorException;
 import es.caib.seycon.ng.utils.Security;
 import es.caib.zkib.binder.BindContext;
@@ -98,6 +92,7 @@ public class StandardUserWindow extends WorkflowWindow {
 	private PageInfo pageInfo;
 	private boolean grantsReadOnly;
 	private boolean readonly;
+	private boolean ignoreEmptyFields;
 
 	public void onCreate () {
 	}
@@ -126,22 +121,25 @@ public class StandardUserWindow extends WorkflowWindow {
 					getVariables().put("grants", grants);
 				}
 				
+				ignoreEmptyFields = false;
 			}
 			else
 			{
 				ProcessInstance proc = ProcessInstance.toProcessInstance( getProcessInstance() );
 				pageInfo = EJBLocator.getBpmUserService().getPageInfo( proc );
+				ignoreEmptyFields = true;
 			}
-			
-			generateFields();
-			
-			updateFieldsVisibility();
 			
 			for ( Trigger trigger: pageInfo.getTriggers())
 			{
 				if ("onLoad".equals(trigger.getName()))
 					runTrigger(trigger);
 			}
+			
+			generateFields();
+			
+			updateFieldsVisibility();
+			
 		} catch (Exception e) {
 			throw new RuntimeException ("Error getting task information", e);
 		}
@@ -178,16 +176,18 @@ public class StandardUserWindow extends WorkflowWindow {
 			}
 			
 		});
+		Map vars = getTask() == null ? getProcessInstance().getVariables() : getTask().getVariables();
 		for ( Field field: pageInfo.getFields())
 		{
-			createField (field);
+			if ( ! ignoreEmptyFields || vars.get(field.getName()) != null)
+				createField (field);
 		}
 	}
 
 	private void createField(Field field) throws Exception {
 		if (field.getName().equals("grants"))
 		{
-			if ( pageInfo.getNodeType() == NodeType.NT_GRANT_SCREEN)
+			if ( pageInfo.getNodeType() == NodeType.NT_GRANT_SCREEN || readonly || field.getReadOnly())
 				createApproveGrants (field);
 			else
 				createGrants (field);
@@ -255,8 +255,10 @@ public class StandardUserWindow extends WorkflowWindow {
 		
 		grantsGrid.getRows().getChildren().clear();
 		int i = 1;
+		log.info("Generating screen for "+grants.size()+" grants");
 		for ( RoleRequestInfo grant: grants)
 		{
+			log.info("Generating row for "+grant);
 			generateApplicationRow(grantsGrid, i, grant);
 			i++;
 		}
@@ -272,7 +274,10 @@ public class StandardUserWindow extends WorkflowWindow {
 			{
 				f = new CustomField();
 				f.setLabel(field.getLabel()+" :");
-				f.setDataType(att.getType().toString());
+				if (att.getType() == null)
+					f.setDataType(TypeEnumeration.STRING_TYPE.toString());
+				else
+					f.setDataType(att.getType().toString());
 				f.setDataObjectType(att.getDataObjectType());
 				f.setBind( toBind ( att.getName()) );
 				f.setReadonly( field.getReadOnly() != null && field.getReadOnly().booleanValue());
@@ -409,6 +414,7 @@ public class StandardUserWindow extends WorkflowWindow {
 		{
 			fetchUserAttributes();
 			refresh();
+			generateFields();
 		}
 		updateFieldsVisibility();
 		for ( Trigger trigger: pageInfo.getTriggers())
@@ -426,35 +432,24 @@ public class StandardUserWindow extends WorkflowWindow {
 		String user = (String) getVariables().get("userSelector");
 		User u = com.soffid.iam.EJBLocator.getUserService().findUserByUserName(user);
 		if (u != null)
-		{
-			Map<String, Object> atts = com.soffid.iam.EJBLocator.getUserService().findUserAttributes(user);
-			if (atts == null)
-				atts = new HashMap<String, Object>();
-			for (DataType dt: ServiceLocator.instance().getAdditionalDataService().findDataTypes2(MetadataScope.USER))
-			{
-				if (dt.getBuiltin() != null && dt.getBuiltin().booleanValue())
-				{
-					Object o = PropertyUtils.getProperty(u, dt.getCode());
-					getVariables().put(dt.getCode(), o);
-				}
-				else
-				{
-					getVariables().put(dt.getCode(), atts.get(dt.getCode()));
-				}
-			}
-			populatePermissions(u);
-			if (! "D".equals(getVariables().get("action")))
-			{
-				if (u.getActive().booleanValue())
-					getVariables().put("action", "E");
-				else
-					getVariables().put("action", "M");
-			}
-			refresh ();
-		}
+			TaskUtils.populatePermissions(getTask().getVariables() , u);
+		refresh ();
 				
 	}
 	
+	private void populatePermissions() throws Exception {
+		if (grantsGrid == null)
+			return;
+
+		for (Row row : new LinkedList<Row>((List<Row>) grantsGrid.getRows().getChildren())) {
+			if (row.getAttribute("permRow") != null)
+				row.setParent(null);
+		}
+
+		regenerateAppRows(grantsGrid);
+		refresh();
+	}
+
 	protected void updateFieldsVisibility() {
 		String action = (String) getVariables().get("action");
 		boolean add = "A".equals(action);
@@ -654,10 +649,12 @@ public class StandardUserWindow extends WorkflowWindow {
 					
 					lb.addEventListener("onSelect", new EventListener() {
 						public void onEvent(Event event) throws Exception {
+							updateStatus (event.getTarget(), i-1);
 							createChildRoles (g, i-1);
 						}
 					});
-					
+					d.appendChild(new Label()); // Status label
+					updateStatus (lb, i-1);
 				}
 				else
 				{
@@ -701,61 +698,47 @@ public class StandardUserWindow extends WorkflowWindow {
 		}
 	}
 
+	private void updateStatus(Component lb, int i) {
+		Label l = (Label) lb.getNextSibling();
+		RoleRequestInfo perm = grants.get(i);
+		if (perm.getRoleId() == null)
+		{
+			if (perm.getPreviousRoleId() == null)
+				l.setValue("");
+			else
+			{
+				l.setValue("The permission "+perm.getPreviousRoleDescription()+" will be removed");
+				l.setStyle("color: red");
+			}
+		} else {
+			if (perm.getPreviousRoleId() == null)
+			{
+				l.setValue("New permission");
+				l.setStyle("color: green");
+				
+			}
+			else if (perm.getPreviousRoleId().equals(perm.getRoleId()))
+				l.setValue("");
+			else
+			{
+				l.setValue("Permission "+perm.getPreviousRoleDescription()+" will be replaced");
+				l.setStyle("color: blue");
+			}
+		}
+		
+	}
+
 	private void createChildRoles(Grid g, int i) throws Exception {
 		removeOrphanApps();
 
-		createChildRolesNoRefresh(i);
+		com.soffid.iam.addons.bpm.tools.TaskUtils.createChildRolesNoRefresh(grants, i);
 		
 		regenerateAppRows(g);
 		
 	}
 
 
-	private void createChildRolesNoRefresh(int i) throws Exception {
-		RoleRequestInfo app = grants.get(i);
-		Long roleId = (Long) app.getRoleId();
-		if (roleId != null)
-		{
-			Security.nestedLogin(Security.getCurrentAccount(), 
-					new String [] {
-				Security.AUTO_ROLE_QUERY+Security.AUTO_ALL,
-				Security.AUTO_APPLICATION_QUERY+Security.AUTO_ALL
-			});
-			try {
-				Role r = ServiceLocator.instance().getApplicationService().findRoleById(roleId);
-				int first = i+1;
-				List<RoleGrant> ownedRoles = new LinkedList<RoleGrant>( r.getOwnedRoles() );
-				Collections.sort(ownedRoles, new Comparator<RoleGrant>() {
-					public int compare(RoleGrant o1, RoleGrant o2) {
-						int o = o1.getInformationSystem().compareTo(o2.getInformationSystem());
-						if (o == 0)
-							o = o1.getRoleName().compareTo(o2.getRoleName());
-						return o;
-					}
-					
-				});
-				for ( RoleGrant grant: ownedRoles)
-				{
-					if (! Boolean.TRUE.equals(grant.getMandatory()))
-					{
-						Role r2 = ServiceLocator.instance().getApplicationService().findRoleById(grant.getRoleId());
-						Application appDesc = ServiceLocator.instance().getApplicationService().findApplicationByApplicationName(r2.getInformationSystemName());
-						RoleRequestInfo ri = new RoleRequestInfo();
-						ri.setApplicationName(r2.getInformationSystemName());
-						ri.setApplicationDescription(appDesc.getDescription());
-						ri.setUserName(null);
-						ri.setRoleId(r2.getId());
-						ri.setParentRole(roleId);
-						ri.setRoleDescription(r2.getDescription());
-						grants.add(++i, ri);
-					}
-				}
-			} finally {
-				Security.nestedLogoff();
-			}
-		}
-	}
-	
+
 	private void removeOrphanApps() {
 		for (Iterator<RoleRequestInfo> it = grants.iterator(); it.hasNext ();)
 		{
@@ -884,65 +867,6 @@ public class StandardUserWindow extends WorkflowWindow {
 	}
 
 
-	private void populatePermissions(User u) throws Exception {
-		// Elevo los permisos:
-		Security.nestedLogin(Security.getCurrentAccount(), new String[] { Security.AUTO_METADATA_UPDATE_ALL,
-				Security.AUTO_ACCOUNT_QUERY, Security.AUTO_ACCOUNT_QUERY + Security.AUTO_ALL,
-				Security.AUTO_USER_QUERY + Security.AUTO_ALL, Security.AUTO_USER_ROLE_CREATE + Security.AUTO_ALL,
-				Security.AUTO_USER_ROLE_DELETE + Security.AUTO_ALL, Security.AUTO_USER_CREATE + Security.AUTO_ALL,
-				Security.AUTO_USER_UPDATE + Security.AUTO_ALL, Security.AUTO_USER_GROUP_CREATE + Security.AUTO_ALL,
-				Security.AUTO_USER_GROUP_DELETE + Security.AUTO_ALL,
-				Security.AUTO_USER_SET_PASSWORD + Security.AUTO_ALL,
-				Security.AUTO_USER_UPDATE_PASSWORD + Security.AUTO_ALL,
-				Security.AUTO_APPLICATION_QUERY + Security.AUTO_ALL, Security.AUTO_GROUP_CREATE + Security.AUTO_ALL,
-				Security.AUTO_GROUP_QUERY + Security.AUTO_ALL, Security.AUTO_ROLE_QUERY + Security.AUTO_ALL });
-		try {
-
-			// es.caib.seycon.ng.servei.ejb.AplicacioService appSvc =
-			// EJBLocator.getAplicacioService();
-
-			ApplicationService appSvc = ServiceLocator.instance().getApplicationService();
-
-			Collection<RoleAccount> userGrants = u == null ? new LinkedList<RoleAccount>()
-					: appSvc.findUserRolesByUserName(u.getUserName());
-			grants.clear();
-
-			Grid g = (Grid) grantsGrid;
-			if (grantsGrid == null)
-				return;
-
-			for (Row row : new LinkedList<Row>((List<Row>) g.getRows().getChildren())) {
-				if (row.getAttribute("permRow") != null)
-					row.setParent(null);
-			}
-
-			Long role = null;
-			for (RoleAccount ra : userGrants) {
-				Role r = appSvc.findRoleByNameAndSystem(ra.getRoleName(), ra.getSystem());
-
-				if (r.getBpmEnforced() != null && r.getBpmEnforced().booleanValue()) {
-					Application app = appSvc.findApplicationByApplicationName(r.getInformationSystemName());
-					if (app.getBpmEnforced() != null && app.getBpmEnforced().booleanValue()) {
-						RoleRequestInfo ri = new RoleRequestInfo();
-						ri.setApplicationName( r.getInformationSystemName());
-						ri.setPreviousRoleId(r.getId());
-						ri.setPreviousRoleDescription(r.getDescription());
-						ri.setRoleId(r.getId());
-						ri.setUserName(ra.getUserCode());
-						ri.setUserFullName( app.getDescription());
-
-						grants.add(ri);
-						createChildRolesNoRefresh(grants.size()-1);
-					}
-				}
-			}
-			getVariables().put("grants", grants);
-			regenerateAppRows(grantsGrid);
-			refresh();
-		} finally {
-			Security.nestedLogoff();
-		}
-	}
 
 	private void createApproveGrants(Field field) throws Exception {
 		Div d = new Div();
@@ -964,11 +888,11 @@ public class StandardUserWindow extends WorkflowWindow {
 		approveGrantsGrid.setRows(15);
 		Listhead h = new Listhead();
 		approveGrantsGrid.appendChild(h);
-		Listheader lh1 = new Listheader( Labels.getLabel("bpm.user") ); lh1.setWidth("150px");
+		Listheader lh1 = new Listheader( Labels.getLabel("bpm.user") ); lh1.setWidth("100px");
 		h.appendChild(lh1);
 		lh1 = new Listheader ( Labels.getLabel("com.soffid.iam.api.User.fullName")); lh1.setWidth("250px");
 		h.appendChild(lh1);
-		Listheader lh2 = new Listheader( Labels.getLabel("bpm.permission") ); lh2.setWidth("*");
+		Listheader lh2 = new Listheader( Labels.getLabel("bpm.permission") ); // lh2.setWidth("400px");
 		h.appendChild(lh2);
 		Listheader lh3 = new Listheader( Labels.getLabel("bpm.approve") ); lh3.setWidth("80px");
 		h.appendChild(lh3);
@@ -991,7 +915,8 @@ public class StandardUserWindow extends WorkflowWindow {
 		for ( RoleRequestInfo grant: grants)
 		{
 			Long ti = (Long) grant.getTaskInstance();
-			if (ti != null && ti.equals( getTask().getId() ))
+			if ( pageInfo.getNodeType() != NodeType.NT_GRANT_SCREEN ||
+					(ti != null && ti.equals( getTask().getId() )))
 				generateApproveApplicationRow(lb, i, grant);
 			i++;
 		}
@@ -1013,7 +938,9 @@ public class StandardUserWindow extends WorkflowWindow {
 			
 			Listitem item = new Listitem();
 			item.appendChild( new Listcell(u.getUserName()));
-			item.appendChild( new Listcell(u.getFullName()));
+			Listcell listCell = new Listcell(u.getFullName());
+			item.appendChild( listCell);
+			addIconPermissions(listCell, u);
 			
 			Listcell permsCell = new Listcell();
 			item.appendChild(permsCell);
@@ -1074,6 +1001,70 @@ public class StandardUserWindow extends WorkflowWindow {
 		}
 	}
 	
+	private void addIconPermissions(Listcell listCell, final User u) {
+		if (getTask() != null && getTask().isOpen())
+		{
+			ImageClic ic = new ImageClic();
+			ic.setSrc("/img/info.png");
+			ic.setTitle(Labels.getLabel("bpm.currentPermissions"));
+			ic.addEventListener("onClick", onClickCurrentPermissions);
+			ic.setAttribute("user", u);
+			listCell.appendChild(ic);
+		}
+	}
+
+	
+	EventListener onClickCurrentPermissions = new EventListener() {
+		
+		public void onEvent(Event event) throws Exception {
+			User u = (User) event.getTarget().getAttribute("user");
+			Window w = (Window) getFellow("currentPermissions");
+			Grid g = (Grid) w.getFirstChild();
+			Rows rows = g.getRows();
+			rows.getChildren().clear();
+			Security.nestedLogin(Security.ALL_PERMISSIONS);
+			try {
+				ApplicationService aplicacioService = ServiceLocator.instance().getApplicationService();
+				List<RoleAccount> roles = new LinkedList<RoleAccount>(aplicacioService.findUserRolesByUserName(u.getUserName()));
+				Collections.sort(roles, new Comparator<RoleAccount>() {
+					public int compare(RoleAccount o1, RoleAccount o2) {
+						int i = o1.getInformationSystemName().compareTo(o2.getInformationSystemName());
+						if (i == 0)
+							i = o1.getRoleName().compareTo(o2.getRoleName());
+						return i;
+					}
+				});
+				for (RoleAccount roleAccount: roles)
+				{
+					Role role = aplicacioService.findRoleByNameAndSystem(roleAccount.getRoleName(), roleAccount.getSystem());
+					if (role != null && role.getBpmEnforced() != null && role.getBpmEnforced().booleanValue())
+					{
+						Application app = aplicacioService.findApplicationByApplicationName(role.getInformationSystemName());
+						if (app != null && app.getBpmEnforced() != null && app.getBpmEnforced().booleanValue())
+						{
+							Row r = new Row();
+							rows.appendChild(r);
+							if (roleAccount.getSodRisk() == null)
+								r.appendChild(new Label());
+							else
+							{
+								Image image = new Image();
+								image.setSrc("/img/risk-" + roleAccount.getSodRisk().getValue()+".png");
+								r.appendChild(image);
+							}
+							
+							r.appendChild( new Label (app.getDescription()));
+							r.appendChild( new Label ( role.getDescription() ));
+						}
+					}
+				}
+			} finally {
+				Security.nestedLogoff();
+			}
+			((Button)w.getFellow("closeButton")).setDisabled(false);
+			w.doHighlighted();
+		}
+	};
 	EventListener onApprove = new EventListener() {
 		public void onEvent(Event event) throws Exception {
 			Listitem item = (Listitem) event.getTarget().getParent().getParent();

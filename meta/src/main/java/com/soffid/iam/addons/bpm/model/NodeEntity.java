@@ -54,7 +54,7 @@ public class NodeEntity {
 	
 	@Column(name="NOD_GRSCTY")
 	@Nullable
-	@Description("Admits three values: enter / approve / review")
+	@Description("Admits four values: request / enter / displayApproved / displayPendig / displayRejected")
 	String grantScreenType;
 	
 	@Column(name="NOD_APLUSE")

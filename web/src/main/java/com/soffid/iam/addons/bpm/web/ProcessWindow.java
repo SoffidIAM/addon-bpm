@@ -159,8 +159,8 @@ public class ProcessWindow extends Window {
 	};
 
 	private String getFieldsName() {
-		NodeType type = (NodeType) typeListbox.getSelectedItem().getValue();
-		return type.equals(NodeType.NT_SCREEN) || type.equals(NodeType.NT_START) ? "fields": "fields2";
+//		NodeType type = (NodeType) typeListbox.getSelectedItem().getValue();
+		return "fields";
 	}
 
 	private EventListener onNewTransition = new EventListener() {
@@ -238,6 +238,7 @@ public class ProcessWindow extends Window {
 
 	private Listbox typeListbox;
 	private Listbox nodesListbox;
+	private Listbox grantTypeListbox;
 	
 	public void onCreate() {
 		getFellow("save").addEventListener("onClick", onSave);
@@ -246,11 +247,13 @@ public class ProcessWindow extends Window {
 		getFellow("newNodeButton").addEventListener("onClick", onNewNode);
 		typeListbox = (Listbox) getFellow("type");
 		typeListbox.addEventListener("onSelect", onSelectType);
+		grantTypeListbox = (Listbox) getFellow("grantScreenListbox");
+		grantTypeListbox.addEventListener("onSelect", onSelectType);
 		getParent().getFellow("form").addEventListener("onChangeXPath", onChangeXPath);
 		getFellow("container").addEventListener("onChangeXPath", onChangeXPath);
 		nodesListbox = ((Listbox) getFellow("nodes"));
 		getFellow("newFieldButton").addEventListener("onClick", onNewField);
-		getFellow("newFieldButton2").addEventListener("onClick", onNewField);
+//		getFellow("newFieldButton2").addEventListener("onClick", onNewField);
 		getFellow("newTriggerButton").addEventListener("onClick", onNewTrigger);
 		getFellow("newOutTransitionButton").addEventListener("onClick", onNewTransition);
 		getFellow("newInTransitionButton").addEventListener("onClick", onNewTransition);
@@ -277,16 +280,30 @@ public class ProcessWindow extends Window {
 	{
 		if ( typeListbox.getSelectedItem() != null)
 		{
+			String grantType = 
+				grantTypeListbox.getSelectedItem() == null ? null :
+				(String) grantTypeListbox.getSelectedItem().getValue();
 			Node node = (Node) nodesListbox.getSelectedItem().getValue();
 			WorkflowType processType = (WorkflowType) XPathUtils.getValue(this, "type");
 			NodeType type = (NodeType) typeListbox.getSelectedItem().getValue();
 			getFellow("screenType").setVisible(type == NodeType.NT_SCREEN || ( type == NodeType.NT_START && processType.equals(WorkflowType.WT_USER)));
 			getFellow("grantScreenType").setVisible(type == NodeType.NT_GRANT_SCREEN || (type == NodeType.NT_START && processType.equals(WorkflowType.WT_PERMISSION)));
-			getFellow("fieldsTab").setVisible(type == NodeType.NT_SCREEN || type == NodeType.NT_START );
+			getFellow("fieldsTab").setVisible(
+					type == NodeType.NT_SCREEN || 
+					type == NodeType.NT_GRANT_SCREEN || 
+					(type == NodeType.NT_START  && ! (processType == WorkflowType.WT_PERMISSION && "request".equals(grantType))));
 			getFellow("triggersTab").setVisible(type == NodeType.NT_SCREEN || type == NodeType.NT_START );
 			getFellow("actorRow").setVisible(type == NodeType.NT_SCREEN);
 			getFellow("actorRow2").setVisible(type == NodeType.NT_GRANT_SCREEN);
 			getFellow("customType").setVisible(type == NodeType.NT_CUSTOM);
+			getFellow("grantTypeDiv").setVisible(type == NodeType.NT_START  && processType == WorkflowType.WT_PERMISSION ||
+					type == NodeType.NT_GRANT_SCREEN) ;
+			grantTypeListbox.getItemAtIndex(0).setDisabled(false);
+			grantTypeListbox.getItemAtIndex(1).setDisabled(type != NodeType.NT_START);
+			grantTypeListbox.getItemAtIndex(2).setDisabled(type == NodeType.NT_START);
+			grantTypeListbox.getItemAtIndex(3).setDisabled(type == NodeType.NT_START);
+			grantTypeListbox.getItemAtIndex(4).setDisabled(type == NodeType.NT_START);
+			grantTypeListbox.getItemAtIndex(5).setDisabled(type == NodeType.NT_START);
 			getFellow("mailType").setVisible(type == NodeType.NT_MAIL);
 			getFellow("applyType").setVisible(type == NodeType.NT_APPLY);
 			if (node != null && node.getFields() != null)

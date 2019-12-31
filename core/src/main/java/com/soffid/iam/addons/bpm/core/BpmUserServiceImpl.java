@@ -23,7 +23,7 @@ public class BpmUserServiceImpl extends BpmUserServiceBase {
 		try {
 			org.jbpm.graph.exe.ProcessInstance process = ctx.loadProcessInstance(proc.getId());
 			ProcessDefinition def = process.getProcessDefinition();
-			InputStream in = def.getFileDefinition().getInputStream("task#start");
+			InputStream in = def.getFileDefinition().getInputStream("task#process");
 			if (in == null)
 			{
 				PageInfo pi = new PageInfo();

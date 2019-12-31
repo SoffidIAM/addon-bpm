@@ -45,7 +45,8 @@ public class Node {
 	String mailMessage;
 
 	@Nullable
-	@Description("Admits three values: enter / approve / review")
+	@Description("Admits three values: request / enter / approve / review")
+	@Attribute(defaultValue = "\"request\"")
 	String grantScreenType;
 	
 	@Nullable

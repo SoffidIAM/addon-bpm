@@ -3,7 +3,16 @@ package com.soffid.iam.addons.bpm.common;
 import java.io.Serializable;
 import java.util.Set;
 
+import com.soffid.iam.api.RoleAccount;
+
+import es.caib.seycon.ng.comu.SoDRisk;
+
 public class RoleRequestInfo implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -6814385468391558715L;
+	
 	String userName;
 	String userFullName;
 	String applicationName;
@@ -19,6 +28,9 @@ public class RoleRequestInfo implements Serializable {
 	String ownersString;
 	Long parentRole; 
 	String comments;
+	private SoDRisk sodRisk;
+	RoleAccount roleAccount;
+	
 
 	public String getApplicationName() {
 		return applicationName;
@@ -109,6 +121,18 @@ public class RoleRequestInfo implements Serializable {
 	}
 	public void setComments(String comments) {
 		this.comments = comments;
+	}
+	public void setSodRisk(SoDRisk sodRisk) {
+		this.sodRisk = sodRisk;
+	}
+	public SoDRisk getSodRisk() {
+		return sodRisk;
+	}
+	public RoleAccount getRoleAccount() {
+		return roleAccount;
+	}
+	public void setRoleAccount(RoleAccount roleAccount) {
+		this.roleAccount = roleAccount;
 	}
 
 

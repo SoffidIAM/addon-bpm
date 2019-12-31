@@ -5,10 +5,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintStream;
+import java.net.URLEncoder;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -25,6 +27,7 @@ import org.jbpm.graph.def.Transition;
 import org.jbpm.graph.exe.ProcessInstance;
 import org.jbpm.graph.exe.Token;
 import org.jbpm.graph.node.EndState;
+import org.jbpm.graph.node.MailNode;
 import org.jbpm.graph.node.StartState;
 import org.jbpm.graph.node.TaskNode;
 import org.jbpm.instantiation.Delegation;
@@ -42,10 +45,12 @@ import com.soffid.iam.addons.bpm.handler.ApplyHandler;
 import com.soffid.iam.addons.bpm.handler.AssignmentHandler;
 import com.soffid.iam.addons.bpm.handler.CustomActionHandler;
 import com.soffid.iam.addons.bpm.handler.GrantTaskNodeHandler;
+import com.soffid.iam.addons.bpm.handler.StartHandler;
 import com.soffid.iam.addons.bpm.model.NodeEntity;
 import com.soffid.iam.addons.bpm.model.NodeEntityDao;
 import com.soffid.iam.addons.bpm.model.ProcessEntity;
 import com.soffid.iam.addons.bpm.model.TransitionEntity;
+import com.soffid.iam.api.Audit;
 import com.soffid.iam.bpm.business.Messages;
 import com.soffid.iam.bpm.mail.Mail;
 import com.soffid.iam.bpm.model.ProcessDefinitionProperty;
@@ -54,15 +59,20 @@ import com.soffid.iam.bpm.model.TenantModuleDefinition;
 import com.soffid.iam.bpm.model.UserInterface;
 import com.soffid.iam.bpm.model.dal.ProcessDefinitionPropertyDal;
 import com.soffid.iam.bpm.service.BpmEngine;
+import com.soffid.iam.common.security.SoffidPrincipal;
+import com.soffid.iam.model.AuditEntity;
+import com.soffid.iam.model.AuditEntityDao;
 import com.soffid.iam.utils.Security;
 
+import es.caib.bpm.vo.PredefinedProcessType;
 import es.caib.seycon.ng.exception.InternalErrorException;
 
 public class Deployer {
 	private BpmEngine bpmEngine;
 	private NodeEntityDao nodeDao;
 	private JbpmContext ctx;
-
+	AuditEntityDao auditEntityDao; 
+	
 	public void deploy ( ProcessEntity procEntity, com.soffid.iam.addons.bpm.common.Process proc ) throws InternalErrorException, IOException
 	{
 		ctx = bpmEngine.getContext();
@@ -97,6 +107,7 @@ public class Deployer {
 			saveTaskNodeInformation(nodesMap, proc, fd);
 			generateUiXml( fd, procEntity.getVersion() );
 			generateZuls (fd, procEntity, def);
+			saveWorkflowType (procEntity, def, ctx);
 			saveActors (procEntity, def);
 			saveVersion(procEntity, def);
 			ctx.getGraphSession().saveProcessDefinition(def);
@@ -107,21 +118,57 @@ public class Deployer {
 		}
 	}
 
+	private void saveWorkflowType(ProcessEntity procEntity, ProcessDefinition def, JbpmContext ctx2) {
+		if (procEntity.getType() == WorkflowType.WT_PERMISSION)
+		{
+            ProcessDefinitionProperty prop = new ProcessDefinitionProperty();
+            prop.setProcessDefinitionId(
+            		new Long(def.getId()));
+            prop.setName("type"); //$NON-NLS-1$
+            prop.setValue(PredefinedProcessType.ROLE_GRANT_APPROVAL.getValue());
+            ctx.getSession().save(prop);
+		}
+	}
+
 	private void saveVersion(ProcessEntity procEntity, ProcessDefinition def) {
 		ProcessDefinitionProperty processProperty = new ProcessDefinitionProperty();
 		processProperty.setName("tag");
 		processProperty.setProcessDefinitionId(def.getId());
 		processProperty.setValue(procEntity.getVersion().toString());
 		ctx.getSession().save(processProperty);
+
+		SoffidPrincipal p = Security.getSoffidPrincipal();
+		if (p != null)
+		{
+			processProperty = new ProcessDefinitionProperty();
+			processProperty.setName("author");
+			processProperty.setProcessDefinitionId(def.getId());
+			processProperty.setValue(p.getUserName());
+			ctx.getSession().save(processProperty);
+		}
+		processProperty = new ProcessDefinitionProperty();
+		processProperty.setName("deployed");
+		processProperty.setProcessDefinitionId(def.getId());
+		processProperty.setValue(Long.toString(System.currentTimeMillis()));
+		ctx.getSession().save(processProperty);
 	}
 
 	private void generateZuls(FileDefinition fd, ProcessEntity procEntity, ProcessDefinition def) {
 		generateDefaultZul(fd, "ui/default.zul");
-		if ( procEntity.getType() == WorkflowType.WT_PERMISSION ||
-				 procEntity.getType() == WorkflowType.WT_USER )
-			generateDefaultZul(fd, "ui/start.zul");
-		else
+		
+		String grantType = null;
+		for ( NodeEntity node: procEntity.getNodes())
+		{
+			if (node.getType().equals(NodeType.NT_START))
+				grantType = node.getGrantScreenType();
+		}
+
+		if ( procEntity.getType() == WorkflowType.WT_PERMISSION  &&
+				grantType.equals( "request") )
 			generateZul(fd, "ui/start.zul", "request.zul");
+		else
+			generateDefaultZul(fd, "ui/start.zul");
+
 		for ( NodeEntity node: procEntity.getNodes())
 		{
 			if (node.getType().equals(NodeType.NT_SCREEN) ||
@@ -190,11 +237,26 @@ public class Deployer {
 					event.addAction(a);
 					jbpmTransition.addEvent( event);
 				}
+				if (t.getSource().getType().equals(NodeType.NT_START) &&
+						procEntity.getType().equals(WorkflowType.WT_PERMISSION) )
+				{
+					Delegation d = new Delegation();
+					d.setClassName(StartHandler.class.getName());
+					Action a = new Action();
+					a.setName(t.getName()+"Start");
+					a.setActionDelegation( d );
+					a.setPropagationAllowed(true);
+
+					Event event = new Event(jbpmTransition, Event.EVENTTYPE_TRANSITION);
+					event.addAction(a);
+					jbpmTransition.addEvent( event);
+				}
 			}
 		}
 	}
 
 	private void saveTaskNodeInformation(Map<NodeEntity, Node> nodesMap, com.soffid.iam.addons.bpm.common.Process proc, FileDefinition fd) throws IOException {
+		LinkedList<Field> processFields = new LinkedList<Field>();
 		for (NodeEntity nodeEntity: nodesMap.keySet())
 		{
 			Node jbpmNode = nodesMap.get(nodeEntity);
@@ -202,6 +264,7 @@ public class Deployer {
 			{
 				if (node.getId().equals(nodeEntity.getId()))
 				{
+					addFields(processFields, node.getFields());
 					PageInfo pageInfo = new PageInfo();
 					pageInfo.setNodeType(node.getType());
 					pageInfo.setFields(node.getFields().toArray( new Field[ node.getFields().size() ] ));
@@ -218,6 +281,7 @@ public class Deployer {
 		{
 			if (node.getType() == NodeType.NT_START)
 			{
+				addFields(processFields, node.getFields());
 				PageInfo pageInfo = new PageInfo();
 				pageInfo.setNodeType(NodeType.NT_START);
 				pageInfo.setFields(node.getFields().toArray( new Field[ node.getFields().size() ] ));
@@ -229,6 +293,37 @@ public class Deployer {
 				fd.addFile("task#start", os.toByteArray());
 			}
 		}
+		// Generate process information
+		PageInfo pageInfo = new PageInfo();
+		pageInfo.setNodeType(NodeType.NT_SCREEN);
+		pageInfo.setFields(processFields.toArray( new Field[ processFields.size() ] ));
+		pageInfo.setAttributes(proc.getAttributes().toArray(new Attribute[proc.getAttributes().size()]));
+		pageInfo.setWorkflowType(proc.getType());
+		ByteArrayOutputStream os = new ByteArrayOutputStream();
+		new ObjectOutputStream(os).writeObject( pageInfo );
+		fd.addFile("task#process", os.toByteArray());
+	}
+
+	private void addFields(LinkedList<Field> processFields, List<Field> fields) {
+		for (Field field: fields)
+		{
+			boolean found = false;
+			for ( Field f: processFields)
+			{
+				if (f.getName() != null && f.getName().endsWith(field.getName()))
+				{
+					found = true;
+					break;
+				}
+			}
+			if ( ! found)
+			{
+				Field field2 = new Field(field);
+				field2.setReadOnly(true);
+				processFields.add(field2);
+			}
+		}
+		
 	}
 
 	private void saveNodes(ProcessDefinition def, ProcessEntity proc, TaskMgmtDefinition tmd, Map<NodeEntity, Node> nodesMap) throws InternalErrorException {
@@ -328,7 +423,10 @@ public class Deployer {
 						escape (node.getCustomScript())+
 						"</script><actor>"+
 						escape (node.getMailActor())+
-						"</actor>"
+						"</actor>"+
+						"<type>"+
+						escape (node.getGrantScreenType())+
+						"</type>"
 						);
 
 				action.setEvent(ev);
@@ -340,7 +438,7 @@ public class Deployer {
 			}
 			else if (node.getType().equals((NodeType.NT_MAIL)))
 			{
-				n = new Node();
+				n = new MailNode();
 				Delegation d = new Delegation();
 				d.setClassName(Mail.class.getName());
 				StringBuffer mailConfig = new StringBuffer();
@@ -562,4 +660,24 @@ public class Deployer {
         }
         return ok;
     }
+
+	public void audit(org.jbpm.graph.def.ProcessDefinition definition, String action) {
+		Audit auditoria = new Audit();
+		auditoria.setAction(action); //$NON-NLS-1$
+		auditoria.setAuthor(Security.getCurrentAccount());
+		auditoria.setConfigurationParameter( definition.getName());
+		auditoria.setObject("JBPM_PROCESSDEFINITON"); //$NON-NLS-1$
+		AuditEntity auditoriaEntity = getAuditEntityDao().auditToEntity(
+				auditoria);
+		getAuditEntityDao().create(auditoriaEntity);
+	}
+
+	public AuditEntityDao getAuditEntityDao() {
+		return auditEntityDao;
+	}
+
+	public void setAuditEntityDao(AuditEntityDao auditEntityDao) {
+		this.auditEntityDao = auditEntityDao;
+	}
+
 }

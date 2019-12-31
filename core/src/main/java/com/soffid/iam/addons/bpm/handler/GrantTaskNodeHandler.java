@@ -1,5 +1,7 @@
 package com.soffid.iam.addons.bpm.handler;
 
+import java.util.Collection;
+import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -28,6 +30,7 @@ import com.soffid.iam.addons.bpm.common.Constants;
 import com.soffid.iam.addons.bpm.common.RoleRequestInfo;
 import com.soffid.iam.api.Application;
 import com.soffid.iam.api.Role;
+import com.soffid.iam.api.RoleAccount;
 import com.soffid.iam.service.ApplicationService;
 import com.soffid.iam.utils.Security;
 
@@ -43,53 +46,63 @@ public class GrantTaskNodeHandler implements ActionHandler {
 
 	String script;
 	String actor;
+	String type;
 	final ApplicationService appService = ServiceLocator.instance().getApplicationService();
 
 	@Override
 	public void execute(ExecutionContext executionContext) throws Exception {
 		TaskNode tn = (TaskNode) executionContext.getNode();
+		log.info("Creating tasks for node " +tn.getName()+" type "+type);
 		List<RoleRequestInfo> roles = (List<RoleRequestInfo>) executionContext.getVariable(Constants.ROLES_VAR); // $NON-NLS-1$
 		Security.nestedLogin(Security.ALL_PERMISSIONS);
 		try {
 			HashSet<String> ownersSet = new HashSet<String>();
 			for (RoleRequestInfo role : roles) {
-
-				Long roleId = (Long) role.getRoleId();
-				Long previousRoleId = (Long) role.getPreviousRoleId();
-				if ( role.getParentRole() != null)
+				log.info("Checking "+role);
+				if ( applies (role))
 				{
-					for (RoleRequestInfo role2 : roles)
+					log.info("Applies");
+					Long roleId = (Long) role.getRoleId();
+					Long previousRoleId = (Long) role.getPreviousRoleId();
+					if ( role.getParentRole() != null)
 					{
-						Long roleId2 = (Long) role.getRoleId();
-						if (role.getParentRole().equals(roleId2))
+						for (RoleRequestInfo role2 : roles)
 						{
-							role.setOwners(role2.getOwners());
-							role.setOwnersString(role2.getOwnersString());
+							Long roleId2 = (Long) role.getRoleId();
+							if (role.getParentRole().equals(roleId2))
+							{
+								role.setOwners(role2.getOwners());
+								role.setOwnersString(role2.getOwnersString());
+							}
 						}
-					}
-				} 
-				else if ( role.isDenied() )
-				{
-					// Already denied grant => ignore
-				}
-				else if (roleId == null? previousRoleId == null : roleId.equals(previousRoleId))
-				{
-					// No change => ignore
-				} else {
-					Role r = appService.findRoleById(roleId == null ? previousRoleId : roleId);
-					if (r != null) {
-						Application app = appService.findApplicationByApplicationName(r.getInformationSystemName());
-						String[] owners = findOwner(r, app, executionContext);
-						HashSet<String> s = new HashSet<String>();
-						for (String owner: owners) s.add(owner);
-						role.setOwners( s );
-						StringBuffer sb = new StringBuffer();
-						for (String owner : owners)
-							sb.append(owner).append(" ");
-						if (sb.length() > 0)
-						{
-							ownersSet.add (sb.toString());
-							role.setOwnersString(sb.toString());
+					} 
+					else if (roleId == null? previousRoleId == null : roleId.equals(previousRoleId))
+					{
+						// No change => ignore
+					} else {
+						Role r = appService.findRoleById(roleId == null ? previousRoleId : roleId);
+						log.info("Got role definition "+r);
+						if (r != null) {
+							Application app = appService.findApplicationByApplicationName(r.getInformationSystemName());
+							String[] owners = findOwner(role, r, app, executionContext);
+							log.info("owners = "+owners);
+							HashSet<String> s = new HashSet<String>();
+							if (owners != null)
+							{
+								for (String owner: owners) s.add(owner);
+								role.setOwners( s );
+								StringBuffer sb = new StringBuffer();
+								for (String owner : owners)
+									sb.append(owner).append(" ");
+								if (sb.length() > 0)
+								{
+									ownersSet.add (sb.toString());
+									role.setOwnersString(sb.toString());
+								}
+							} else {
+								role.setOwnersString(null);
+								role.setOwners(s);
+							}
 						}
 					}
 				}
@@ -143,15 +156,55 @@ public class GrantTaskNodeHandler implements ActionHandler {
 		}
 	}
 
-	private String[] findOwner(Role role, Application application, ExecutionContext executionContext) throws Exception {
-		if (actor != null)
-			return findActorOwner(role, application, executionContext);
-		else
-			return findScriptOwner(role, application, executionContext);
+	/*
+	 *
+	 * 											<listitem value="enter" label="${c:l('bpm.grantTypeList') }"/>
+											<listitem value="request" label="${c:l('bpm.grantTypeRequest') }"/>
+											<listitem value="displayPending" label="${c:l('bpm.grantTypeDisplayPending') }"/>
+											<listitem value="displayAll" label="${c:l('bpm.grantTypeDisplayAll') }"/>
+											<listitem value="displayApproved" label="${c:l('bpm.grantDisplayApproved') }"/>
+											<listitem value="displayRejected" label="${c:l('bpm.grantTypeDisplayRejected') }"/>
+
+	 */
+	private boolean applies(RoleRequestInfo role) {
+		return 
+			type == null ? true : 
+			role.isApproved() ? "enter".equals(type) || "displayAll".equals(type) || "displayApproved".equals(type) :
+			role.isDenied() ? "enter".equals(type) || "displayAll".equals(type) || "displayRejected".equals(type) :
+				"enter".equals(type) || "displayAll".equals(type) || "displayPending".equals(type) ;
 	}
 
-	private String[] findScriptOwner(Role role, Application application, ExecutionContext executionContext) throws Exception {
+	private String[] findOwner(RoleRequestInfo request, Role role, Application application, ExecutionContext executionContext) throws Exception {
+		if (actor != null && !actor.trim().isEmpty())
+			return findActorOwner(role, application, executionContext);
+		else if (script != null && !script.trim().isEmpty())
+			return findScriptOwner(request, role, application, executionContext);
+		else return null;
+	}
+
+	private String[] findScriptOwner(RoleRequestInfo request, Role role, Application application, ExecutionContext executionContext) throws Exception {
 		try {
+			if (request.getSodRisk() == null)
+			{
+				List<RoleAccount> ra;
+				if ( request.getUserName() != null)
+					ra = new LinkedList<RoleAccount> (
+							ServiceLocator
+								.instance()
+								.getApplicationService()
+								.findUserRolesByUserName(request.getUserName()));
+				else
+					ra = new LinkedList<RoleAccount>();
+				RoleAccount grant = new RoleAccount();
+				grant.setUserCode(request.getUserName());
+				grant.setRoleName(role.getName());
+				grant.setSystem(role.getSystem());
+				grant.setStartDate(new Date());
+				ra.add(grant);
+				ServiceLocator.instance().getSoDRuleService().qualifyRolAccountList(ra);
+				request.setSodRisk(grant.getSodRisk());
+			}
+			log.info("Evaluating script " + script);
 			Interpreter interpreter = new Interpreter();
 			ContextInstance contextInstance = executionContext.getContextInstance();
 			// we copy all the variableInstances of the context into the interpreter
@@ -164,11 +217,13 @@ public class GrantTaskNodeHandler implements ActionHandler {
 				}
 			}
 			interpreter.set("executionContext", executionContext);
+			interpreter.set("serviceLocator", ServiceLocator.instance());
 			interpreter.set("token", executionContext.getToken());
 			interpreter.set("node", executionContext.getNode());
 			interpreter.set("task", executionContext.getTask());
 			interpreter.set("taskInstance", executionContext.getTaskInstance());
 			interpreter.set("role", role);
+			interpreter.set("request", request);
 			interpreter.set("application", application);
 
 			Object o = interpreter.eval(getScript());
@@ -196,6 +251,7 @@ public class GrantTaskNodeHandler implements ActionHandler {
 	}
 
 	private String[] findActorOwner(Role role, Application application, ExecutionContext executionContext) {
+		log.info("Evaluating "+actor);
 		JbpmVariableResolver variableResolver = new JbpmVariableResolver();
 		RoleVariableResolver variableResolver2 = new RoleVariableResolver(role, application, variableResolver);
 		Object o = JbpmExpressionEvaluator.evaluate(actor, executionContext, variableResolver2,
@@ -222,6 +278,14 @@ public class GrantTaskNodeHandler implements ActionHandler {
 
 	public void setActor(String actor) {
 		this.actor = actor;
+	}
+
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
 	}
 
 }

@@ -18,11 +18,13 @@ import com.soffid.iam.addons.bpm.common.Process;
 
 import es.caib.bpm.servei.BpmEngine;
 import es.caib.bpm.vo.TaskInstance;
+import es.caib.seycon.ng.model.AuditoriaEntity;
 import es.caib.seycon.ng.model.UsuariEntity;
 import roles.Tothom;
 
 @Service(grantees= {Editor.class, Publisher.class})
-@Depends({FieldEntity.class, NodeEntity.class, ProcessEntity.class, TransitionEntity.class, BpmEngine.class, UsuariEntity.class, AttributeEntity.class, TriggerEntity.class})
+@Depends({FieldEntity.class, NodeEntity.class, ProcessEntity.class, TransitionEntity.class, BpmEngine.class, UsuariEntity.class, AttributeEntity.class, TriggerEntity.class,
+		AuditoriaEntity.class})
 public class BpmEditorService {
 	@Operation(grantees= {Editor.class})
 	public List<Process> findAll(){ return null;}

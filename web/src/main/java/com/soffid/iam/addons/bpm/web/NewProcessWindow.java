@@ -180,7 +180,7 @@ public class NewProcessWindow extends Window {
 		{
 			Field f = new Field();
 			f.setLabel( ad.getLabel() );
-			f.setName( "attributes{"+ad.getCode()+"}");
+			f.setName( ad.getCode());
 			f.setOrder( new Long (order ++));
 			f.setValidationScript(ad.getVisibilityExpression());
 			f.setVisibilityScript(ad.getVisibilityExpression());

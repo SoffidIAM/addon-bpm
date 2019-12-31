@@ -18,7 +18,7 @@ public class LongestPathFinder {
 	static Log log = LogFactory.getLog(LongestPathFinder.class);
 	
 	public static Node find(Node current, Set<Node> next, Collection<Node> nodesList) {
-		log.info ("Searching for "+current.getName());
+//		log.info ("Searching for "+current.getName());
 		Set<Node> visited = new HashSet<Node>();
 		LinkedList<Trip> trips = new LinkedList<Trip>();
 		for ( Node n: next)
@@ -37,7 +37,7 @@ public class LongestPathFinder {
 			trips.removeFirst();
 			for (Transition n: trip.node.getOutTransitions())
 			{
-				log.info(" >> Transition : "+ n.getSource()+ " -> " +  n.getName()+" -> " + n.getTarget());
+//				log.info(" >> Transition : "+ n.getSource()+ " -> " +  n.getName()+" -> " + n.getTarget());
 				Node nextNode = n.getTarget();
 				if ( nodesList.contains(nextNode) && nextNode != trip.node) // a node not painted yet
 				{

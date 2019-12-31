@@ -274,6 +274,7 @@ public class BpmEditorServiceImpl extends BpmEditorServiceBase {
 	@Override
 	protected void handlePublish(Process process) throws Exception {
 		Deployer d = new Deployer();
+		d.setAuditEntityDao(getAuditEntityDao());
 		d.setNodeDao(getNodeEntityDao());
 		d.setBpmEngine( getBpmEngine() );
 

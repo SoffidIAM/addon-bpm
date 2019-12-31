@@ -125,6 +125,19 @@
 										<imageclic src="/img/pencil.png" id="editScriptButton"/>
 									</div>
 								</row>
+								<row id="grantTypeDiv">
+									<div>
+										${c:l('bpm.grantScreenType') }: 
+										<listbox bind="grantScreenType" mold="select" id="grantScreenListbox" onSelect="">
+											<listitem value="enter" label="${c:l('bpm.grantTypeList') }"/>
+											<listitem value="request" label="${c:l('bpm.grantTypeRequest') }"/>
+											<listitem value="displayPending" label="${c:l('bpm.grantTypeDisplayPending') }"/>
+											<listitem value="displayAll" label="${c:l('bpm.grantTypeDisplayAll') }"/>
+											<listitem value="displayApproved" label="${c:l('bpm.grantTypeDisplayApproved') }"/>
+											<listitem value="displayRejected" label="${c:l('bpm.grantTypeDisplayRejected') }"/>
+										</listbox>
+									</div>
+								</row>
 							</rows>
 						</grid>
 						<tabbox>
@@ -195,37 +208,6 @@
 											</rows>
 										</grid>
 									
-										<grid dataPath="/fields" fixedLayout="true" id="fields2" sclass="fieldsGrid">
-											<columns>
-												<column label="${c:l('bpm.field.order') }" width="80px"/>
-												<column label="${c:l('bpm.field.label') }" width="150px"/>
-												<column label="${c:l('bpm.field.name') }" width="300px"/>
-												<column label="${c:l('bpm.field.readOnly') }" width="80px"/>
-												<column label="${c:l('bpm.field.validationScript') }" width="80px"/>
-												<column label="${c:l('bpm.field.visibilityScript') }" width="80px"/>
-												<column label="." width="32px"/>
-											</columns>
-											<datarow droppable="true"  onDrop="w.renumAttributes(event)">
-												<div>
-													<image src="/img/move_hint.png" draggable="true" style="margin-left: 8px; cursor: move"/>
-												</div>
-												<textbox bind="@label" width="150px"></textbox>
-												<combobox use="com.soffid.iam.addons.bpm.web.AttributesCombo" bind="@name" width="300px"/>
-												<checkbox bind="@readOnly"/>
-												<div>
-													<textbox bind="@validationScript" visible="false" multiline="true"/>
-													<imageclic src="/img/pencil.png" onClick="w.editValidationScript(event)"/>
-												</div>
-												<div>
-													<textbox bind="@visibilityScript" visible="false" multiline="true" />
-													<imageclic src="/img/pencil.png" onClick="w.editVisibilityScript(event)"/>
-												</div>
-												<imageclic class="removeIcon" src="~./img/remove.png" width="16px" onClick="w.onRemoveField(event)"/>
-											</datarow>
-										</grid>
-										<button image="~./img/list-add.gif" label="${c:l('bpm.field.new') }"
-											style="margin-top: 16px"
-											id="newFieldButton2"/>
 									</div>
 									<div id="mailType">
 										<grid>
