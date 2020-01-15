@@ -47,8 +47,9 @@ public class NewProcessWindow extends Window {
 		Process p = new Process();
 		p.setName(name.getValue());
 		p.setDescription(name.getValue());
-		p.setInitiators("tothom");
-		p.setObservers("tothom");
+		p.setInitiators("*");
+		p.setManagers("SOFFID_ADMIN");
+		p.setObservers("admin");
 		WorkflowType t = (WorkflowType) type.getSelectedItem().getValue();
 		p.setType( t );
 		

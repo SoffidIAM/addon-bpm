@@ -296,8 +296,6 @@ public class ProcessWindow extends Window {
 			getFellow("actorRow").setVisible(type == NodeType.NT_SCREEN);
 			getFellow("actorRow2").setVisible(type == NodeType.NT_GRANT_SCREEN);
 			getFellow("customType").setVisible(type == NodeType.NT_CUSTOM);
-			getFellow("grantTypeDiv").setVisible(type == NodeType.NT_START  && processType == WorkflowType.WT_PERMISSION ||
-					type == NodeType.NT_GRANT_SCREEN) ;
 			grantTypeListbox.getItemAtIndex(0).setDisabled(false);
 			grantTypeListbox.getItemAtIndex(1).setDisabled(type != NodeType.NT_START);
 			grantTypeListbox.getItemAtIndex(2).setDisabled(type == NodeType.NT_START);

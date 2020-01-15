@@ -40,23 +40,25 @@
 		}
 	</style>
 	<window id="w" visible="false" title="${c:l('bpm.processEditor') }" width="90%" use="com.soffid.iam.addons.bpm.web.ProcessWindow">
-		<div style="float: right">
+		<div style="float:right;margin:12px;margin-right:8px">
 			<button label="${c:l('bpm.save') }" id="save"/>
 			<button label="${c:l('bpm.saveAndPublish') }" id="saveAndPublish"/>
 			<button label="${c:l('bpm.cancel') }" id="cancel"/>
 		</div>
-		<div style="width:100%; margin-bottom: 16px">
+		<div style="width:100%; margin:12px">
 			<div>
 				<label value="${c:l('bpm.processName') }:" sclass="bpmLabel"/>
 				<textbox bind="@name" onChange=""/>
-				${c:l('bpm.processType') }:
-				<listbox bind="type" dataPath="/model:/processType" mold="select" onSelect=""> 
+			</div>
+			<div>
+			    <label value="${c:l('bpm.processType') }:" sclass="bpmLabel"/>
+				<listbox bind="type" dataPath="/model:/processType" mold="select" onSelect="" style="margin-top:4px;margin-bottom:4px"> 
 					<dataitem bind="value"><listcell bind="literal"/> </dataitem>
 				</listbox>
 			</div>
 			<div>
-				<label value="${c:l('bpm.processDescription') }:" sclass="bpmLabel"/>
-				<textbox bind="@description" onChange="" width="200px" multiline="true" rows="4"/>
+				<label value="${c:l('bpm.processDescription') }:" sclass="bpmLabel" style="vertical-align:top"/>
+				<textbox bind="@description" onChange="" width="400px" multiline="true" rows="3"/>
 			</div>
 			<div>
 				<label value="${c:l('bpm.initiators') }:" sclass="bpmLabel"/>
@@ -116,26 +118,7 @@
 								</row>
 								<row>
 									<div>
-										${c:l('bpm.description') }: <textbox bind="description" multiline="true" rows="4" width="400px" onChange=""/>
-									</div>
-								</row>
-								<row id="customType">
-									<div>
-										${c:l('bpm.customScript') }: <textbox bind="customScript" multiline="true" rows="4" width="400px" onChange=""/>
-										<imageclic src="/img/pencil.png" id="editScriptButton"/>
-									</div>
-								</row>
-								<row id="grantTypeDiv">
-									<div>
-										${c:l('bpm.grantScreenType') }: 
-										<listbox bind="grantScreenType" mold="select" id="grantScreenListbox" onSelect="">
-											<listitem value="enter" label="${c:l('bpm.grantTypeList') }"/>
-											<listitem value="request" label="${c:l('bpm.grantTypeRequest') }"/>
-											<listitem value="displayPending" label="${c:l('bpm.grantTypeDisplayPending') }"/>
-											<listitem value="displayAll" label="${c:l('bpm.grantTypeDisplayAll') }"/>
-											<listitem value="displayApproved" label="${c:l('bpm.grantTypeDisplayApproved') }"/>
-											<listitem value="displayRejected" label="${c:l('bpm.grantTypeDisplayRejected') }"/>
-										</listbox>
+										${c:l('bpm.description') }: <textbox bind="description" multiline="true" rows="3" width="400px" onChange=""/>
 									</div>
 								</row>
 							</rows>
@@ -158,8 +141,8 @@
 											<rows>
 												<row>
 													<div>
-														<div  style="width:100%; padding-bottom: 32px; padding-top:32px">
-															Write an expression to identify the actor depending on the requested role.
+														<div  style="width:100%; padding-bottom: 16px">
+															Write an expression to identify the actor depending on the requested role.<h:br/>
 															One can use EL expressions based on role and application attributes.<h:br/>
 															For instance: SOFFID_MANAGER/${"${primaryGroup}"}
 														</div>
@@ -168,11 +151,11 @@
 												</row>
 												<row>
 													<div>
-														<div  style="width:100%; padding-bottom: 32px; padding-top:32px">
-														Alternatively, write a Beanshell script to return the actor depending on the process varilabels.<h:br/>
+														<div  style="width:100%; padding-bottom: 16px; padding-top:16px">
+														Alternatively, write a Beanshell script to return the actor depending on the process variables.<h:br/>
 														For instance: return primaryGroup.attributes{"owner"};
 														</div>
-														${c:l('bpm.actorScript') }: <textbox bind="customScript" multiline="true" rows="4" width="400px" onChange=""/>
+														${c:l('bpm.actorScript') }: <textbox bind="customScript" multiline="true" rows="3" width="400px" onChange=""/>
 													</div>
 												</row>
 											</rows>
@@ -180,39 +163,55 @@
 									
 									</div>
 									<div id="grantScreenType">
-										<grid  id="actorRow2">
+										<grid id="actorRow2">
 											<columns>
-												<column label="${c:l('bpm.taskDetails') }"/>
+												<column/>
 											</columns>
 											<rows>
-												<row >
-													<div  style="width:100%; padding-bottom: 32px; padding-top:32px">
-													Write an expression to identify the actor depending on the requested role.
-													One can use EL expressions based on role and application attributes.
-													Additionally any process variable is available<h:br/>
-													For instance: ${"$"}{role.attributes['owner']} or APPLICATION_OWNER/${"$"}{application.name}
-													</div>
+												<row>
 													<div>
-														${c:l('bpm.actor') }: <textbox bind="mailActor" width="300px" onChange=""/>
+														${c:l('bpm.grantScreenType') }: <listbox bind="grantScreenType" mold="select" id="grantScreenListbox" onSelect="" style="margin-left:5px">
+															<listitem value="enter" label="${c:l('bpm.grantTypeList') }"/>
+															<listitem value="request" label="${c:l('bpm.grantTypeRequest') }"/>
+															<listitem value="displayPending" label="${c:l('bpm.grantTypeDisplayPending') }"/>
+															<listitem value="displayAll" label="${c:l('bpm.grantTypeDisplayAll') }"/>
+															<listitem value="displayApproved" label="${c:l('bpm.grantTypeDisplayApproved') }"/>
+															<listitem value="displayRejected" label="${c:l('bpm.grantTypeDisplayRejected') }"/>
+														</listbox>
 													</div>
 												</row>
 												<row>
-													<div  style="width:100%; padding-bottom: 32px; padding-top:32px">
-													Alternatively, write a Beanshell script to return the actor depending on the requested role. Additionally to task variables, role and application objects are available<h:br/>
-													For instance: return role.attributes{"owner"};  or return "APPLICATION_OWNER/"+application.name;
+													<div  style="width:100%; padding-bottom: 16px; padding-top:16px">
+													Write an expression to identify the actor depending on the requested role.<h:br/>
+													One can use EL expressions based on role and application attributes.<h:br/>
+													Additionally any process variable is available.<h:br/>
+													For instance: ${"$"}{role.attributes['owner']} or APPLICATION_OWNER/${"$"}{application.name}
 													</div>
+												</row>
+												<row>
 													<div>
-														${c:l('bpm.actorScript') }: <textbox bind="customScript" multiline="true" rows="4" width="400px" onChange=""/>
+													${c:l('bpm.actor') }: <textbox bind="mailActor" width="300px" onChange=""/>
+													</div>
+												</row>
+												<row>
+													<div  style="width:100%; padding-bottom: 16px; padding-top:16px">
+													Alternatively, write a Beanshell script to return the actor depending on the requested role.<h:br/>
+													Additionally to task variables, role and application objects are available.<h:br/>
+													For instance: return role.attributes{"owner"}; or return "APPLICATION_OWNER/"+application.name;
+													</div>
+												</row>
+												<row>
+													<div>
+													${c:l('bpm.actorScript') }: <textbox bind="customScript" multiline="true" rows="3" width="400px" onChange=""/>
 													</div>
 												</row>
 											</rows>
 										</grid>
-									
 									</div>
 									<div id="mailType">
 										<grid>
 											<columns>
-												<column label="${c:l('bpm.mailDetails') }"/>
+												<column/>
 											</columns>
 											<rows>
 												<row>
@@ -232,7 +231,7 @@
 												</row>
 												<row>
 													<div>
-														${c:l('bpm.mailMessage') }: <textbox bind="mailMessage" multiline="true" rows="4" width="400px" onChange=""/>
+														${c:l('bpm.mailMessage') }: <textbox bind="mailMessage" multiline="true" rows="6" width="400px" onChange=""/>
 													</div>
 												</row>
 											</rows>
@@ -242,7 +241,7 @@
 									<div id="applyType">
 										<grid>
 											<columns>
-												<column label="${c:l('bpm.mailDetails') }"/>
+												<column/>
 											</columns>
 											<rows>
 												<row>
@@ -257,7 +256,21 @@
 												</row>
 											</rows>
 										</grid>
-									
+									</div>
+									<div id="customType">
+										<grid>
+											<columns>
+												<column/>
+											</columns>
+											<rows>
+												<row>
+													<div>
+														${c:l('bpm.customScript') }: <textbox bind="customScript" multiline="true" rows="6" width="400px" onChange=""/>
+														<imageclic src="/img/pencil.png" id="editScriptButton"/>
+													</div>
+												</row>
+											</rows>
+										</grid>
 									</div>
 								</tabpanel>
 								<tabpanel>
@@ -402,7 +415,6 @@
 							<div>
 								<input_dada bind="@name" id="detall_codi" width_custom="7em"
 									maxim="25" mascara="no empty" />
-								<label value="*" />
 							</div>
 							<grid width="100%" sclass="noBorderGrid">
 								<columns>
@@ -416,7 +428,7 @@
 											width="80%" onChange="" />
 									</row>
 									<row>
-										<input_etiqueta value="${c:l('dadesAddicionals.zul.Type')} ::" />
+										<input_etiqueta value="${c:l('dadesAddicionals.zul.Type')}" />
 										<listbox width="99%" visible="true" bind="." mold="select"
 											use="com.soffid.iam.addons.bpm.web.CustomDataTypeListbox"
 											style="font-size: 10px"

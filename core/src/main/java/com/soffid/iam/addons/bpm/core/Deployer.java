@@ -163,7 +163,7 @@ public class Deployer {
 				grantType = node.getGrantScreenType();
 		}
 
-		if ( procEntity.getType() == WorkflowType.WT_PERMISSION  &&
+		if ( procEntity.getType() == WorkflowType.WT_PERMISSION  && grantType!=null &&
 				grantType.equals( "request") )
 			generateZul(fd, "ui/start.zul", "request.zul");
 		else
