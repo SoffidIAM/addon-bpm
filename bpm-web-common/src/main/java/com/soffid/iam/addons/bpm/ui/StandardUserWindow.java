@@ -133,7 +133,7 @@ public class StandardUserWindow extends WorkflowWindow {
 			for ( Trigger trigger: pageInfo.getTriggers())
 			{
 				if ("onLoad".equals(trigger.getName()))
-					runTrigger(trigger);
+					runTrigger(trigger, null);
 			}
 			
 			generateFields();
@@ -146,15 +146,21 @@ public class StandardUserWindow extends WorkflowWindow {
 	}
 
 	
-	private void runTrigger(Trigger trigger) throws InternalErrorException {
+	private void runTrigger(Trigger trigger, Component inputField) throws InternalErrorException {
 		SecureInterpreter interpreter = new SecureInterpreter();
 
 		try {
-			interpreter.set("serviceLocator", new com.soffid.iam.EJBLocator()); //$NON-NLS-1$
-			interpreter.set("task", getTask()); //$NON-NLS-1$
-			interpreter.set("workflowWindow", this); //$NON-NLS-1$
-					
-			interpreter.eval(trigger.getAction());
+			if (trigger.getAction() != null &&
+					!trigger.getAction().trim().isEmpty())
+			{
+				interpreter.set("serviceLocator", new com.soffid.iam.EJBLocator()); //$NON-NLS-1$
+				interpreter.set("task", getTask()); //$NON-NLS-1$
+				interpreter.set("workflowWindow", this); //$NON-NLS-1$
+				interpreter.set("inputField", inputField); //$NON-NLS-1$
+				
+				interpreter.eval(trigger.getAction());
+				
+			}
 		} catch (TargetError e) {
 			throw new InternalErrorException ("Error evaluating trigger "+trigger.getName()+": "+
 					e.toString(),
@@ -187,7 +193,7 @@ public class StandardUserWindow extends WorkflowWindow {
 	private void createField(Field field) throws Exception {
 		if (field.getName().equals("grants"))
 		{
-			if ( pageInfo.getNodeType() == NodeType.NT_GRANT_SCREEN || readonly || field.getReadOnly())
+			if ( pageInfo.getNodeType() == NodeType.NT_GRANT_SCREEN || readonly || Boolean.TRUE.equals(field.getReadOnly()))
 				createApproveGrants (field);
 			else
 				createGrants (field);
@@ -422,7 +428,7 @@ public class StandardUserWindow extends WorkflowWindow {
 			if ("onChange".equals(trigger.getName()) && 
 					fieldDef.getName().equals(trigger.getField()))
 			{
-				runTrigger(trigger);
+				runTrigger(trigger, customField);
 			}
 		}
 	}
