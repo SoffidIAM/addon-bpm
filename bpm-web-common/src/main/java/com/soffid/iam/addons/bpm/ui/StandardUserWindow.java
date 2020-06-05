@@ -18,6 +18,7 @@ import javax.security.auth.login.LoginException;
 import javax.transaction.NotSupportedException;
 import javax.transaction.SystemException;
 
+import org.apache.commons.beanutils.PropertyUtils;
 import org.zkoss.util.resource.Labels;
 import org.zkoss.zk.ui.Component;
 import org.zkoss.zk.ui.UiException;
@@ -130,10 +131,12 @@ public class StandardUserWindow extends WorkflowWindow {
 				ignoreEmptyFields = true;
 			}
 			
-			for ( Trigger trigger: pageInfo.getTriggers())
-			{
-				if ("onLoad".equals(trigger.getName()))
-					runTrigger(trigger, null);
+			if (pageInfo.getTriggers() != null) {
+				for ( Trigger trigger: pageInfo.getTriggers())
+				{
+					if ("onLoad".equals(trigger.getName()))
+						runTrigger(trigger, null);
+				}
 			}
 			
 			generateFields();
@@ -423,12 +426,14 @@ public class StandardUserWindow extends WorkflowWindow {
 			generateFields();
 		}
 		updateFieldsVisibility();
-		for ( Trigger trigger: pageInfo.getTriggers())
-		{
-			if ("onChange".equals(trigger.getName()) && 
-					fieldDef.getName().equals(trigger.getField()))
+		if (pageInfo.getTriggers() != null) {
+			for ( Trigger trigger: pageInfo.getTriggers())
 			{
-				runTrigger(trigger, customField);
+				if ("onChange".equals(trigger.getName()) && 
+						fieldDef.getName().equals(trigger.getField()))
+				{
+					runTrigger(trigger, customField);
+				}
 			}
 		}
 	}
@@ -438,7 +443,32 @@ public class StandardUserWindow extends WorkflowWindow {
 		String user = (String) getVariables().get("userSelector");
 		User u = com.soffid.iam.EJBLocator.getUserService().findUserByUserName(user);
 		if (u != null)
+		{
+			Map<String, Object> atts = com.soffid.iam.EJBLocator.getUserService().findUserAttributes(user);
+			if (atts == null)
+				atts = new HashMap<String, Object>();
+			for (DataType dt: ServiceLocator.instance().getAdditionalDataService().findDataTypes2(MetadataScope.USER))
+			{
+				if (dt.getBuiltin() != null && dt.getBuiltin().booleanValue())
+				{
+					Object o = PropertyUtils.getProperty(u, dt.getCode());
+					getVariables().put(dt.getCode(), o);
+				}
+				else
+				{
+					getVariables().put(dt.getCode(), atts.get(dt.getCode()));
+				}
+			}
 			TaskUtils.populatePermissions(getTask().getVariables() , u);
+			if (! "D".equals(getVariables().get("action")))
+			{
+				if (u.getActive().booleanValue())
+					getVariables().put("action", "E");
+				else
+					getVariables().put("action", "M");
+			}
+			refresh ();
+		}
 		refresh ();
 				
 	}
@@ -938,13 +968,20 @@ public class StandardUserWindow extends WorkflowWindow {
 				user = (String) getVariables().get("userName");
 			
 			User u = ServiceLocator.instance().getUserService().findUserByUserName(user);
-			
-			if (u == null)
-				return;
+
+			String fullName = "";
+			if (u == null) {
+				String fn = (String) getVariables().get("firstName");
+				String ln = (String) getVariables().get("lastName");
+				if (fn != null && ln != null)
+					fullName = fn+ " "+ln;
+			} else {
+				fullName = u.getFullName();
+			}
 			
 			Listitem item = new Listitem();
-			item.appendChild( new Listcell(u.getUserName()));
-			Listcell listCell = new Listcell(u.getFullName());
+			item.appendChild( new Listcell(user));
+			Listcell listCell = new Listcell(fullName);
 			item.appendChild( listCell);
 			addIconPermissions(listCell, u);
 			

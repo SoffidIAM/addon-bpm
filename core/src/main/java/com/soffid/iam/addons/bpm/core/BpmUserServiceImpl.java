@@ -12,6 +12,7 @@ import com.soffid.iam.addons.bpm.common.Field;
 import com.soffid.iam.addons.bpm.common.Node;
 import com.soffid.iam.addons.bpm.common.NodeType;
 import com.soffid.iam.addons.bpm.common.PageInfo;
+import com.soffid.iam.addons.bpm.common.Trigger;
 import com.soffid.iam.bpm.api.ProcessInstance;
 import com.soffid.iam.bpm.api.TaskInstance;
 
@@ -29,6 +30,7 @@ public class BpmUserServiceImpl extends BpmUserServiceBase {
 				PageInfo pi = new PageInfo();
 				pi.setFields(new Field[0]);
 				pi.setAttributes(new Attribute[0]);
+				pi.setTriggers(new Trigger[0]);
 				return pi;
 			}
 			ObjectInputStream o = new ObjectInputStream(in);
@@ -63,6 +65,7 @@ public class BpmUserServiceImpl extends BpmUserServiceBase {
 				PageInfo pi = new PageInfo();
 				pi.setFields(new Field[0]);
 				pi.setAttributes(new Attribute[0]);
+				pi.setTriggers(new Trigger[0]);
 				return pi;
 			}
 			ObjectInputStream o = new ObjectInputStream(in);

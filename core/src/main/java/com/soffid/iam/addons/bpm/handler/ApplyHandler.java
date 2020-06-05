@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.beanutils.PropertyUtils;
+import org.apache.commons.logging.LogFactory;
 import org.jbpm.context.exe.ContextInstance;
 import org.jbpm.graph.def.ActionHandler;
 import org.jbpm.graph.exe.ExecutionContext;
@@ -29,6 +30,8 @@ import es.caib.bpm.toolkit.exception.UserWorkflowException;
 import es.caib.seycon.ng.exception.InternalErrorException;
 
 public class ApplyHandler implements ActionHandler {
+	org.apache.commons.logging.Log log = LogFactory.getLog(getClass());
+	
 	UserService userService = ServiceLocator.instance().getUserService();
 	ApplicationService appService = ServiceLocator.instance().getApplicationService();
 	
@@ -79,29 +82,38 @@ public class ApplyHandler implements ActionHandler {
 	}
 
 	private void applyEntitlements(ExecutionContext executionContext) throws UserWorkflowException, InternalErrorException {
+		log.info("Applying entitlements");
 		List<RoleRequestInfo> grants = (List<RoleRequestInfo>) executionContext.getVariable( Constants.ROLES_VAR );
 		for ( RoleRequestInfo grant: grants)
 		{
+			log.info("Processing grant "+grant);
 			if (grant.getUserName() == null)
-				grant.setUserName( (String) executionContext.getVariable("UserName"));
+				grant.setUserName( (String) executionContext.getVariable("userSelector"));
+			if (grant.getUserName() == null)
+				grant.setUserName( (String) executionContext.getVariable("userName"));
 			if (grant.getUserName() != null && grant.getParentRole() == null)
 			{
 				if (grant.isApproved())
 				{
+					log.info(">> Approved ");
 					if (grant.getPreviousRoleId() != null && grant.getPreviousRoleId().equals(grant.getRoleId()))
 					{
+						log.info(">> No change. Nothing to do ");
 						// Do nothing
 					}
 					else if ( grant.getRoleId() == null )
 					{
+						log.info(">> Revoking role");
 						revoke (grant, executionContext);
 					}
 					else if ( grant.getPreviousRoleId() == null)
 					{
+						log.info(">> Granting role");
 						grant (grant, executionContext);
 					}
 					else
 					{
+						log.info(">> Changing role");
 						revoke(grant, executionContext);
 						grant(grant, executionContext);
 					}
@@ -159,12 +171,18 @@ public class ApplyHandler implements ActionHandler {
 		
 		for ( RoleAccount ra: appService.findUserRolesByUserNameNoSoD(grant.getUserName()))
 		{
+			log.info("ra: " +ra);
 			if (ra.getRoleName().equals(role.getName()) && ra.getSystem().equals(role.getSystem()))
 			{
-				if (ra.getRemovalPending() != null)
+				if (ra.getRemovalPending() != null && ra.getRemovalPending().booleanValue())
+				{
+					log.info("Approv delete");
 					appService.approveDelete(ra);
-				else
+				}
+				else {
+					log.info("delete");
 					appService.delete(ra);
+				}
 				String userName = grant.getUserName();
 				if (userName != null)
 				{
@@ -190,15 +208,15 @@ public class ApplyHandler implements ActionHandler {
 
 	private void applyUserChanges(ExecutionContext executionContext) throws InternalErrorException, UserWorkflowException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
 		String action = (String) executionContext.getVariable("action");
-		String userSelector = (String) executionContext.getVariable("executionContext");
+		String userSelector = (String) executionContext.getVariable("userSelector");
 		User user = userSelector == null ? null: userService.findUserByUserName(userSelector);
 		Map<String, Object> attributes = user == null? null: userService.findUserAttributes(user.getUserName());
 		if ("D".equals(action))
 		{
 			if (user == null)
 				throw new UserWorkflowException("No user has been selected");
-			user.setActive(false);
 			updateAttributes (user, attributes, executionContext);
+			user.setActive(false);
 			userService.update(user);
 			userService.updateUserAttributes(user.getUserName(), attributes);
 		}
