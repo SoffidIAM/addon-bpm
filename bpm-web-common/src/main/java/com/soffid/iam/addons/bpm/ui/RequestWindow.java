@@ -1,8 +1,6 @@
 package com.soffid.iam.addons.bpm.ui;
 
-import java.rmi.RemoteException;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -10,25 +8,15 @@ import java.util.Map;
 
 import javax.ejb.CreateException;
 import javax.naming.NamingException;
-import javax.security.auth.login.LoginException;
-import javax.transaction.NotSupportedException;
-import javax.transaction.SystemException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.zkoss.zk.ui.Component;
-import org.zkoss.zk.ui.Page;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
-import org.zkoss.zk.ui.event.Events;
 import org.zkoss.zk.ui.event.InputEvent;
 import org.zkoss.zul.Div;
-import org.zkoss.zul.Grid;
 import org.zkoss.zul.Image;
 import org.zkoss.zul.Label;
-import org.zkoss.zul.Listbox;
-import org.zkoss.zul.Listcell;
-import org.zkoss.zul.Listitem;
 import org.zkoss.zul.Row;
 import org.zkoss.zul.Textbox;
 
@@ -41,23 +29,9 @@ import com.soffid.iam.api.User;
 import com.soffid.iam.utils.Security;
 
 import es.caib.bpm.toolkit.WorkflowWindow;
-import es.caib.bpm.toolkit.exception.SystemWorkflowException;
 import es.caib.bpm.toolkit.exception.UserWorkflowException;
 import es.caib.bpm.toolkit.exception.WorkflowException;
-import es.caib.seycon.ng.EJBLocator;
-import es.caib.seycon.ng.ServiceLocator;
-import es.caib.seycon.ng.comu.Aplicacio;
-import es.caib.seycon.ng.comu.Rol;
-import es.caib.seycon.ng.comu.RolAccount;
-import es.caib.seycon.ng.comu.Usuari;
-import es.caib.seycon.ng.comu.UsuariCriteria;
 import es.caib.seycon.ng.exception.InternalErrorException;
-import es.caib.seycon.ng.servei.AplicacioService;
-import es.caib.seycon.ng.servei.workflow.InformacioAutoritzacioService;
-import es.caib.zkib.component.DataLabel;
-import es.caib.zkib.component.DataListbox;
-import es.caib.zkib.component.DataTextbox;
-import es.caib.zkib.zkiblaf.ImageClic;
 
 public class RequestWindow extends WorkflowWindow
 {

@@ -94,7 +94,8 @@ public class StandardUserWindow extends WorkflowWindow {
 	private boolean grantsReadOnly;
 	private boolean readonly;
 	private boolean ignoreEmptyFields;
-
+	private Map<String, Component > inputFields;
+	
 	public void onCreate () {
 	}
 
@@ -160,6 +161,7 @@ public class StandardUserWindow extends WorkflowWindow {
 				interpreter.set("task", getTask()); //$NON-NLS-1$
 				interpreter.set("workflowWindow", this); //$NON-NLS-1$
 				interpreter.set("inputField", inputField); //$NON-NLS-1$
+				interpreter.set("inputFields", inputFields); //$NON-NLS-1$
 				
 				interpreter.eval(trigger.getAction());
 				
@@ -186,6 +188,7 @@ public class StandardUserWindow extends WorkflowWindow {
 			
 		});
 		Map vars = getTask() == null ? getProcessInstance().getVariables() : getTask().getVariables();
+		inputFields.clear();
 		for ( Field field: pageInfo.getFields())
 		{
 			if ( ! ignoreEmptyFields || vars.get(field.getName()) != null)
@@ -253,6 +256,7 @@ public class StandardUserWindow extends WorkflowWindow {
 				}
 			});
 		}
+		inputFields.put (field.getName(), d);
 		
 	}
 
@@ -296,6 +300,7 @@ public class StandardUserWindow extends WorkflowWindow {
 				if (att.getValues() != null)
 					f.setListOfValues(att.getValues().toArray(new String[0]));
 				f.setAttribute("processAttributeDef", att);
+				inputFields.put (field.getName(), f);
 				break;
 			}
 		}
@@ -318,6 +323,7 @@ public class StandardUserWindow extends WorkflowWindow {
 						f.setListOfValues(att.getValues().toArray(new String[0]));
 					f.setAttribute("standardAttributeDefinition", att);
 					f.setFilterExpression(att.getFilterExpression());
+					inputFields.put (field.getName(), f);
 					break ;
 				}
 			}
@@ -943,6 +949,7 @@ public class StandardUserWindow extends WorkflowWindow {
 		}
 		grantsReadOnly = readonly || Boolean.TRUE.equals( field.getReadOnly() );
 		regenerateApproveAppRows(approveGrantsGrid);
+		inputFields.put (field.getName(), d);
 	}
 
 	private void regenerateApproveAppRows(Listbox lb) throws InternalErrorException {
