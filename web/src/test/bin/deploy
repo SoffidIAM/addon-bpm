@@ -3,3 +3,7 @@ cp -r /home/gbuades/soffid-2.0/addon-bpm/web/src/main/webapp/addon/*    /home/gb
 cp -r /home/gbuades/soffid-2.0/addon-bpm/web/target/classes/* /home/gbuades/soffid-2.0/test/iam-console-2/work/soffid/iam-ear.ear/iam-web-*-SNAPSHOT/WEB-INF/classes/
 cp -r /home/gbuades/soffid-2.0/addon-bpm/web/src/main/resources/* /home/gbuades/soffid-2.0/test/iam-console-2/work/soffid/iam-ear.ear/iam-web-*-SNAPSHOT/WEB-INF/classes/
  
+cp -r /home/gbuades/soffid-2.0/addon-bpm/web/src/main/webapp/addon/*    /home/gbuades/soffid/test/iam-console-3/work/soffid/iam-ear.ear/iam-web-*-SNAPSHOT/addon
+cp -r /home/gbuades/soffid-2.0/addon-bpm/web/target/classes/* /home/gbuades/soffid/test/iam-console-3/work/soffid/iam-ear.ear/iam-web-*-SNAPSHOT/WEB-INF/classes/
+cp -r /home/gbuades/soffid-2.0/addon-bpm/web/src/main/resources/* /home/gbuades/soffid/test/iam-console-3/work/soffid/iam-ear.ear/iam-web-*-SNAPSHOT/WEB-INF/classes/
+ 

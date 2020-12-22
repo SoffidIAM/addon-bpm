@@ -27,6 +27,9 @@ public class Node {
 	String name;
 	
 	@Nullable
+	String taskName;
+
+	@Nullable
 	String description;
 	
 	@Nullable
@@ -45,6 +48,9 @@ public class Node {
 	String mailMessage;
 
 	@Nullable
+	Long matchThreshold;
+
+	@Nullable
 	@Description("Admits three values: request / enter / approve / review")
 	@Attribute(defaultValue = "\"request\"")
 	String grantScreenType;
@@ -52,6 +58,10 @@ public class Node {
 	@Nullable
 	@Attribute(defaultValue="new java.util.LinkedList()")
 	List<Field> fields;
+
+	@Nullable
+	@Attribute(defaultValue="new java.util.LinkedList()")
+	List<Filter> filters;
 
 	@Nullable
 	@Attribute(defaultValue="new java.util.LinkedList()")

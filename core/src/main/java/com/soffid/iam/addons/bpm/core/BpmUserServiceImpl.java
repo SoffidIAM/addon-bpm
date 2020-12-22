@@ -77,4 +77,30 @@ public class BpmUserServiceImpl extends BpmUserServiceBase {
 		}
 	}
 
+	@Override
+	protected PageInfo handleGetPageInfoByNodeId(Long nodeId) throws Exception {
+		JbpmContext ctx = getBpmEngine().getContext();
+		try {
+			InputStream in;
+
+			org.jbpm.graph.def.Node node = (org.jbpm.graph.def.Node) ctx.getSession().get(org.jbpm.graph.def.Node.class, nodeId);
+			ProcessDefinition def = node.getProcessDefinition();
+			in = def.getFileDefinition().getInputStream("task#"+nodeId);
+			if (in == null)
+			{
+				PageInfo pi = new PageInfo();
+				pi.setFields(new Field[0]);
+				pi.setAttributes(new Attribute[0]);
+				pi.setTriggers(new Trigger[0]);
+				return pi;
+			}
+			ObjectInputStream o = new ObjectInputStream(in);
+			PageInfo pi = (PageInfo) o.readObject();
+			
+			return pi;
+		} finally {
+			ctx.close();
+		}
+	}
+
 }

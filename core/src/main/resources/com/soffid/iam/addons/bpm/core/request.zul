@@ -4,9 +4,6 @@
 	xmlns:zk="http://www.zkoss.org/2005/zk"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://www.zkoss.org/2005/zul http://www.zkoss.org/2005/zul/zul.xsd">
-    <zscript><![CDATA[
-//       com.soffid.bpm.authoritativechange.ui.ZulMessages msg = new com.soffid.bpm.authoritativechange.ui.ZulMessages();
-    ]]></zscript>
 	<task id="window" use="com.soffid.iam.addons.bpm.ui.RequestWindow">
 		<style>
 			div.app { background: #ffffc0;
@@ -65,6 +62,7 @@
 			div.selected span.roleDescription { display: none;}
 
 		</style>
+		<div id="attributes" />
 		<div id="selected" style="float: right; background-color: #e0e0e0">
 			Shopping cart
 		</div>
@@ -85,6 +83,4 @@
 		</div>
 				
 	</task>
-	<include src="usuarisllista.zul"/>
-	
 </zk>

@@ -11,6 +11,7 @@ import javax.naming.NamingException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.zkoss.zk.ui.UiException;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zk.ui.event.InputEvent;
@@ -20,7 +21,9 @@ import org.zkoss.zul.Label;
 import org.zkoss.zul.Row;
 import org.zkoss.zul.Textbox;
 
+import com.soffid.iam.EJBLocator;
 import com.soffid.iam.addons.bpm.common.Constants;
+import com.soffid.iam.addons.bpm.common.Field;
 import com.soffid.iam.addons.bpm.common.RoleRequestInfo;
 import com.soffid.iam.api.Application;
 import com.soffid.iam.api.Role;
@@ -29,11 +32,12 @@ import com.soffid.iam.api.User;
 import com.soffid.iam.utils.Security;
 
 import es.caib.bpm.toolkit.WorkflowWindow;
+import es.caib.bpm.toolkit.exception.SystemWorkflowException;
 import es.caib.bpm.toolkit.exception.UserWorkflowException;
 import es.caib.bpm.toolkit.exception.WorkflowException;
 import es.caib.seycon.ng.exception.InternalErrorException;
 
-public class RequestWindow extends WorkflowWindow
+public class RequestWindow extends StandardUserWindow
 {
 		
 	@SuppressWarnings("unchecked")
@@ -43,6 +47,25 @@ public class RequestWindow extends WorkflowWindow
 		{
 			if ( perms == null || perms.isEmpty())
 				throw new UserWorkflowException("Please, add some permission");
+			
+			super.prepareTransition(trasition);
+			String currentUser = Security.getCurrentUser();
+			Security.nestedLogin(Security.ALL_PERMISSIONS);
+			User user;
+			try {
+				String userName = getVariables().get("userName") == null ?
+						currentUser:
+						(String) getVariables().get("userName");
+				user = EJBLocator.getUserService().findUserByUserName(userName);
+				for ( RoleRequestInfo perm: perms) {
+					perm.setUserName(user.getUserName());
+					perm.setUserFullName(user.getFullName());
+				}
+			} catch (Exception e) {
+				throw new SystemWorkflowException(e);
+			} finally {
+				Security.nestedLogoff();
+			}
 		}
 	}
 
@@ -63,8 +86,9 @@ public class RequestWindow extends WorkflowWindow
 	{
 	}
 
-	public void onCreate() throws InternalErrorException
+	public void onCreate() 
 	{
+		super.onCreate();
 	}
 	
 	public void addRole ( Role role ) throws InternalErrorException, NamingException, CreateException
@@ -116,14 +140,6 @@ public class RequestWindow extends WorkflowWindow
 		finally {
 			Security.nestedLogoff();
 		}
-	}
-	
-	private Map<String, Object> getVariables()
-	{
-		if (getTask() == null)
-			return getProcessInstance().getVariables();
-		else
-			return getTask().getVariables();
 	}
 	
 	EventListener onSelectApp = new EventListener() {
@@ -221,8 +237,10 @@ public class RequestWindow extends WorkflowWindow
 		}
 	};
 
-	public void onLoad () throws InternalErrorException, NamingException, CreateException
+	@Override
+	protected void load()
 	{
+		super.load();
 		readOnly = readOnly || getTask() == null;
 		if (getTask() != null && ! getTask().getVariables().containsKey(Constants.REQUESTER_VAR)) {
 			getTask().getVariables().put(Constants.REQUESTER_VAR, Security.getCurrentUser());
@@ -232,25 +250,29 @@ public class RequestWindow extends WorkflowWindow
 		Security.nestedLogin(Security.ALL_PERMISSIONS);
 		try {
 			Div p = (Div) getFellow("apps");
-			for ( Application app: 
-				com.soffid.iam.EJBLocator.getApplicationService()
-					.findApplicationByJsonQuery("bpmEnforced eq \"true\"))"))
-			{
-				Div d = new Div();
-				d.setAttribute("app", app);
-				d.setSclass("app");
-				Image i = new Image("~./img/remove.png");
-				i.setSclass("cancel");
-				d.appendChild(i);
-				Label l = new Label(app.getName());
-				l.setSclass("appName");
-				d.appendChild(l);
-				l = new Label (app.getDescription());
-				l.setSclass("appDescription");
-				d.appendChild(l);
-				p.appendChild(d);
-				d.addEventListener("onClick", onSelectApp);
-				
+			try {
+				for ( Application app: 
+					com.soffid.iam.EJBLocator.getApplicationService()
+						.findApplicationByJsonQuery("bpmEnabled eq \"true\"))"))
+				{
+					Div d = new Div();
+					d.setAttribute("app", app);
+					d.setSclass("app");
+					Image i = new Image("~./img/remove.png");
+					i.setSclass("cancel");
+					d.appendChild(i);
+					Label l = new Label(app.getName());
+					l.setSclass("appName");
+					d.appendChild(l);
+					l = new Label (app.getDescription());
+					l.setSclass("appDescription");
+					d.appendChild(l);
+					p.appendChild(d);
+					d.addEventListener("onClick", onSelectApp);
+					
+				}
+			} catch (Exception e) {
+				throw new UiException(e);
 			}
 		} finally {
 			Security.nestedLogoff();
@@ -299,4 +321,8 @@ public class RequestWindow extends WorkflowWindow
 		}
 	}
 
+	// Not required
+	protected void createGrants(Field field) throws Exception {
+		return;
+	}
 }

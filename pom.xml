@@ -111,7 +111,7 @@
     </dependency>
   </dependencies>
   <properties>
-    <console.version>2.6.0</console.version>
+    <console.version>3.0.0-SNAPSHOT</console.version>
   </properties>
   <pluginRepositories>
     <pluginRepository>

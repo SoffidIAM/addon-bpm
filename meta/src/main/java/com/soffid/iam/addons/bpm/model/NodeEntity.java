@@ -28,6 +28,10 @@ public class NodeEntity {
 	@Column(name="NOD_NAME")
 	String name;
 	
+	@Column(name="NOD_TASNAM")
+	@Nullable
+	String taskName;
+	
 	@Column(name="NOD_DESCRI")
 	@Nullable
 	String description;
@@ -52,6 +56,10 @@ public class NodeEntity {
 	@Nullable
 	String mailMessage;
 	
+	@Column(name="NOD_MTCTHR")
+	@Nullable
+	Long matchThreshold;
+
 	@Column(name="NOD_GRSCTY")
 	@Nullable
 	@Description("Admits four values: request / enter / displayApproved / displayPendig / displayRejected")

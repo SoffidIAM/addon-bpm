@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.soffid.iam.addons.bpm.model.AttributeEntity;
 import com.soffid.iam.addons.bpm.model.FieldEntity;
+import com.soffid.iam.addons.bpm.model.FilterEntity;
 import com.soffid.iam.addons.bpm.model.NodeEntity;
 import com.soffid.iam.addons.bpm.model.ProcessEntity;
 import com.soffid.iam.addons.bpm.model.TransitionEntity;
@@ -24,7 +25,7 @@ import roles.Tothom;
 
 @Service(grantees= {Editor.class, Publisher.class})
 @Depends({FieldEntity.class, NodeEntity.class, ProcessEntity.class, TransitionEntity.class, BpmEngine.class, UsuariEntity.class, AttributeEntity.class, TriggerEntity.class,
-		AuditoriaEntity.class})
+	FilterEntity.class,	AuditoriaEntity.class})
 public class BpmEditorService {
 	@Operation(grantees= {Editor.class})
 	public List<Process> findAll(){ return null;}

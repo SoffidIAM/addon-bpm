@@ -1,5 +1,6 @@
 package com.soffid.iam.addons.bpm.web;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
 import java.util.List;
 
@@ -11,6 +12,7 @@ import org.zkoss.zul.Listbox;
 import org.zkoss.zul.Listcell;
 import org.zkoss.zul.Listitem;
 import org.zkoss.zul.Row;
+import org.zkoss.zul.impl.InputElement;
 
 import com.soffid.iam.addons.bpm.common.Node;
 import com.soffid.iam.addons.bpm.common.Transition;
@@ -25,6 +27,8 @@ import es.caib.zkib.jxpath.Pointer;
 import es.caib.zkib.zkiblaf.ImageClic;
 
 public class TransitionsGrid extends DataGrid {
+	String version="2";
+	
 	public TransitionsGrid () {
 		addEventListener("onNewRow", onNeRow);
 	}
@@ -32,14 +36,9 @@ public class TransitionsGrid extends DataGrid {
 	private EventListener onEditScript = new EventListener() {
 		@Override
 		public void onEvent(Event event) throws Exception {
-		    Events.sendEvent(new Event ("onEdit", 
-		    		getDesktop().getPage("editor").getFellow("top"),
-		    		new Object[] {
-						    event.getTarget().getPreviousSibling(),
+		    edit (event.getTarget().getPreviousSibling(),
 							"{\"executionContext\":\"org.jbpm.graph.exe.ExecutionContext\","
-							  + "\"serviceLocator\":\"com.soffid.iam.ServiceLocator\"}"
-					}
-		    ));
+							  + "\"serviceLocator\":\"com.soffid.iam.ServiceLocator\"}");
 		}
 	};
 
@@ -120,4 +119,27 @@ public class TransitionsGrid extends DataGrid {
 		listbox.setAttribute("listboxType", path);
 		listbox.addEventListener("onSelect", onSelect);
 	}
+
+	public void edit(Component component, String vars ) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException {
+		if ("3".equals(version)) {
+			Class.forName("com.soffid.iam.web.popup.Editor")
+			.getMethod("edit", InputElement.class, String.class)
+			.invoke(null, component, vars);
+
+		} else {
+			Events.sendEvent(new Event ("onEdit", 
+					getDesktop().getPage("editor").getFellow("top"),
+					new Object[] { component, vars }
+					));
+		}
+	}
+
+	public String getVersion() {
+		return version;
+	}
+
+	public void setVersion(String version) {
+		this.version = version;
+	}
+
 }

@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -53,6 +54,7 @@ import com.soffid.iam.addons.bpm.common.RoleRequestInfo;
 import com.soffid.iam.addons.bpm.common.Trigger;
 import com.soffid.iam.addons.bpm.common.WorkflowType;
 import com.soffid.iam.addons.bpm.tools.TaskUtils;
+import com.soffid.iam.api.Account;
 import com.soffid.iam.api.Application;
 import com.soffid.iam.api.DataType;
 import com.soffid.iam.api.MetadataScope;
@@ -63,7 +65,7 @@ import com.soffid.iam.bpm.api.ProcessInstance;
 import com.soffid.iam.bpm.api.TaskInstance;
 import com.soffid.iam.service.ApplicationService;
 import com.soffid.iam.service.impl.bshjail.SecureInterpreter;
-import com.soffid.iam.web.users.additionalData.CustomField;
+import com.soffid.iam.web.component.CustomField3;
 
 import bsh.EvalError;
 import bsh.TargetError;
@@ -94,7 +96,7 @@ public class StandardUserWindow extends WorkflowWindow {
 	private boolean grantsReadOnly;
 	private boolean readonly;
 	private boolean ignoreEmptyFields;
-	private Map<String, Component > inputFields;
+	private Map<String, Component > inputFields = new HashMap<String, Component>();
 	
 	public void onCreate () {
 	}
@@ -110,7 +112,11 @@ public class StandardUserWindow extends WorkflowWindow {
 
 		grid = new Div();
 		grid.setStyle("display: table; width: 100%; table-layout: fixed");
-		appendChild(grid);
+		Component a = getFellowIfAny("attributes");
+		if (a != null)
+			a.appendChild(grid);
+		else
+			appendChild(grid);
 		try {
 			if (getTask() != null)
 			{
@@ -140,6 +146,13 @@ public class StandardUserWindow extends WorkflowWindow {
 				}
 			}
 			
+			if (pageInfo.getWorkflowType() == WorkflowType.WT_ACCOUNT_RESERVATION) {
+				Date until = (Date) getVariables().get("until");
+				if (until == null) {
+					until = new Date(System.currentTimeMillis() + 24 * 60 * 60 * 1000);
+					getVariables().put("until", until);
+				}
+			}
 			generateFields();
 			
 			updateFieldsVisibility();
@@ -150,7 +163,7 @@ public class StandardUserWindow extends WorkflowWindow {
 	}
 
 	
-	private void runTrigger(Trigger trigger, Component inputField) throws InternalErrorException {
+	private void runTrigger(Trigger trigger, Component inputField) throws InternalErrorException, WorkflowException {
 		SecureInterpreter interpreter = new SecureInterpreter();
 
 		try {
@@ -167,7 +180,12 @@ public class StandardUserWindow extends WorkflowWindow {
 				
 			}
 		} catch (TargetError e) {
-			throw new InternalErrorException ("Error evaluating trigger "+trigger.getName()+": "+
+			if (e.getTarget() instanceof InternalErrorException)
+				throw (InternalErrorException) e.getTarget();
+			else if (e.getTarget() instanceof WorkflowException)
+				throw (WorkflowException) e.getTarget();
+			else
+				throw new InternalErrorException ("Error evaluating trigger "+trigger.getName()+": "+
 					e.toString(),
 					e.getTarget());
 		} catch (EvalError e) {
@@ -212,15 +230,15 @@ public class StandardUserWindow extends WorkflowWindow {
 		}
 	}
 
-	private void createGrants(Field field) throws Exception {
+	protected void createGrants(Field field) throws Exception {
 		Div d = new Div();
-		d.setSclass("inputField");
+		d.setSclass("databox");
 		grid.appendChild(d);
 		Label label = new Label(field.getLabel());
-		label.setSclass("inputField_label");
+		label.setSclass("label");
 		d.appendChild(label);
 		Div data = new Div();
-		data.setSclass("inputField_input");
+		data.setSclass("container");
 		// data.setWidth("100%");
 		d.appendChild(data);
 		grantsGrid = new Grid();
@@ -280,13 +298,13 @@ public class StandardUserWindow extends WorkflowWindow {
 
 	private void createStandardField(Field field)
 			throws InternalErrorException, NamingException, CreateException, IOException {
-		CustomField f = null;
+		CustomField3 f = null;
 		for  (Attribute att: pageInfo.getAttributes())
 		{
 			if (att.getName().equals(field.getName()))
 			{
-				f = new CustomField();
-				f.setLabel(field.getLabel()+" :");
+				f = new CustomField3();
+				f.setLabel(field.getLabel());
 				if (att.getType() == null)
 					f.setDataType(TypeEnumeration.STRING_TYPE.toString());
 				else
@@ -311,8 +329,8 @@ public class StandardUserWindow extends WorkflowWindow {
 			{
 				if (att.getCode().equals(field.getName()))
 				{
-					f = new CustomField();
-					f.setLabel(field.getLabel()+" :");
+					f = new CustomField3();
+					f.setLabel(field.getLabel());
 					f.setDataType(att.getType().toString());
 					f.setDataObjectType(att.getDataObjectType());
 					f.setBind( toBind ( att.getCode()) );
@@ -330,13 +348,14 @@ public class StandardUserWindow extends WorkflowWindow {
 		}
 		if (f == null)
 		{
-			f = new CustomField();
+			f = new CustomField3();
 			f.setLabel(field.getLabel());
-			f.setDataType("string");
+			f.setDataType("STRING");
 			f.setDataObjectType(null);
 			f.setBind( toBind ( field.getName()) );
 			f.setMultiValue( false );
 		}
+		grid.appendChild(f);
 		f.setReadonly( getTask() == null || getTask().getStart() == null ||
 				Boolean.TRUE.equals(field.getReadOnly()));
 		if (field.getValidationScript() != null && !field.getValidationScript().trim().isEmpty())
@@ -344,13 +363,11 @@ public class StandardUserWindow extends WorkflowWindow {
 		if (field.getVisibilityScript() != null && !field.getVisibilityScript().trim().isEmpty())
 			f.setVisibilityScript(field.getVisibilityScript());
 		
-		grid.appendChild(f);
-		
 		BindContext ctx = XPathUtils.getComponentContext(this);
 		f.setContext(ctx.getXPath());
 		f.setOwnerObject( getVariables());
 		
-		f.onCreate();
+		f.afterCompose();
 		f.addEventListener("onChange", onChangeField);
 		f.setAttribute("fieldDef", field);
 		return ;
@@ -383,7 +400,7 @@ public class StandardUserWindow extends WorkflowWindow {
 		} while (true);
 	}
 
-	private Map getVariables() {
+	protected Map getVariables() {
 		if (getTask() != null)
 			return getTask().getVariables();
 		else
@@ -423,7 +440,7 @@ public class StandardUserWindow extends WorkflowWindow {
 	};
 
 	private void onChangeField(Event event) throws Exception {
-		CustomField customField = (CustomField) event.getTarget();
+		CustomField3 customField = (CustomField3) event.getTarget();
 		Field fieldDef = (Field) customField.getAttribute("fieldDef");
 		if ( fieldDef.getName().equals("userSelector"))
 		{
@@ -445,24 +462,26 @@ public class StandardUserWindow extends WorkflowWindow {
 	}
 	
 
-	protected void fetchUserAttributes() throws Exception {
+	public void fetchUserAttributes() throws Exception {
 		String user = (String) getVariables().get("userSelector");
 		User u = com.soffid.iam.EJBLocator.getUserService().findUserByUserName(user);
 		if (u != null)
 		{
-			Map<String, Object> atts = com.soffid.iam.EJBLocator.getUserService().findUserAttributes(user);
+			Map<String, Object> atts = u.getAttributes();
 			if (atts == null)
 				atts = new HashMap<String, Object>();
 			for (DataType dt: ServiceLocator.instance().getAdditionalDataService().findDataTypes2(MetadataScope.USER))
 			{
-				if (dt.getBuiltin() != null && dt.getBuiltin().booleanValue())
-				{
-					Object o = PropertyUtils.getProperty(u, dt.getCode());
-					getVariables().put(dt.getCode(), o);
-				}
-				else
-				{
-					getVariables().put(dt.getCode(), atts.get(dt.getCode()));
+				if (dt.getType() != TypeEnumeration.SEPARATOR) {
+					if (dt.getBuiltin() != null && dt.getBuiltin().booleanValue())
+					{
+						Object o = PropertyUtils.getProperty(u, dt.getCode());
+						getVariables().put(dt.getCode(), o);
+					}
+					else
+					{
+						getVariables().put(dt.getCode(), atts.get(dt.getCode()));
+					}
 				}
 			}
 			TaskUtils.populatePermissions(getTask().getVariables() , u);
@@ -497,11 +516,11 @@ public class StandardUserWindow extends WorkflowWindow {
 		boolean add = "A".equals(action);
 		boolean disable = "D".equals(action);
 		
-		for (Div div: (Collection<Div>) grid.getChildren())
+		for (Component div: (Collection<Div>) grid.getChildren())
 		{
-			if (div instanceof CustomField)
+			if (div instanceof CustomField3)
 			{
-				CustomField customField = (CustomField) div;
+				CustomField3 customField = (CustomField3) div;
 				
 				Field fieldDef = (Field) customField.getAttribute("fieldDef");
 				DataType dataType = (DataType) customField.getAttribute("standardAttributeDefinition");
@@ -533,7 +552,7 @@ public class StandardUserWindow extends WorkflowWindow {
 		}
 	}
 	
-	private SecureInterpreter createInterpreter(CustomField cf, Field fieldDefinition, Object value) throws EvalError {
+	private SecureInterpreter createInterpreter(CustomField3 cf, Field fieldDefinition, Object value) throws EvalError {
 		Component grandpa = getParent().getParent();
 		SecureInterpreter i = new SecureInterpreter();
 
@@ -559,7 +578,7 @@ public class StandardUserWindow extends WorkflowWindow {
 
 	boolean validate ()
 	{
-		for (CustomField customField: (Collection<CustomField>) grid.getChildren())
+		for (CustomField3 customField: (Collection<CustomField3>) grid.getChildren())
 		{
 			if (customField.isVisible() && ! customField.isReadonly())
 			{
@@ -594,10 +613,10 @@ public class StandardUserWindow extends WorkflowWindow {
 	protected void prepareTransition(String trasition) throws WorkflowException {
 		for (Component d: (Collection<Component>)grid.getChildren())
 		{
-			CustomField customField;
-			if (d instanceof CustomField)
+			CustomField3 customField;
+			if (d instanceof CustomField3)
 			{
-				customField = (CustomField) d;
+				customField = (CustomField3) d;
 				if (customField.isVisible() && ! customField.isReadonly())
 				{
 					if (! customField.validate())
@@ -618,6 +637,46 @@ public class StandardUserWindow extends WorkflowWindow {
 						throw new UserWorkflowException(Labels.getLabel("bpm.missingApproval"));
 					}
 				}
+			}
+		}
+		
+		for ( Trigger trigger: pageInfo.getTriggers()) {
+			if ( "onPrepareTransition".equals( trigger.getName() )) {
+				try {
+					runTrigger(trigger, null);
+				} catch (WorkflowException e) {
+					throw e;
+				} catch (InternalErrorException e) {
+					throw new SystemWorkflowException(e);
+				}
+			}
+		}
+		
+		if (pageInfo.getWorkflowType() == WorkflowType.WT_ACCOUNT_RESERVATION) {
+			String user = Security.getCurrentUser();
+			Security.nestedLogin(Security.ALL_PERMISSIONS);
+			try {
+				String accountName = (String) getVariables().get("account");
+				String dispatcherName = (String) getVariables().get("systemName");
+				if (accountName == null || accountName.trim().isEmpty() ||
+						dispatcherName == null || dispatcherName.trim().isEmpty()) {
+					throw new UserWorkflowException("Please, select an account");
+				}
+				Account acc = com.soffid.iam.EJBLocator.getAccountService().findAccount(accountName, dispatcherName);
+				getVariables().put("accountObject", acc);
+				List<String> owners = new LinkedList<String>();
+				if ( acc.getOwnerUsers() != null);
+				owners.addAll(acc.getOwnerGroups());
+				owners.addAll(acc.getOwnerRoles());
+				getVariables().put("owners", owners);
+			} catch (InternalErrorException e) {
+				throw new UiException(e);
+			} catch (NamingException e) {
+				throw new UiException(e);
+			} catch (CreateException e) {
+				throw new UiException(e);
+			} finally {
+				Security.nestedLogoff();
 			}
 		}
 	}
@@ -912,13 +971,13 @@ public class StandardUserWindow extends WorkflowWindow {
 
 	private void createApproveGrants(Field field) throws Exception {
 		Div d = new Div();
-		d.setSclass("inputField");
+		d.setSclass("databox");
 		grid.appendChild(d);
 		Label label = new Label(field.getLabel());
-		label.setSclass("inputField_label");
+		label.setSclass("label");
 		d.appendChild(label);
 		Div data = new Div();
-		data.setSclass("inputField_input");
+		data.setSclass("container");
 		data.setWidth("100%");
 		d.appendChild(data);
 		approveGrantsGrid = new Listbox();
@@ -1055,7 +1114,8 @@ public class StandardUserWindow extends WorkflowWindow {
 		if (getTask() != null && getTask().isOpen())
 		{
 			ImageClic ic = new ImageClic();
-			ic.setSrc("/img/info.png");
+			ic.setSrc("/img/info.svg");
+			ic.setStyle("vertical-align: middle");
 			ic.setTitle(Labels.getLabel("bpm.currentPermissions"));
 			ic.addEventListener("onClick", onClickCurrentPermissions);
 			ic.setAttribute("user", u);

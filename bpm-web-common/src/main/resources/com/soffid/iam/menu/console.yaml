@@ -1,0 +1,11 @@
+- name: soffid.admin
+  options:
+      - name: seu.configuration
+        options:
+        - name: seu.workflow-settings
+          options:
+          - name: bpm.title
+            img: /img/menu/workflow-editor.svg
+            url: /addon/bpm/editor-v3.zul
+            permissions: ["seu:bpmeditor:show"]
+          

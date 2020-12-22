@@ -14,6 +14,7 @@ import org.zkoss.zk.ui.UiException;
 
 import com.soffid.iam.addons.bpm.common.Attribute;
 import com.soffid.iam.addons.bpm.common.Field;
+import com.soffid.iam.addons.bpm.common.Filter;
 import com.soffid.iam.addons.bpm.common.Node;
 import com.soffid.iam.addons.bpm.common.NodeType;
 import com.soffid.iam.addons.bpm.common.Process;
@@ -57,6 +58,7 @@ public class ProcessSerializer {
 			if (node.getCustomScript() != null) builder2.add("customScript", node.getCustomScript());
 			if (node.getDescription() != null) builder2.add("description", node.getDescription());
 			if (node.getFields() != null) builder2.add("fields", fieldsToJson( node.getFields()) );
+			if (node.getFilters() != null) builder2.add("filters", filtersToJson( node.getFilters()) );
 			if (node.getGrantScreenType() != null) builder2.add("grantScreenType", node.getGrantScreenType());
 			if (node.getMailActor() != null) builder2.add("mailActor", node.getMailActor());
 			if (node.getMailAddress() != null) builder2.add("mailAddress", node.getMailAddress());
@@ -66,6 +68,21 @@ public class ProcessSerializer {
 			if (node.getOutTransitions() != null) builder2.add("outTransitions", transitionsToJson( node.getOutTransitions()));
 			if (node.getTriggers() != null) builder2.add("triggers", triggersToJson( node.getTriggers()));
 			if (node.getType() != null) builder2.add("type", node.getType().toString());
+			if (node.getTaskName() != null) builder2.add("taskName", node.getTaskName().toString());
+			if (node.getMatchThreshold() != null) builder2.add("matchThreshold", node.getMatchThreshold());
+			builder.add(builder2);
+		}
+		return builder;
+	}
+
+	private static JsonArrayBuilder filtersToJson(List<Filter> filters) {
+		JsonArrayBuilder builder = Json.createArrayBuilder();
+		for (Filter filter: filters)
+		{
+			JsonObjectBuilder builder2 = Json.createObjectBuilder();
+			if (filter.getWeight() != null) builder2.add("weight", filter.getWeight());
+			if (filter.getType() != null) builder2.add("type", filter.getType());
+			if (filter.getQuery() != null) builder2.add("query", filter.getQuery());
 			builder.add(builder2);
 		}
 		return builder;
@@ -179,6 +196,7 @@ public class ProcessSerializer {
 				target.setCustomScript(src.getString("customScript", null));
 				target.setDescription( src.getString("description", null));
 				target.setFields( loadFields ( src.getJsonArray("fields")));
+				target.setFilters( loadFilters ( src.getJsonArray("filters")));
 				target.setGrantScreenType( src.getString("grantStringType", null));
 				target.setInTransitions(new LinkedList<Transition>());
 				target.setOutTransitions(new LinkedList<Transition>());
@@ -188,6 +206,9 @@ public class ProcessSerializer {
 				target.setMailSubject(src.getString("mailSubject", null));
 				target.setName(src.getString("name", null));
 				target.setTriggers(loadTriggers ( src.getJsonArray("triggers")));
+				if (src.containsKey("matchThreshold"))
+						target.setMatchThreshold( new Long(src.getInt("matchThreshold")));
+				target.setTaskName(src.getString("taskName"));
 				target.setType( NodeType.fromString( src.getString("type", NodeType.NT_END.toString())));
 				l.add(target);
 			}
@@ -280,6 +301,25 @@ public class ProcessSerializer {
 		return l;
 	}
 
+	private static List<Filter> loadFilters(JsonArray jsonArray) {
+		if (jsonArray == null)
+			return null;
+		List<Filter> l = new LinkedList<Filter>();
+		for (JsonValue obj: jsonArray)
+		{
+			if (obj instanceof JsonObject) {
+				JsonObject src = (JsonObject) obj;
+				Filter target = new Filter();
+				if (src.containsKey("weight"))
+					target.setWeight(src.getJsonNumber("weight").longValue());
+				target.setType( src.getString("type", null));
+				target.setQuery(src.getString("query", null));
+				l.add(target);
+			}
+		}
+		return l;
+	}
+
 	private static List<Attribute> loadAttributes(JsonArray jsonArray) {
 		if (jsonArray == null)
 			return null;
@@ -308,9 +348,9 @@ public class ProcessSerializer {
 		if (jsonArray == null)
 			return null;
 		List<String> l = new LinkedList<String>();
-		for (JsonValue obj: jsonArray)
+		for (int i = 0; i < jsonArray.size(); i++)
 		{
-			l.add(obj.toString());
+			l.add( jsonArray.getJsonString(i).getString());
 		}
 		return l;
 	}

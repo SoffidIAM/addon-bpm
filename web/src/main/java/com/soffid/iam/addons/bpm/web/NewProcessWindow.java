@@ -1,15 +1,20 @@
 package com.soffid.iam.addons.bpm.web;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import javax.ejb.CreateException;
 import javax.naming.NamingException;
 
 import org.zkoss.util.resource.Labels;
 import org.zkoss.zk.ui.UiException;
+import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zul.Listbox;
 import org.zkoss.zul.Textbox;
 import org.zkoss.zul.Window;
 
 import com.soffid.iam.EJBLocator;
+import com.soffid.iam.addons.bpm.common.Attribute;
 import com.soffid.iam.addons.bpm.common.Field;
 import com.soffid.iam.addons.bpm.common.Node;
 import com.soffid.iam.addons.bpm.common.NodeType;
@@ -19,6 +24,7 @@ import com.soffid.iam.addons.bpm.common.WorkflowType;
 import com.soffid.iam.api.DataType;
 import com.soffid.iam.api.MetadataScope;
 
+import es.caib.seycon.ng.comu.TypeEnumeration;
 import es.caib.seycon.ng.exception.InternalErrorException;
 import es.caib.zkib.component.DataListbox;
 import es.caib.zkib.component.DataModel;
@@ -55,6 +61,8 @@ public class NewProcessWindow extends Window {
 		
 		if (t == WorkflowType.WT_USER)
 			createUserTemplate(p);
+		else if (t == WorkflowType.WT_ACCOUNT_RESERVATION)
+			createAccountTemplate(p);
 		else
 			createPermissionsTemplate(p);
 		
@@ -144,6 +152,98 @@ public class NewProcessWindow extends Window {
 		addTransition (nodeApply, nodeEnd, "");
 	}
 
+	private void createAccountTemplate(Process p) throws InternalErrorException, NamingException, CreateException {
+		p.setInitiators("-nobody-");
+		
+		long order = 1;
+		
+		List<Attribute> attributes = new LinkedList<Attribute>();
+		Attribute a = new Attribute();
+		a.setName("account");
+		a.setLabel("Account name");
+		a.setMultiValued(false);
+		a.setOrder(order++);
+		a.setType(TypeEnumeration.STRING_TYPE);
+		attributes.add(a);
+		
+		a = new Attribute();
+		a.setName("systemName");
+		a.setLabel("System");
+		a.setMultiValued(false);
+		a.setOrder(order++);
+		a.setType(TypeEnumeration.STRING_TYPE);
+		attributes.add(a);
+		
+		a = new Attribute();
+		a.setName("loginName");
+		a.setLabel("Login name");
+		a.setMultiValued(false);
+		a.setOrder(order++);
+		a.setType(TypeEnumeration.STRING_TYPE);
+		attributes.add(a);
+		
+		a = new Attribute();
+		a.setName("server");
+		a.setLabel("Server");
+		a.setMultiValued(false);
+		a.setOrder(order++);
+		a.setType(TypeEnumeration.STRING_TYPE);
+		attributes.add(a);
+		
+		a = new Attribute();
+		a.setName("owners");
+		a.setLabel("Owners");
+		a.setMultiValued(true);
+		a.setOrder(order++);
+		a.setType(TypeEnumeration.STRING_TYPE);
+		attributes.add(a);
+		
+		a = new Attribute();
+		a.setName("until");
+		a.setLabel("Until");
+		a.setMultiValued(false);
+		a.setOrder(order++);
+		a.setType(TypeEnumeration.DATE_TIME_TYPE);
+		attributes.add(a);
+
+		p.setAttributes(attributes );
+		
+		Node nodeStart = new Node();
+		Node nodeApprove = new Node();
+		Node nodeApply = new Node();
+		Node nodeEnd = new Node();
+		
+		nodeStart.setName("Start");
+		nodeStart.setDescription("Request access to privileged account");
+		nodeStart.setType(NodeType.NT_START);
+		addAccountFields (nodeStart, false);
+		p.getNodes().add(nodeStart);
+		
+		nodeApprove.setName("Approve");
+		nodeApprove.setDescription("Approve ");
+		nodeApprove.setType(NodeType.NT_SCREEN);
+		nodeApprove.setMailActor("${owners}");
+		addAccountFields (nodeApprove, true);
+		p.getNodes().add(nodeApprove);
+		
+		nodeApply.setName("Apply changes");
+		nodeApply.setType(NodeType.NT_APPLY);
+		nodeApply.setDescription("Apply changes");
+		nodeApply.setApplyEntitlements(true);
+		p.getNodes().add(nodeApply);
+		
+		nodeEnd.setName("End");
+		nodeEnd.setDescription("End");
+		nodeEnd.setType(NodeType.NT_END);
+		p.getNodes().add(nodeEnd);
+		
+		addTransition (nodeStart, nodeApprove, "Request");
+		addTransition (nodeStart, nodeEnd, "Cancel");
+		addTransition (nodeApprove, nodeApply, "Approve");
+		addTransition (nodeApprove, nodeEnd, "Reject");
+		addTransition (nodeApply, nodeEnd, "");
+	}
+
 	private void addTransition(Node nodeStart, Node nodeEnd, String name) {
 		Transition t = new Transition ();
 		t.setName(name);
@@ -156,13 +256,6 @@ public class NewProcessWindow extends Window {
 	static String defaultFields[] = {
 		"action",
 		"userName",
-		"userType",
-		"firstName",
-		"lastName",
-		"primaryGroup",
-		"shortName",
-		"mailDomain",
-		"comments"
 	};
 	
 	private void addFields(Node node, boolean readOnly) throws InternalErrorException, NamingException, CreateException {
@@ -177,7 +270,7 @@ public class NewProcessWindow extends Window {
 			node.getFields().add(f);
 		}
 		
-		for (DataType ad: EJBLocator.getAdditionalDataService().findDataTypes(MetadataScope.USER))
+		for (DataType ad: EJBLocator.getAdditionalDataService().findDataTypes2(MetadataScope.USER))
 		{
 			Field f = new Field();
 			f.setLabel( ad.getLabel() );
@@ -198,6 +291,58 @@ public class NewProcessWindow extends Window {
 		f.setReadOnly(readOnly);
 		node.getFields().add(f);
 		
+	}
+
+	private void addAccountFields(Node node, boolean readOnly) throws InternalErrorException, NamingException, CreateException {
+		int order = 1;
+			
+		Field f = new Field();
+		f.setLabel( "Account name" );
+		f.setName( "account");
+		f.setOrder( new Long (order ++));
+		f.setReadOnly(readOnly);
+		node.getFields().add(f);
+
+		f = new Field();
+		f.setLabel( "System" );
+		f.setName( "systemName");
+		f.setOrder( new Long (order ++));
+		f.setReadOnly(readOnly);
+		node.getFields().add(f);
+
+		f = new Field();
+		f.setLabel( "Login name" );
+		f.setName( "loginName");
+		f.setOrder( new Long (order ++));
+		f.setReadOnly(readOnly);
+		node.getFields().add(f);
+
+		f = new Field();
+		f.setLabel( "Server" );
+		f.setName( "server");
+		f.setOrder( new Long (order ++));
+		f.setReadOnly(readOnly);
+		node.getFields().add(f);
+
+		f = new Field();
+		f.setLabel( "Until date" );
+		f.setName( "until");
+		f.setOrder( new Long (order ++));
+		f.setReadOnly(true);
+		node.getFields().add(f);
+	}
+	
+	public void raise(Event event) {
+		Textbox name = (Textbox) getFellow("name");
+		name.setValue ("");
+		Listbox type = (Listbox) getFellow("type");
+		type.setSelectedIndex(0);
+		doHighlighted();
+		name.focus();
+	}
+	
+	public void hide(Event event) {
+		setVisible(false);
 	}
 
 }

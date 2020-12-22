@@ -17,13 +17,16 @@ import org.jbpm.file.def.FileDefinition;
 
 import com.soffid.iam.addons.bpm.common.Attribute;
 import com.soffid.iam.addons.bpm.common.Field;
+import com.soffid.iam.addons.bpm.common.Filter;
 import com.soffid.iam.addons.bpm.common.Node;
 import com.soffid.iam.addons.bpm.common.NodeType;
 import com.soffid.iam.addons.bpm.common.Process;
 import com.soffid.iam.addons.bpm.common.Transition;
 import com.soffid.iam.addons.bpm.common.Trigger;
+import com.soffid.iam.addons.bpm.common.WorkflowType;
 import com.soffid.iam.addons.bpm.model.AttributeEntity;
 import com.soffid.iam.addons.bpm.model.FieldEntity;
+import com.soffid.iam.addons.bpm.model.FilterEntity;
 import com.soffid.iam.addons.bpm.model.NodeEntity;
 import com.soffid.iam.addons.bpm.model.ProcessEntity;
 import com.soffid.iam.addons.bpm.model.TransitionEntity;
@@ -54,6 +57,7 @@ public class BpmEditorServiceImpl extends BpmEditorServiceBase {
 			nodeEntity.getOutTransitions().clear();
 			nodeEntity.getInTransitions().clear();
 			getFieldEntityDao().remove(nodeEntity.getFields());
+			getFilterEntityDao().remove(nodeEntity.getFilters());
 			getTriggerEntityDao().remove(nodeEntity.getTriggers());
 		}
 
@@ -80,6 +84,15 @@ public class BpmEditorServiceImpl extends BpmEditorServiceBase {
 				getFieldEntityDao().create(fieldEntity);
 				f.setId(fieldEntity.getId());
 				nodeEntity.getFields().add(fieldEntity);
+			}
+			
+			for (Filter filter: node.getFilters())
+			{
+				FilterEntity filterEntity = getFilterEntityDao().filterToEntity(filter);
+				filterEntity.setNode(nodeEntity);
+				getFilterEntityDao().create(filterEntity);
+				filter.setId(filterEntity.getId());
+				nodeEntity.getFilters().add(filterEntity);
 			}
 			
 			for (Trigger t: node.getTriggers())
@@ -197,7 +210,7 @@ public class BpmEditorServiceImpl extends BpmEditorServiceBase {
 			if (att.getName().equals("grants"))
 				containsGrants = true;
 		}
-		if ( ! containsAction)
+		if ( ! containsAction && pe.getType() == WorkflowType.WT_USER)
 		{
 			AttributeEntity attEntity = getAttributeEntityDao().newAttributeEntity();
 			attEntity.setProcess(pe);
@@ -211,7 +224,7 @@ public class BpmEditorServiceImpl extends BpmEditorServiceBase {
 			Attribute att = getAttributeEntityDao().toAttribute(attEntity);
 			proc.getAttributes().add(0, att);
 		}
-		if ( ! containsOldUser)
+		if ( ! containsOldUser && pe.getType() == WorkflowType.WT_USER)
 		{
 			AttributeEntity attEntity = getAttributeEntityDao().newAttributeEntity();
 			attEntity.setProcess(pe);
@@ -222,9 +235,10 @@ public class BpmEditorServiceImpl extends BpmEditorServiceBase {
 			attEntity.setOrder(0L);
 			getAttributeEntityDao().create(attEntity);
 			Attribute att = getAttributeEntityDao().toAttribute(attEntity);
-			proc.getAttributes().add(1, att);
+			proc.getAttributes().add(Math.min(1, proc.getAttributes().size()), att);
 		}
-		if ( ! containsGrants)
+		if ( ! containsGrants && 
+			(pe.getType() == WorkflowType.WT_USER || pe.getType() == WorkflowType.WT_PERMISSION))
 		{
 			AttributeEntity attEntity = getAttributeEntityDao().newAttributeEntity();
 			attEntity.setProcess(pe);
@@ -235,7 +249,7 @@ public class BpmEditorServiceImpl extends BpmEditorServiceBase {
 			attEntity.setOrder(2L);
 			getAttributeEntityDao().create(attEntity);
 			Attribute att = getAttributeEntityDao().toAttribute(attEntity);
-			proc.getAttributes().add(2, att);
+			proc.getAttributes().add( Math.min(2, proc.getAttributes().size()) , att);
 		}
 		Collections.sort(proc.getAttributes(), new Comparator<Attribute>() {
 			@Override
@@ -297,6 +311,7 @@ public class BpmEditorServiceImpl extends BpmEditorServiceBase {
 		{
 			getTransitionEntityDao().remove(ne.getOutTransitions());
 			getFieldEntityDao().remove(ne.getFields());
+			getFilterEntityDao().remove(ne.getFilters());
 		}
 		getAttributeEntityDao().remove(procEntity.getAttributes());
 		getNodeEntityDao().remove(procEntity.getNodes());

@@ -21,4 +21,6 @@ public class BpmUserService {
 	public PageInfo getPageInfo (TaskInstance task) { return null; }
 
 	public PageInfo getPageInfo (ProcessInstance task) { return null; }
+
+	public PageInfo getPageInfoByNodeId (Long nodeId) { return null; }
 }

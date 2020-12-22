@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintStream;
-import java.net.URLEncoder;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -37,14 +36,18 @@ import org.jbpm.taskmgmt.exe.TaskInstance;
 
 import com.soffid.iam.addons.bpm.common.Attribute;
 import com.soffid.iam.addons.bpm.common.Field;
+import com.soffid.iam.addons.bpm.common.Filter;
 import com.soffid.iam.addons.bpm.common.NodeType;
 import com.soffid.iam.addons.bpm.common.PageInfo;
 import com.soffid.iam.addons.bpm.common.Trigger;
 import com.soffid.iam.addons.bpm.common.WorkflowType;
+import com.soffid.iam.addons.bpm.handler.ApplyAccountHandler;
 import com.soffid.iam.addons.bpm.handler.ApplyHandler;
 import com.soffid.iam.addons.bpm.handler.AssignmentHandler;
+import com.soffid.iam.addons.bpm.handler.ComputeMatchesNodeHandler;
 import com.soffid.iam.addons.bpm.handler.CustomActionHandler;
 import com.soffid.iam.addons.bpm.handler.GrantTaskNodeHandler;
+import com.soffid.iam.addons.bpm.handler.StartAccountHandler;
 import com.soffid.iam.addons.bpm.handler.StartHandler;
 import com.soffid.iam.addons.bpm.model.NodeEntity;
 import com.soffid.iam.addons.bpm.model.NodeEntityDao;
@@ -169,6 +172,8 @@ public class Deployer {
 		else
 			generateDefaultZul(fd, "ui/start.zul");
 
+		generateZul(fd, "ui/match.zul", "match.zul");
+
 		for ( NodeEntity node: procEntity.getNodes())
 		{
 			if (node.getType().equals(NodeType.NT_SCREEN) ||
@@ -176,7 +181,15 @@ public class Deployer {
 			{
 				UserInterface ui = new UserInterface();
 				ui.setFileName("ui/default.zul");
-				ui.setTarea(node.getName());
+				ui.setTarea(node.getTaskName() == null || node.getTaskName().trim().isEmpty() ? node.getName() : node .getTaskName());
+				ui.setProcessDefinitionId(def.getId());
+				ctx.getSession().save(ui);
+			}
+			if (node.getType().equals(NodeType.NT_MATCH_SCREEN) )
+			{
+				UserInterface ui = new UserInterface();
+				ui.setFileName("ui/match.zul");
+				ui.setTarea(node.getTaskName() == null || node.getTaskName().trim().isEmpty() ? node.getName() : node .getTaskName());
 				ui.setProcessDefinitionId(def.getId());
 				ctx.getSession().save(ui);
 			}
@@ -220,6 +233,7 @@ public class Deployer {
 				from.addLeavingTransition(jbpmTransition);
 				to.addArrivingTransition(jbpmTransition);
 				jbpmTransition.setProcessDefinition(def);
+				Event event = null;
 				if ( t.getScript() != null && ! t.getScript().trim().isEmpty())
 				{
 					Delegation d = new Delegation();
@@ -233,23 +247,31 @@ public class Deployer {
 					a.setActionDelegation( d );
 					a.setPropagationAllowed(true);
 
-					Event event = new Event(jbpmTransition, Event.EVENTTYPE_TRANSITION);
+					event = new Event(jbpmTransition, Event.EVENTTYPE_TRANSITION);
 					event.addAction(a);
 					jbpmTransition.addEvent( event);
 				}
 				if (t.getSource().getType().equals(NodeType.NT_START) &&
-						procEntity.getType().equals(WorkflowType.WT_PERMISSION) )
+						(procEntity.getType() == WorkflowType.WT_PERMISSION ||
+						 procEntity.getType() == WorkflowType.WT_ACCOUNT_RESERVATION))
 				{
+					if ( event == null) {
+						event = new Event(jbpmTransition, Event.EVENTTYPE_TRANSITION);
+						jbpmTransition.addEvent( event);
+					}
+					
 					Delegation d = new Delegation();
-					d.setClassName(StartHandler.class.getName());
+					
+					if (procEntity.getType() == WorkflowType.WT_ACCOUNT_RESERVATION)
+						d.setClassName(StartAccountHandler.class.getName());
+					else
+						d.setClassName(StartHandler.class.getName());
+					
 					Action a = new Action();
 					a.setName(t.getName()+"Start");
 					a.setActionDelegation( d );
 					a.setPropagationAllowed(true);
-
-					Event event = new Event(jbpmTransition, Event.EVENTTYPE_TRANSITION);
 					event.addAction(a);
-					jbpmTransition.addEvent( event);
 				}
 			}
 		}
@@ -270,6 +292,8 @@ public class Deployer {
 					pageInfo.setFields(node.getFields().toArray( new Field[ node.getFields().size() ] ));
 					pageInfo.setAttributes(proc.getAttributes().toArray(new Attribute[proc.getAttributes().size()]));
 					pageInfo.setTriggers(node.getTriggers().toArray( new Trigger[ node.getTriggers().size()] ) );
+					if (node.getFilters() != null)
+						pageInfo.setFilters(node.getFilters().toArray( new Filter[node.getFilters().size()] ));
 					pageInfo.setWorkflowType(proc.getType());
 					ByteArrayOutputStream os = new ByteArrayOutputStream();
 					new ObjectOutputStream(os).writeObject( pageInfo );
@@ -361,7 +385,10 @@ public class Deployer {
 						! Boolean.TRUE.equals(node.getApplyUserChanges()))
 					throw new InternalErrorException ("Node "+node.getName()+" must check apply user changes, apply entitlements or both");
 				Delegation d = new Delegation();
-				d.setClassName(ApplyHandler.class.getName());
+				if (proc.getType() == WorkflowType.WT_ACCOUNT_RESERVATION)
+					d.setClassName(ApplyAccountHandler.class.getName());
+				else
+					d.setClassName(ApplyHandler.class.getName());
 				d.setConfigType("bean");
 				d.setConfiguration("<applyUserChanges>"+node.getApplyUserChanges()+"</applyUserChanges>"
 						+ "<applyEntitlements>"+node.getApplyEntitlements()+"</applyEntitlements>");
@@ -394,9 +421,10 @@ public class Deployer {
 					t.setActorIdExpression("previous");
 				}
 				t.setDescription(node.getDescription());
-				t.setName(node.getName());
+				t.setName(node.getTaskName() == null || node.getTaskName().trim().isEmpty() ? node.getName() : node .getTaskName());
 				t.setProcessDefinition(def);
 				t.setTaskNode((TaskNode) n);
+				t.setSignalling(true);
 				tmd.addTask(t);
 			}
 			else if (node.getType().equals((NodeType.NT_GRANT_SCREEN)))
@@ -407,7 +435,7 @@ public class Deployer {
 				tn.setSignal(TaskNode.SIGNAL_LAST_WAIT);
 				
 				Task t = new Task();
-				t.setName(node.getName());
+				t.setName(node.getTaskName() == null || node.getTaskName().trim().isEmpty() ? node.getName() : node .getTaskName());
 				t.setDescription(node.getDescription());
 				t.setProcessDefinition(def);
 				t.setTaskNode((TaskNode) n);
@@ -428,6 +456,47 @@ public class Deployer {
 						escape (node.getGrantScreenType())+
 						"</type>"
 						);
+
+				action.setEvent(ev);
+				action.setName("Create tasks");
+				action.setActionDelegation(d2);
+				
+				ev.addAction(action);
+				tn.addEvent(ev);
+			}
+			else if (node.getType().equals((NodeType.NT_MATCH_SCREEN)))
+			{
+				TaskNode tn = new TaskNode();
+				n = tn;
+				Task t = new Task();
+				if (node.getMailActor() != null && ! node.getMailActor().isEmpty())
+					t.setPooledActorsExpression( node.getMailActor() );
+				else if (node.getCustomScript() != null && ! node.getCustomScript().isEmpty())
+				{
+					Delegation d = new Delegation();
+					d.setClassName(AssignmentHandler.class.getName());
+					d.setConfigType("bean");
+					d.setConfiguration("<script>" + 
+							escape (node.getCustomScript())+
+							"</script>");
+					t.setAssignmentDelegation( d );
+				} else {
+					t.setActorIdExpression("previous");
+				}
+				t.setDescription(node.getDescription());
+				t.setName(node.getTaskName() == null || node.getTaskName().trim().isEmpty() ? node.getName() : node .getTaskName());
+				t.setProcessDefinition(def);
+				t.setTaskNode((TaskNode) n);
+				t.setSignalling(true);
+				tmd.addTask(t);
+
+				// Match computation
+				Delegation d2 = new Delegation();				
+				Action action = new Action();
+				Event ev = new Event(tn, "task-create");
+				
+				d2.setClassName(ComputeMatchesNodeHandler.class.getName());
+				d2.setConfigType("bean");
 
 				action.setEvent(ev);
 				action.setName("Create tasks");
@@ -615,7 +684,7 @@ public class Deployer {
 
 		        TaskInstance ti = (TaskInstance) taskIterator.next();
 		        String taskName = ti.getName();
-		        boolean exactName = taskName.equals(ti.getTask().getName());
+		        boolean exactName = taskName == null || taskName.equals(ti.getTask().getName());
 		        Task targetTask = (Task) tasks.get(ti);
 		        ti.setTask(targetTask);
 		        if (!exactName) {

@@ -8,6 +8,7 @@ public class NodeEntityDaoImpl extends NodeEntityDaoBase {
 	public void toNode(NodeEntity source, Node target) {
 		super.toNode(source, target);
 		target.setFields(getFieldEntityDao().toFieldList(source.getFields()));
+		target.setFilters(getFilterEntityDao().toFilterList(source.getFilters()));
 		target.setTriggers(getTriggerEntityDao().toTriggerList(source.getTriggers()));
 	}
 
