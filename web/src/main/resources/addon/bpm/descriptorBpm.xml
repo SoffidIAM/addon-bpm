@@ -20,6 +20,8 @@
 				statusList.add(NodeType.NT_GRANT_SCREEN);
 				statusList.add(NodeType.NT_MAIL);
 				statusList.add(NodeType.NT_CUSTOM);
+				statusList.add(NodeType.NT_FORK);
+				statusList.add(NodeType.NT_JOIN);
 				statusList.add(NodeType.NT_APPLY);
 				statusList.add(NodeType.NT_END);
 

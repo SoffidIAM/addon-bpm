@@ -27,6 +27,8 @@ import org.jbpm.graph.def.Transition;
 import org.jbpm.graph.exe.ProcessInstance;
 import org.jbpm.graph.exe.Token;
 import org.jbpm.graph.node.EndState;
+import org.jbpm.graph.node.Fork;
+import org.jbpm.graph.node.Join;
 import org.jbpm.graph.node.MailNode;
 import org.jbpm.graph.node.StartState;
 import org.jbpm.graph.node.TaskNode;
@@ -472,6 +474,14 @@ public class Deployer {
 				a.setActionDelegation( d );
 				a.setPropagationAllowed(true);
 				n.setAction(a);
+			}
+			else if (node.getType().equals((NodeType.NT_FORK)))
+			{
+				n = new Fork();
+			}
+			else if (node.getType().equals((NodeType.NT_JOIN)))
+			{
+				n = new Join();
 			}
 			else
 			{
