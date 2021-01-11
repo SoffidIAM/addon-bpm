@@ -206,7 +206,7 @@ public class StandardUserWindow extends WorkflowWindow {
 			
 		});
 		Map vars = getTask() == null ? getProcessInstance().getVariables() : getTask().getVariables();
-		inputFields.clear();
+		inputFields = new HashMap<String, Component>();
 		for ( Field field: pageInfo.getFields())
 		{
 			if ( ! ignoreEmptyFields || vars.get(field.getName()) != null)

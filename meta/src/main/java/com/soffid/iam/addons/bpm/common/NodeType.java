@@ -12,4 +12,6 @@ public class NodeType {
 	public static String NT_MAIL = "mail";
 	public static String NT_START = "start";
 	public static String NT_END = "end";
+	public static String NT_FORK = "fork";
+	public static String NT_JOIN = "join";
 }
