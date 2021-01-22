@@ -23,7 +23,7 @@
       <plugin>
         <groupId>com.soffid.tools</groupId>
         <artifactId>mda-maven-plugin</artifactId>
-        <version xmlns:maven="http://maven.apache.org/POM/4.0.0">2.0.29</version>
+        <version xmlns:maven="http://maven.apache.org/POM/4.0.0">2.1.0</version>
         <executions>
           <execution>
             <goals>

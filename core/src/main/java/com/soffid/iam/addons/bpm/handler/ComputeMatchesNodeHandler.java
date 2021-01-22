@@ -56,9 +56,9 @@ public class ComputeMatchesNodeHandler implements ActionHandler {
 					List<User> usersList;
 					String q = (String) JbpmExpressionEvaluator.evaluate(filter.getQuery(), executionContext);
 					if (filter.getType().equals("scim")) {
-						usersList = userService.findUserByJsonQuery(q, 0, 1000);
+						usersList = userService.findUserByJsonQuery(q, 0, 1000).getResources();
 					} else {
-						usersList = userService.findUserByTextAndFilter(q, null, 0, 1000);
+						usersList = userService.findUserByTextAndFilter(q, null, 0, 1000).getResources();
 					}
 					for (User user: usersList ) {
 						Long i = users.get(user.getUserName());
