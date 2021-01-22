@@ -3,7 +3,7 @@
 	<parent>
 		<artifactId>bpm</artifactId>
 		<groupId>com.soffid.iam.addon.bpm</groupId>
-		<version>2.0.7-SNAPSHOT</version>
+		<version>3.0.0</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>bpm-core</artifactId>
@@ -245,14 +245,14 @@
 		<dependency>
 			<groupId>com.soffid.iam.console</groupId>
 			<artifactId>iam-core</artifactId>
-			<version>${console.version}</version>
+			<version>3.0.0-beta-1</version>
 			<scope>provided</scope>
 			<type>ejb</type>
 		</dependency>
 		<dependency>
 			<groupId>com.soffid.iam.console</groupId>
 			<artifactId>iam-common</artifactId>
-			<version>${console.version}</version>
+			<version>3.0.0-beta-1</version>
 			<scope>provided</scope>
 			<type>ejb</type>
 		</dependency>
