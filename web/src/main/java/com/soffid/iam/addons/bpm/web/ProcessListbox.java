@@ -15,6 +15,7 @@ import org.zkoss.util.media.Media;
 import org.zkoss.zk.ui.Component;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
+import org.zkoss.zk.ui.event.UploadEvent;
 import org.zkoss.zul.Filedownload;
 import org.zkoss.zul.Fileupload;
 import org.zkoss.zul.Label;
@@ -24,6 +25,7 @@ import org.zkoss.zul.Window;
 
 import com.soffid.iam.EJBLocator;
 import com.soffid.iam.addons.bpm.common.Process;
+import com.soffid.iam.web.popup.FileUpload2;
 
 import es.caib.zkib.binder.BindContext;
 import es.caib.zkib.component.DataListbox;
@@ -68,22 +70,24 @@ public class ProcessListbox extends DataListbox {
 	}
 	
 	public void importProcess() throws Exception {
-		Media media = Fileupload.get();
-		JsonReader reader = media.getByteData() != null ? Json.createReader( new ByteArrayInputStream( media.getByteData()) ):
-			 media.getStreamData() != null ? Json.createReader( media.getStreamData() ):
-			 media.getReaderData() != null ? Json.createReader( media.getReaderData() ):
-				Json.createReader( new StringReader( media.getStringData()) );
-			 
-		JsonObject object = reader.readObject();
-		reader.close();
-		final Process p = ProcessSerializer.processFromJson(object);
-		final String name = p.getName();
-		final List<Process> old = com.soffid.iam.addons.bpm.common.EJBLocator.getBpmEditorService().findByName(name);
-		if ( old == null || old.isEmpty() ) {
-			openProcessWindow(p);			
-		} else {
-			Missatgebox.confirmaYES_NO(String.format("The process %s already exists. Do you want to overwrite it?", name), 
-					new EventListener() {
+		FileUpload2.get(
+			event -> {
+				Media media = ( (UploadEvent) event).getMedia();
+				JsonReader reader = media.getByteData() != null ? Json.createReader( new ByteArrayInputStream( media.getByteData()) ):
+					media.getStreamData() != null ? Json.createReader( media.getStreamData() ):
+						media.getReaderData() != null ? Json.createReader( media.getReaderData() ):
+							Json.createReader( new StringReader( media.getStringData()) );
+				
+				JsonObject object = reader.readObject();
+				reader.close();
+				final Process p = ProcessSerializer.processFromJson(object);
+				final String name = p.getName();
+				final List<Process> old = com.soffid.iam.addons.bpm.common.EJBLocator.getBpmEditorService().findByName(name);
+				if ( old == null || old.isEmpty() ) {
+					openProcessWindow(p);			
+				} else {
+					Missatgebox.confirmaYES_NO(String.format("The process %s already exists. Do you want to overwrite it?", name), 
+							new EventListener() {
 						public void onEvent(Event ev) throws Exception {
 							if (ev.getData().equals( Missatgebox.YES ))
 							{
@@ -100,7 +104,9 @@ public class ProcessListbox extends DataListbox {
 							}
 						}
 					});
-		}
+				}
+			}
+		);
 	}
 
 	public void openProcessWindow(Process p) throws Exception {
