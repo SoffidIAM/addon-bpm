@@ -86,13 +86,15 @@ public class BpmEditorServiceImpl extends BpmEditorServiceBase {
 				nodeEntity.getFields().add(fieldEntity);
 			}
 			
-			for (Filter filter: node.getFilters())
-			{
-				FilterEntity filterEntity = getFilterEntityDao().filterToEntity(filter);
-				filterEntity.setNode(nodeEntity);
-				getFilterEntityDao().create(filterEntity);
-				filter.setId(filterEntity.getId());
-				nodeEntity.getFilters().add(filterEntity);
+			if (node.getFilters() != null) {
+				for (Filter filter: node.getFilters())
+				{
+					FilterEntity filterEntity = getFilterEntityDao().filterToEntity(filter);
+					filterEntity.setNode(nodeEntity);
+					getFilterEntityDao().create(filterEntity);
+					filter.setId(filterEntity.getId());
+					nodeEntity.getFilters().add(filterEntity);
+				}
 			}
 			
 			for (Trigger t: node.getTriggers())
