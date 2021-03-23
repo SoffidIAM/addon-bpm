@@ -208,7 +208,10 @@ public class ProcessSerializer {
 				target.setTriggers(loadTriggers ( src.getJsonArray("triggers")));
 				if (src.containsKey("matchThreshold"))
 						target.setMatchThreshold( new Long(src.getInt("matchThreshold")));
-				target.setTaskName(src.getString("taskName"));
+				if (src.containsKey("name") && ! src.containsKey("taskName"))
+					target.setTaskName(src.getString("name"));
+				else
+					target.setTaskName(src.getString("taskName"));
 				target.setType( NodeType.fromString( src.getString("type", NodeType.NT_END.toString())));
 				l.add(target);
 			}
@@ -302,9 +305,9 @@ public class ProcessSerializer {
 	}
 
 	private static List<Filter> loadFilters(JsonArray jsonArray) {
-		if (jsonArray == null)
-			return null;
 		List<Filter> l = new LinkedList<Filter>();
+		if (jsonArray == null)
+			return l;
 		for (JsonValue obj: jsonArray)
 		{
 			if (obj instanceof JsonObject) {
