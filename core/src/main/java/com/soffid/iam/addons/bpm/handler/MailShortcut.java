@@ -57,6 +57,7 @@ import org.jbpm.taskmgmt.exe.TaskInstance;
 import com.soffid.iam.EJBLocator;
 import com.soffid.iam.ServiceLocator;
 import com.soffid.iam.addons.bpm.common.Attribute;
+import com.soffid.iam.addons.bpm.common.Field;
 import com.soffid.iam.addons.bpm.common.NodeType;
 import com.soffid.iam.addons.bpm.common.PageInfo;
 import com.soffid.iam.addons.bpm.common.RoleRequestInfo;
@@ -65,6 +66,7 @@ import com.soffid.iam.api.Account;
 import com.soffid.iam.api.Application;
 import com.soffid.iam.api.AuthorizationRole;
 import com.soffid.iam.api.CustomObject;
+import com.soffid.iam.api.DataType;
 import com.soffid.iam.api.Group;
 import com.soffid.iam.api.GroupUser;
 import com.soffid.iam.api.Host;
@@ -237,6 +239,8 @@ public class MailShortcut implements ActionHandler {
 	private String buttonsText;
 
 	private String body;
+
+	private DataType t;
 	public void send() throws InternalErrorException, IOException, AddressException, NamingException, CreateException 
 	{
 		// Prevent recursive lock
@@ -342,15 +346,39 @@ public class MailShortcut implements ActionHandler {
 		BpmUserService svc = (BpmUserService) ServiceLocator.instance().getService(BpmUserService.SERVICE_NAME);
 		PageInfo pi = svc.getPageInfoByNodeId(new Long( executionContext.getNode().getId()) );
 		StringBuffer buffer = new StringBuffer();
-		buffer.append("<table>");
-		for (Attribute att: pi.getAttributes()) {
-			addField(buffer, user, att);
+		buffer.append("<table class='formdata'>");
+		for (com.soffid.iam.addons.bpm.common.Field field: pi.getFields()) {
+			Attribute att = findAttribute (field, pi);
+			if (att != null)
+				addField(buffer, user, field, att);
 		}
 		buffer.append("</table>");
 		body = buffer.toString();
 	}
 
-	private void addField(StringBuffer buffer, String user, Attribute att) throws InternalErrorException {
+	private Attribute findAttribute(Field field, PageInfo pi) throws InternalErrorException {
+		for (Attribute att: pi.getAttributes()) {
+			if (att.getName().equals(field.getName())) {
+				return att;
+			}
+		}
+		Collection<DataType> dt = ServiceLocator.instance().getAdditionalDataService().findDataTypesByObjectTypeAndName2(User.class.getName(), field.getName());
+		if (dt == null || dt.isEmpty())
+			return null;
+		t = dt.iterator().next();
+		Attribute att = new Attribute();
+		att.setDataObjectType(t.getDataObjectType());
+		att.setLabel(field.getLabel() == null || field.getLabel().isEmpty() ? t.getLabel(): field.getLabel());
+		att.setMultiValued(t.isMultiValued());
+		att.setName(t.getName());
+		att.setOrder(t.getOrder());
+		att.setSize(t.getSize());
+		att.setType(t.getType());
+		att.setValues(t.getValues());
+ 		return att;
+	}
+
+	private void addField(StringBuffer buffer, String user, Field field, Attribute att) throws InternalErrorException {
 		buffer.append("<tr><td>");
 		if (att.getType() == TypeEnumeration.SEPARATOR) {
 			buffer.append("<b>")
@@ -358,6 +386,10 @@ public class MailShortcut implements ActionHandler {
 				.append("</b>")
 				.append("</td><td>");
 		} else if (att.getName().equals("grants")) {
+			buffer.append("<b>")
+			.append(quote(att.getLabel()))
+			.append("</b>")
+			.append("</td><td>");
 			List<RoleRequestInfo> grants = (List<RoleRequestInfo>) executionContext.getVariable(att.getName());
 			addGrants(buffer, user, grants);
 		} else {
@@ -389,7 +421,7 @@ public class MailShortcut implements ActionHandler {
 
 	private void addFieldValue(StringBuffer buffer, String user, Attribute att, Object value) throws InternalErrorException {
 		String s = value.toString();
-		if (att.getValues() != null) {
+		if (att.getValues() != null && ! att.getValues().isEmpty()) {
 			for (String option: att.getValues()) {
 				int i = option.indexOf(":");
 				String name;
