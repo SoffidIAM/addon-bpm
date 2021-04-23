@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><?taglib uri="/WEB-INF/tld/web/core.dsp.tld" prefix="c" ?>
+<?page id="index"?>
+<window id="appWindow" xmlns="http://www.zkoss.org/2005/zul" xmlns:h="http://www.w3.org/1999/xhtml" 
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:zk="http://www.zkoss.org/2005/zk"
+ width="100%" xsi:schemaLocation="http://www.zkoss.org/2005/zul http://www.zkoss.org/2005/zul/zul.xsd"
+ use="com.soffid.iam.web.main.MainWindow" >
+	<div sclass="topline">		
+		<menu2 image="/img/gear.svg" sclass="col_der" style="display: none">
+			<label value="${nom } - ${usuari } " sclass="welcome"/>
+			<menu2item image="/img/profile.svg" onClick='ref:appWindow.profile'   label="${c:l('perfil.Titol') }" />
+			<menu2item image="/img/power.svg" label="${c:l('zkiblaf.tancarSessio')}" onClick="ref:appWindow.logout"/>
+		</menu2>
+
+		<div sclass="col_der help"  onClick="ref:appWindow.help">
+			<image src="/img/question-black.svg"/>
+		</div>
+		 
+		<image src="/anonymous/small-logo.png" sclass="logo col_der"/>
+		
+		<div sclass="col_izq">
+			<image src="/img/menu/ninedots.svg" onClick="ref:appWindow.menu" sclass="menu3starter"/>
+			<menu3 id="menu3" style="display: inline-block"/>			
+			<image src="/anonymous/logo-letras-color.png" id="logo"/>
+		</div>
+
+		<div style="display: none">
+			<textbox id="searchTextbox" class="searchBox" placeholder="${c:l('adminPersonalConfigs.zul.Cercar') }" onChanging="ref:searchBox.onChanging(event)"/>
+			<label class="maintitle" id="title" visible="false"/>
+		</div>
+	</div>
+	<div sclass="workarea" id="workArea" style="width: 100%">
+		<include/>
+		<include/>
+		<include/>
+		<include/>
+		<include/>
+		<include/>
+		<include/>
+		<include/>
+		<include/>
+	</div>
+	<popup id="searchBox" use="com.soffid.iam.web.main.SearchBoxWindow" sclass="main-search ctxpopup">
+		<timer id="timer" running="false" repeats="true" delay="200" onTimer="ref:searchBox.onTimer"/>	
+	</popup>
+	<script src="/js/ssokm.js"/>
+	<h:div id="soffidAraleExtensionDetector"/>
+	<html><![CDATA[
+	<form id="pamLauncherForm" action="/" target="_blank" method="POST">
+		<input type="hidden" id="pamLauncherFormSessionId" name="sessionId"/>
+	</form>	
+	]]></html>
+</window>

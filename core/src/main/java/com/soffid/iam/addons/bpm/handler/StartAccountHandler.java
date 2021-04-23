@@ -1,18 +1,10 @@
 package com.soffid.iam.addons.bpm.handler;
 
-import java.util.LinkedList;
-import java.util.List;
-
 import org.jbpm.graph.def.ActionHandler;
 import org.jbpm.graph.exe.ExecutionContext;
 
 import com.soffid.iam.ServiceLocator;
-import com.soffid.iam.addons.bpm.common.Constants;
-import com.soffid.iam.addons.bpm.common.RoleRequestInfo;
 import com.soffid.iam.api.Account;
-import com.soffid.iam.api.Role;
-import com.soffid.iam.api.RoleAccount;
-import com.soffid.iam.api.User;
 import com.soffid.iam.service.AccountService;
 import com.soffid.iam.service.ApplicationService;
 import com.soffid.iam.service.UserService;
@@ -28,6 +20,7 @@ public class StartAccountHandler implements ActionHandler {
 	@Override
 	public void execute(ExecutionContext executionContext) throws Exception {
 		String user = Security.getCurrentUser();
+		Security.nestedLogin(Security.ALL_PERMISSIONS);
 		try {
 			String accountName = (String) executionContext.getVariable("account");
 			String dispatcherName = (String) executionContext.getVariable("systemName");

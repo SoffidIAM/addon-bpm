@@ -1,0 +1,61 @@
+<html>
+	<head>
+		<style>
+		div.buttonsbar {
+			width: 100%;
+			text-align: center;
+		}
+		div.buttonsbar div {
+		    display: inline-block;
+		    border-radius: 8px;
+		    border: solid 4px #a6d100;
+		    background-color: #a6d100;
+		    padding: 20px;
+		    margin: 15px;
+		    font-size: large;
+		    color: black;
+		}
+		table.perms {
+			width: 100%;
+			border: solid 1px #a6d100;
+			border-collapse: collapse;
+			table-layout: fixed;
+		}
+		table.perms th {
+		    background-color: #a6d100;
+		    color: white;
+		    font-weight: bold;
+		    text-align: left;
+			border: solid 1px #a6d100;
+			margin-left: 15px;
+			margin-right: 15px;
+		}
+		table.perms td {
+		    text-align: left;
+			border: solid 1px #a6d100;
+			margin-left: 15px;
+			margin-right: 15px;
+		}
+		</style>
+	</head>
+	<body>
+		This is an automatic mail. Please do not reply.
+		<br>
+		You have been assigned a new task on Soffid Identity Management System:
+		<br><b> ${taskInstance.name} </b> <br>
+		<pre>${taskInstance.description}</pre>
+		<br>
+		DueDate: ${taskInstance.dueDate}<br>
+		<br>
+		${body}
+		<div class="buttonsbar">
+		${buttons}
+		</div>
+		<br>
+		<br>
+		Please, follow this <a target="_new" href="${AutoSSOURL}soffid/wf/task.zul?id=${taskInstance.id}">link</a> to view the task details.
+		<br><br>
+		To see your full task list, follow <a href="${AutoSSOURL}soffid/wf/inbox.zul">this  one</a>.
+		<br>
+	</body>
+</html>

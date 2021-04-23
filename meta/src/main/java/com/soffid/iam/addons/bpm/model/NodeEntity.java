@@ -73,4 +73,15 @@ public class NodeEntity {
 	@Nullable
 	Boolean applyEntitlements;
 	
+	@Column(name="NOD_MAISHC")
+	@Nullable
+	Boolean mailShortcut;
+	
+	@Column(name="NOD_APRTRA")
+	@Nullable
+	String approveTransition;
+
+	@Column(name="NOD_DENTRA")
+	@Nullable
+	String denyTransition;
 }

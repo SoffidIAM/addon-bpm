@@ -698,25 +698,27 @@ public class StandardUserWindow extends WorkflowWindow {
 			if (perm.getPreviousRoleId() != null && ! perm.getPreviousRoleId().equals(perm.getRoleId()))
 			{
 				Label l = new Label( String.format(Labels.getLabel("bpm.revokeRole"), perm.getPreviousRoleDescription()));
-				l.setStyle("color: red");
+				l.setStyle("color: red; vertical-align: top");
 				l.setParent(d);
 			}
 			
 			if (perm.getPreviousRoleId() != null && perm.getPreviousRoleId().equals(perm.getRoleId()))
 			{
 				Label l = new Label(perm.getRoleDescription());
+				l.setStyle("vertical-align: top");
 				l.setParent(d);
 			}
 			else 
 			{
 				Label l = new Label( String.format(Labels.getLabel("bpm.grantRole"), perm.getRoleDescription()));
-				l.setStyle("color: blue");
+				l.setStyle("color: blue; vertical-align: top");
 				l.setParent(d);
 			}
 		} else {
 			DataListbox lb = new DataListbox();
 			lb.setBind("grants["+i+"]/roleId");
 			lb.addEventListener("onSelect", onChangeRole);
+			lb.setStyle("vertical-align: top");
 			lb.setMold("select");
 			lb.setParent(d);
 			lb.setDisabled(grantsReadOnly);

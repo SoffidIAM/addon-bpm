@@ -297,6 +297,8 @@ public class Deployer {
 					if (node.getFilters() != null)
 						pageInfo.setFilters(node.getFilters().toArray( new Filter[node.getFilters().size()] ));
 					pageInfo.setWorkflowType(proc.getType());
+					pageInfo.setApproveTransition(node.getApproveTransition());
+					pageInfo.setDenyTransition(node.getDenyTransition());
 					ByteArrayOutputStream os = new ByteArrayOutputStream();
 					new ObjectOutputStream(os).writeObject( pageInfo );
 					fd.addFile("task#"+jbpmNode.getId(), os.toByteArray());
@@ -428,6 +430,10 @@ public class Deployer {
 				t.setTaskNode((TaskNode) n);
 				t.setSignalling(true);
 				tmd.addTask(t);
+				
+				// Add mail notification
+				addMailNotification(node, n, t);
+				
 			}
 			else if (node.getType().equals((NodeType.NT_GRANT_SCREEN)))
 			{
@@ -454,6 +460,9 @@ public class Deployer {
 						"</script><actor>"+
 						escape (node.getMailActor())+
 						"</actor>"+
+						"<shortcut>"+
+						(Boolean.TRUE.equals(node.getMailShortcut()) ? "true" : "false")+
+						"</shortcut>"+
 						"<type>"+
 						escape (node.getGrantScreenType())+
 						"</type>"
@@ -506,6 +515,9 @@ public class Deployer {
 				
 				ev.addAction(action);
 				tn.addEvent(ev);
+				
+				// Add mail notification
+				addMailNotification(node, tn, t);
 			}
 			else if (node.getType().equals((NodeType.NT_MAIL)))
 			{
@@ -563,6 +575,27 @@ public class Deployer {
 			nodesMap.put ( node, n );
 		}
 		
+	}
+
+	public void addMailNotification(NodeEntity node, Node n, Task t) {
+		Event ev = new Event(n, "task-create");
+		Action action = new Action();
+		Delegation d2 = new Delegation();				
+
+		t.addEvent(ev);
+		ev.addAction(action);
+		action.setEvent(ev);
+		action.setName(t.getName());
+		action.setPropagationAllowed(true);
+		action.setAsync(false);
+		action.setActionDelegation(d2);
+		
+		if (Boolean.TRUE.equals(node.getMailShortcut())) {
+			d2.setClassName("com.soffid.iam.addons.bpm.handler.MailShortcut");
+		} else {
+			d2.setClassName("com.soffid.iam.bpm.mail.Mail");
+		}
+		d2.setConfiguration("<template>task-assign</template>");
 	}
 
 	private String escape(String customScript) {

@@ -70,6 +70,10 @@ public class ProcessSerializer {
 			if (node.getType() != null) builder2.add("type", node.getType().toString());
 			if (node.getTaskName() != null) builder2.add("taskName", node.getTaskName().toString());
 			if (node.getMatchThreshold() != null) builder2.add("matchThreshold", node.getMatchThreshold());
+			if (node.getGrantScreenType() != null) builder2.add("grantScreentype", node.getGrantScreenType());
+			if (node.getMailShortcut() != null) builder2.add("mailShortcut", node.getMailShortcut());
+			if (node.getApproveTransition() != null) builder2.add("approveTransition", node.getApproveTransition());
+			if (node.getDenyTransition() != null) builder2.add("denyTransition", node.getDenyTransition());
 			builder.add(builder2);
 		}
 		return builder;
@@ -178,7 +182,7 @@ public class ProcessSerializer {
 		p.setName(data.getString("name", null));
 		p.setType( WorkflowType.fromString( data.getString("type", WorkflowType.WT_USER.toString())));
 		p.setNodes( loadNodes (data.getJsonArray("nodes")));
-		
+	
 		return p;
 	}
 
@@ -206,6 +210,10 @@ public class ProcessSerializer {
 				target.setMailSubject(src.getString("mailSubject", null));
 				target.setName(src.getString("name", null));
 				target.setTriggers(loadTriggers ( src.getJsonArray("triggers")));
+				target.setGrantScreenType(src.getString("grantScreenType", null));
+				target.setMailShortcut(src.getBoolean("mailShortcut", false));
+				target.setApproveTransition(src.getString("approveTransition", null));
+				target.setDenyTransition(src.getString("denyTransition", null));
 				if (src.containsKey("matchThreshold"))
 						target.setMatchThreshold( new Long(src.getInt("matchThreshold")));
 				if (src.containsKey("name") && ! src.containsKey("taskName"))

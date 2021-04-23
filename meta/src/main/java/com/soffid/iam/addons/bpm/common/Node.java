@@ -80,4 +80,13 @@ public class Node {
 	
 	@Nullable
 	Boolean applyEntitlements;
+
+	@Nullable
+	Boolean mailShortcut;
+	
+	@Nullable
+	String approveTransition;
+
+	@Nullable
+	String denyTransition;
 }

@@ -19,4 +19,10 @@ public class PageInfo {
 
 	@Nullable
 	Long matchThreshold;
+
+	@Nullable
+	String approveTransition;
+
+	@Nullable
+	String denyTransition;
 }

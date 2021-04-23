@@ -146,6 +146,7 @@
 											</div>
 											<customfield3 label="${c:l('bpm.actorScript') }" bind="customScript" dataType="STRING" 
 												multiline="true" selectIcon="/img/pencil.svg"/>
+											<customfield3 label="${c:l('bpm.mailShortcut') }:" dataType="BOOLEAN" bind="mailShortcut" onChange="ref:w.updateMailShortcut"/>
 										</div>
 									</div>
 									<div id="screenMatchType">
@@ -172,9 +173,9 @@
 									</div>
 									<div id="grantScreenType">
 										<customfield3 label="${c:l('bpm.taskName') }" bind="taskName" dataType="STRING" onChange="" required="true"/>
-										<div id="actorRow2">
-											<customfield3 label="${c:l('bpm.grantScreenType') }"
+										<customfield3 label="${c:l('bpm.grantScreenType') }"
 												bind="grantScreenType" dataType="STRING" id="grantScreenListbox" />
+										<div id="actorRow2">
 											<div  style="width:100%; padding-bottom: 16px; padding-top:16px">
 											Write an expression to identify the actor depending on the requested role.<h:br/>
 											One can use EL expressions based on role and application attributes.<h:br/>
@@ -190,6 +191,9 @@
 											<customfield3 dataType="STRING" bind="customScript" 
 														multiline="true" maxlength="10000" 
 														label="${c:l('bpm.actorScript') }" selectIcon="/img/pencil.svg" />
+											<customfield3 label="${c:l('bpm.mailShortcut') }:" dataType="BOOLEAN" bind="mailShortcut" onChange="ref:w.updateMailShortcut"/>
+											<customfield3 label="${c:l('bpm.approveTransition') }:" dataType="STRING" maxlength="150" bind="approveTransition" id="approveTransition"/>
+											<customfield3 label="${c:l('bpm.denyTransition') }:" dataType="STRING"  maxlength="150" bind="denyTransition" id="denyTransition"/>
 										</div>
 									</div>
 									<div id="mailType">

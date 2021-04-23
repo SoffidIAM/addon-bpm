@@ -16,6 +16,7 @@ import org.apache.commons.logging.LogFactory;
 import org.jbpm.context.exe.ContextInstance;
 import org.jbpm.graph.def.ActionHandler;
 import org.jbpm.graph.def.DelegationException;
+import org.jbpm.graph.def.Event;
 import org.jbpm.graph.exe.ExecutionContext;
 import org.jbpm.graph.exe.Token;
 import org.jbpm.graph.node.TaskNode;
@@ -31,6 +32,7 @@ import com.soffid.iam.addons.bpm.common.RoleRequestInfo;
 import com.soffid.iam.api.Application;
 import com.soffid.iam.api.Role;
 import com.soffid.iam.api.RoleAccount;
+import com.soffid.iam.bpm.mail.Mail;
 import com.soffid.iam.service.ApplicationService;
 import com.soffid.iam.utils.Security;
 
@@ -44,6 +46,7 @@ import es.caib.seycon.ng.exception.InternalErrorException;
 public class GrantTaskNodeHandler implements ActionHandler {
 	Log log = LogFactory.getLog(getClass());
 
+	String shortcut;
 	String script;
 	String actor;
 	String type;
@@ -54,7 +57,7 @@ public class GrantTaskNodeHandler implements ActionHandler {
 		TaskNode tn = (TaskNode) executionContext.getNode();
 		log.info("Creating tasks for node " +tn.getName()+" type "+type);
 		List<RoleRequestInfo> roles = (List<RoleRequestInfo>) executionContext.getVariable(Constants.ROLES_VAR); // $NON-NLS-1$
-		Security.nestedLogin(Security.ALL_PERMISSIONS);
+		Security.nestedLogin("bpm-engine", Security.ALL_PERMISSIONS);
 		try {
 			HashSet<String> ownersSet = new HashSet<String>();
 			for (RoleRequestInfo role : roles) {
@@ -132,6 +135,19 @@ public class GrantTaskNodeHandler implements ActionHandler {
 						}
 					}
 					ti.setPooledActors(owners);
+					ActionHandler handler;
+					if ("true".equals(shortcut)) {
+						MailShortcut ms = new MailShortcut();
+						ms.setTemplate("delegate");
+						handler = ms;
+					} else {
+						Mail ms = new Mail();
+						ms.setTemplate("delegate");
+						handler = ms;
+					}
+					ExecutionContext ctx2 = new ExecutionContext(token);
+					ctx2.setTaskInstance(ti);
+					handler.execute(ctx2);
 				}
 				roles = new LinkedList<RoleRequestInfo> ( roles);
 				executionContext.setVariable(Constants.ROLES_VAR, roles);
@@ -286,6 +302,14 @@ public class GrantTaskNodeHandler implements ActionHandler {
 
 	public void setType(String type) {
 		this.type = type;
+	}
+
+	public String getShortcut() {
+		return shortcut;
+	}
+
+	public void setShortcut(String shortcut) {
+		this.shortcut = shortcut;
 	}
 
 }

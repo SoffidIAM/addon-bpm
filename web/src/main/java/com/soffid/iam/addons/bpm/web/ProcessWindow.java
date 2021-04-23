@@ -355,6 +355,7 @@ public class ProcessWindow extends Window {
 				});
 			}
 		}
+		updateMailShortcut(null);
 	}
 	
 	public void renumAttributes (DropEvent event)
@@ -410,5 +411,14 @@ public class ProcessWindow extends Window {
 					new Object[] { component, vars }
 					));
 		}
+	}
+	
+	public void updateMailShortcut (Event ev) {
+		Boolean b = false;
+		try {
+			b = (Boolean) XPathUtils.eval(getFellow("container"), "mailShortcut");
+		} catch (Exception e) {}
+		getFellow("approveTransition").setVisible(Boolean.TRUE.equals(b));
+		getFellow("denyTransition").setVisible(Boolean.TRUE.equals(b));
 	}
 }

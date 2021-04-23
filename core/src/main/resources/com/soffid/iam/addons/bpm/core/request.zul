@@ -4,7 +4,7 @@
 	xmlns:zk="http://www.zkoss.org/2005/zk"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://www.zkoss.org/2005/zul http://www.zkoss.org/2005/zul/zul.xsd">
-	<task id="window" use="com.soffid.iam.addons.bpm.ui.RequestWindow">
+	<task id="window" use="com.soffid.iam.addons.bpm.ui.RequestWindow" width="100%">
 		<style>
 			div.app { background: #ffffc0;
 				width: 180px; 
@@ -15,7 +15,7 @@
 				border-radius: 6px;
 				cursor: pointer; 
 				vertical-align: top}
-			div.app:hover {background: #c0c0ff; margin: 8px; width: 180px; height: 106px; }
+			div.app:hover {background: #c0c0ff; margin: 8px; width: 196px; height: 106px; }
 			div.app span.appName { font-weight: bold; display: block; text-align: center}
 			div.app:hover span.appName { color:white; }
 			div.app span.appDescription { font-size: 12px; font-weight: normal;}
@@ -43,7 +43,10 @@
 				border-radius: 6px;
 				cursor: pointer;
 				vertical-align:top;}
-			div.role:hover {background: #c0ffc0; margin: 8px; width: 180px; height: 106px; }
+			div.role:hover {background: #c0ffc0; margin: 8px; width: 196px; height: 106px; }
+			div.role.disabled, div.role.disabled:hover {
+				background: #e0e0e0; margin: 16px; width: 180px; height: 90px; cursor: not-allowed;
+			}
 			div.role span.roleName { font-weight: bold; display: block; text-align: center}
 			div.role span.roleDescription { font-size: 12px; font-weight: normal;}
 			div.role img.cancel {display: none;}
@@ -63,7 +66,7 @@
 
 		</style>
 		<div id="attributes" />
-		<div id="selected" style="float: right; background-color: #e0e0e0">
+		<div id="selected" style="float: right; background-color: #e0e0e0; padding: 6px; border-radius: 6px;" visible="false">
 			Shopping cart
 		</div>
 		<div>
@@ -71,13 +74,14 @@
 			<label bind="@solicitante"/>
 			<label id="fullNameSolicitante"></label>
 		</div>
+		<div id="navbar"/>
 		<div id="appSelectorDiv">
-			Select application: <textbox width="250px" id="appSelector" onChanging="window.onChangingAppSelector(event)"/>
+			<label value='Select application: ' sclass='label'></label><textbox width="250px" id="appSelector" onChanging="window.onChangingAppSelector(event)"/>
 		</div>
 		<div id="apps">
 		</div>
 		<div id="roleSelectorDiv" visible="false">
-			Select role: <textbox width="250px" id="roleSelector"  onChanging="window.onChangingRoleSelector(event)"/>
+			<label value='Select role: ' sclass='label'></label><textbox width="250px" id="roleSelector"  onChanging="window.onChangingRoleSelector(event)"/>
 		</div>
 		<div id="roles">
 		</div>

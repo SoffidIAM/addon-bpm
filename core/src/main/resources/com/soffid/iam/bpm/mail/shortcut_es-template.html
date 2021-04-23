@@ -1,0 +1,60 @@
+<html>
+	<head>
+		<style>
+		div.buttonsbar {
+			width: 100%;
+			text-align: center;
+		}
+		div.buttonsbar div {
+		    display: inline-block;
+		    border-radius: 8px;
+		    border: solid 4px #a6d100;
+		    background-color: #a6d100;
+		    padding: 20px;
+		    margin: 15px;
+		    font-size: large;
+		    color: black;
+		}
+		table.perms {
+			width: 100%;
+			border: solid 1px #a6d100;
+			border-collapse: collapse;
+			table-layout: fixed;
+		}
+		table.perms th {
+		    background-color: #a6d100;
+		    color: white;
+		    font-weight: bold;
+		    text-align: left;
+			border: solid 1px #a6d100;
+			margin-left: 15px;
+			margin-right: 15px;
+		}
+		table.perms td {
+		    text-align: left;
+			border: solid 1px #a6d100;
+			margin-left: 15px;
+			margin-right: 15px;
+		}
+		</style>
+	</head>
+	<body>
+		Este es un correo autom&aacute;tico. Por favor, no responda a esta direcci&oacute;n de correo.
+		<br>
+		Se le ha asignado una tarea en el sistema de gestión de identidades Soffid:
+		<br><b> ${taskInstance.name} </b> <br>
+		<pre>${taskInstance.description}</pre>
+		<br>
+		Fecha l&iacute;mite: ${taskInstance.dueDate}<br>
+		<br>
+		${body}
+		<div class="buttonsbar">
+		${buttons}
+		</div>
+		<br>
+		Siga el siguiente <a target="_new" href="${AutoSSOURL}soffid/wf/task.zul?id=${taskInstance.id}">enlace</a> para ver los detalles de la tarea.
+		<br><br>
+		Para ver la lista completa de tareas, <a href="${AutoSSOURL}soffid/wf/inbox.zul">pulse aqu&iacute;</a>.
+		<br>
+	</body>
+</html>

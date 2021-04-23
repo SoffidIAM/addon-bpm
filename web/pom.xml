@@ -111,6 +111,12 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
+	  <groupId>com.soffid.iam.console</groupId>
+ 	  <artifactId>iam-core</artifactId>
+      <version>3.0.0-beta-1</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
       <groupId>jdom</groupId>
       <artifactId>jdom</artifactId>
       <version>b9</version>

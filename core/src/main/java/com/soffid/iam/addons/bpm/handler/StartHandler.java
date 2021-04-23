@@ -23,6 +23,7 @@ public class StartHandler implements ActionHandler {
 	@Override
 	public void execute(ExecutionContext executionContext) throws Exception {
 		String user = Security.getCurrentUser();
+		Security.nestedLogin(Security.ALL_PERMISSIONS);
 		try {
 			if (executionContext.getVariable(Constants.REQUESTER_VAR) == null &&
 					executionContext.getVariable("request") != null &&
