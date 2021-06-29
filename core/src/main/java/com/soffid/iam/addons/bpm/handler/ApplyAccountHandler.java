@@ -2,30 +2,15 @@ package com.soffid.iam.addons.bpm.handler;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
-import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.logging.LogFactory;
-import org.jbpm.context.exe.ContextInstance;
 import org.jbpm.graph.def.ActionHandler;
 import org.jbpm.graph.exe.ExecutionContext;
-import org.jbpm.module.exe.ModuleInstance;
 
 import com.soffid.iam.ServiceLocator;
-import com.soffid.iam.addons.bpm.common.Constants;
-import com.soffid.iam.addons.bpm.common.RoleRequestInfo;
 import com.soffid.iam.api.Account;
 import com.soffid.iam.api.BpmUserProcess;
-import com.soffid.iam.api.DataType;
-import com.soffid.iam.api.MetadataScope;
-import com.soffid.iam.api.Role;
-import com.soffid.iam.api.RoleAccount;
-import com.soffid.iam.api.User;
 import com.soffid.iam.service.AccountService;
-import com.soffid.iam.service.ApplicationService;
-import com.soffid.iam.service.UserService;
 import com.soffid.iam.utils.Security;
 
 import es.caib.bpm.toolkit.exception.UserWorkflowException;
@@ -58,11 +43,11 @@ public class ApplyAccountHandler implements ActionHandler {
 		String user = Security.getCurrentUser();
 		Security.nestedLogin(Security.ALL_PERMISSIONS);
 		try {
+			String userName = (String) executionContext.getVariable("requester");
 			if ( "true".equals(applyUserChanges))
 			{
-				applyUserChanges(executionContext, user);
+				applyUserChanges(executionContext, userName);
 			}
-			String userName = (String) executionContext.getVariable("requester");
 			if (userName != null)
 			{
 				BpmUserProcess proc = new BpmUserProcess();
