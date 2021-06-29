@@ -211,12 +211,12 @@ public class MailShortcut implements ActionHandler {
 			String name =  "actions_"+executionContext.getTaskInstance().getId()+"_"+acceptRandom; //$NON-NLS-1$ //$NON-NLS-2$
 			String link = Long.toString(executionContext.getProcessInstance().getId())+"."+Long.toString(executionContext.getTaskInstance().getId())+"."+acceptRandom; //$NON-NLS-1$ //$NON-NLS-2$
 			executionContext.setVariable(name, "approve:"+pi.getApproveTransition()); //$NON-NLS-1$
-			buttons.put(com.soffid.iam.addons.bpm.handler.Messages.getString("MailShortcut.Approve"), link); //$NON-NLS-1$
+			buttons.put("", link); //$NON-NLS-1$
 			String acceptRandom2 = randomString();
 			String name2 =  "actions_"+executionContext.getTaskInstance().getId()+"_"+acceptRandom2; //$NON-NLS-1$ //$NON-NLS-2$
 			String link2 = Long.toString(executionContext.getProcessInstance().getId())+"."+Long.toString(executionContext.getTaskInstance().getId())+"."+acceptRandom2; //$NON-NLS-1$ //$NON-NLS-2$
 			executionContext.setVariable(name2, "deny:"+pi.getDenyTransition()); //$NON-NLS-1$
-			buttons.put(com.soffid.iam.addons.bpm.handler.Messages.getString("MailShortcut.Deny"), link2); //$NON-NLS-1$
+			buttons.put("", link2); //$NON-NLS-1$
 		} else {
 			for (Transition transition: executionContext.getNode().getLeavingTransitions()) {
 				String r = randomString();
@@ -346,13 +346,13 @@ public class MailShortcut implements ActionHandler {
 		BpmUserService svc = (BpmUserService) ServiceLocator.instance().getService(BpmUserService.SERVICE_NAME);
 		PageInfo pi = svc.getPageInfoByNodeId(new Long( executionContext.getNode().getId()) );
 		StringBuffer buffer = new StringBuffer();
-		buffer.append("<table class='formdata'>");
+		buffer.append("<table class='formdata'>"); //$NON-NLS-1$
 		for (com.soffid.iam.addons.bpm.common.Field field: pi.getFields()) {
 			Attribute att = findAttribute (field, pi);
 			if (att != null)
 				addField(buffer, user, field, att);
 		}
-		buffer.append("</table>");
+		buffer.append("</table>"); //$NON-NLS-1$
 		body = buffer.toString();
 	}
 
@@ -379,31 +379,31 @@ public class MailShortcut implements ActionHandler {
 	}
 
 	private void addField(StringBuffer buffer, String user, Field field, Attribute att) throws InternalErrorException {
-		buffer.append("<tr><td>");
+		buffer.append("<tr><td>"); //$NON-NLS-1$
 		if (att.getType() == TypeEnumeration.SEPARATOR) {
-			buffer.append("<b>")
+			buffer.append("<b>") //$NON-NLS-1$
 				.append(quote(att.getLabel()))
-				.append("</b>")
-				.append("</td><td>");
-		} else if (att.getName().equals("grants")) {
-			buffer.append("<b>")
+				.append("</b>") //$NON-NLS-1$
+				.append("</td><td>"); //$NON-NLS-1$
+		} else if (att.getName().equals("grants")) { //$NON-NLS-1$
+			buffer.append("<b>") //$NON-NLS-1$
 			.append(quote(att.getLabel()))
-			.append("</b>")
-			.append("</td><td>");
+			.append("</b>") //$NON-NLS-1$
+			.append("</td><td>"); //$NON-NLS-1$
 			List<RoleRequestInfo> grants = (List<RoleRequestInfo>) executionContext.getVariable(att.getName());
 			addGrants(buffer, user, grants);
 		} else {
-			buffer.append("<tr><td>")
+			buffer.append("<tr><td>") //$NON-NLS-1$
 				.append(quote(att.getLabel()))
-				.append("</td><td>");
+				.append("</td><td>"); //$NON-NLS-1$
 			Object value = executionContext.getVariable(att.getName());
-			if (value != null &&  ! "".equals(value)) {
+			if (value != null &&  ! "".equals(value)) { //$NON-NLS-1$
 				if (Boolean.TRUE.equals(att.getMultiValued()))
 				{
 					int i = 0;
 					for (Object o: (Collection) value) {
 						if (i > 0)
-							buffer.append("<br>");
+							buffer.append("<br>"); //$NON-NLS-1$
 						i++;
 						try {
 							addFieldValue(buffer, user, att, o);
@@ -416,14 +416,14 @@ public class MailShortcut implements ActionHandler {
 				}
 			}
 		}
-		buffer.append("</td></tr>");
+		buffer.append("</td></tr>"); //$NON-NLS-1$
 	}
 
 	private void addFieldValue(StringBuffer buffer, String user, Attribute att, Object value) throws InternalErrorException {
 		String s = value.toString();
 		if (att.getValues() != null && ! att.getValues().isEmpty()) {
 			for (String option: att.getValues()) {
-				int i = option.indexOf(":");
+				int i = option.indexOf(":"); //$NON-NLS-1$
 				String name;
 				String literal;
 				if (i > 0) {
@@ -440,8 +440,8 @@ public class MailShortcut implements ActionHandler {
 			}
 		}
 		else if (att.getType() == TypeEnumeration.ACCOUNT_TYPE) {
-			buffer.append(quote(s)).append(" ");
-			int i = s.lastIndexOf("@");
+			buffer.append(quote(s)).append(" "); //$NON-NLS-1$
+			int i = s.lastIndexOf("@"); //$NON-NLS-1$
 			if (i > 0) {
 				Account account = ServiceLocator.instance().getAccountService().findAccount(s.substring(0,i), s.substring(i+1));
 				if (account != null)
@@ -449,7 +449,7 @@ public class MailShortcut implements ActionHandler {
 			}
 		}
 		else if (att.getType() == TypeEnumeration.APPLICATION_TYPE) {
-			buffer.append(quote(s)).append(" ");
+			buffer.append(quote(s)).append(" "); //$NON-NLS-1$
 			Application o = ServiceLocator.instance().getApplicationService().findApplicationByApplicationName(s);
 			if (o != null)
 				buffer.append(quote(o.getDescription()));
@@ -458,22 +458,22 @@ public class MailShortcut implements ActionHandler {
 		}
 		else if (att.getType() == TypeEnumeration.BOOLEAN_TYPE) {
 			if (Boolean.TRUE.equals(value))
-				buffer.append("&#x2611;");
+				buffer.append("&#x2611;"); //$NON-NLS-1$
 			else
-				buffer.append("&#x2610;");
+				buffer.append("&#x2610;"); //$NON-NLS-1$
 		}
 		else if (att.getType() == TypeEnumeration.CUSTOM_OBJECT_TYPE) {
-			buffer.append(quote(s)).append(" ");
+			buffer.append(quote(s)).append(" "); //$NON-NLS-1$
 			CustomObject o = ServiceLocator.instance().getCustomObjectService().findCustomObjectByTypeAndName(att.getDataObjectType(), s);
 			if (o != null)
 				buffer.append(quote(o.getDescription()));
 		}
 		else if (att.getType() == TypeEnumeration.DATE_TIME_TYPE) {
 			Map<String, String> prefs = ServiceLocator.instance().getPreferencesService().findUserPreferences(user);
-			String dateFormat = prefs.get("dateformat");
-			String timeFormat = prefs.get("timeformat");
-			String timeZone = prefs.get("timezone");
-			String lang = prefs.get("lang");
+			String dateFormat = prefs.get("dateformat"); //$NON-NLS-1$
+			String timeFormat = prefs.get("timeformat"); //$NON-NLS-1$
+			String timeZone = prefs.get("timezone"); //$NON-NLS-1$
+			String lang = prefs.get("lang"); //$NON-NLS-1$
 			
 			Locale locale = lang == null ? Locale.getDefault(): new Locale(lang);
 			TimeZone tz = timeZone == null ? TimeZone.getDefault(): TimeZone.getTimeZone(timeZone);
@@ -486,22 +486,22 @@ public class MailShortcut implements ActionHandler {
 			if (value instanceof Calendar) {
 				Date d = ((Calendar) value).getTime();
 				buffer.append(df.format(d))
-					.append(" ")
+					.append(" ") //$NON-NLS-1$
 					.append(tf.format(d));
 			}
 			else if (value instanceof Date) {
 				Date d = (Date) value;
 				buffer.append(df.format(d))
-					.append(" ")
+					.append(" ") //$NON-NLS-1$
 					.append(tf.format(d));
 			}
 		}
 		else if (att.getType() == TypeEnumeration.DATE_TYPE) {
 			Map<String, String> prefs = ServiceLocator.instance().getPreferencesService().findUserPreferences(user);
-			String dateFormat = prefs.get("dateformat");
-			String timeFormat = prefs.get("timeformat");
-			String timeZone = prefs.get("timezone");
-			String lang = prefs.get("lang");
+			String dateFormat = prefs.get("dateformat"); //$NON-NLS-1$
+			String timeFormat = prefs.get("timeformat"); //$NON-NLS-1$
+			String timeZone = prefs.get("timezone"); //$NON-NLS-1$
+			String lang = prefs.get("lang"); //$NON-NLS-1$
 			
 			Locale locale = lang == null ? Locale.getDefault(): new Locale(lang);
 			TimeZone tz = timeZone == null ? TimeZone.getDefault(): TimeZone.getTimeZone(timeZone);
@@ -524,19 +524,19 @@ public class MailShortcut implements ActionHandler {
 			buffer.append(quote(s));
 		}
 		else if (att.getType() == TypeEnumeration.GROUP_TYPE) {
-			buffer.append(quote(s)).append(" ");
+			buffer.append(quote(s)).append(" "); //$NON-NLS-1$
 			Group o = ServiceLocator.instance().getGroupService().findGroupByGroupName(s);
 			if (o != null)
 				buffer.append(quote(o.getDescription()));
 		}
 		else if (att.getType() == TypeEnumeration.GROUP_TYPE_TYPE) {
-			buffer.append(quote(s)).append(" ");
+			buffer.append(quote(s)).append(" "); //$NON-NLS-1$
 			OUType o = ServiceLocator.instance().getOrganizationalUnitTypeService().findOUTypeByName(s);
 			if (o != null)
 				buffer.append(quote(o.getDescription()));
 		}
 		else if (att.getType() == TypeEnumeration.HOST_TYPE) {
-			buffer.append(quote(s)).append(" ");
+			buffer.append(quote(s)).append(" "); //$NON-NLS-1$
 			Host o = ServiceLocator.instance().getNetworkService().findHostByName(s);
 			if (o != null)
 				buffer.append(quote(o.getDescription()));
@@ -545,14 +545,14 @@ public class MailShortcut implements ActionHandler {
 			buffer.append(s);
 		}
 		else if (att.getType() == TypeEnumeration.MAIL_DOMAIN_TYPE) {
-			buffer.append(quote(s)).append(" ");
+			buffer.append(quote(s)).append(" "); //$NON-NLS-1$
 			MailDomain o = ServiceLocator.instance().getMailListsService().findMailDomainByName(s);
 			if (o != null)
 				buffer.append(quote(o.getDescription()));
 		}
 		else if (att.getType() == TypeEnumeration.MAIL_LIST_TYPE) {
-			buffer.append(quote(s)).append(" ");
-			int i = s.lastIndexOf("@");
+			buffer.append(quote(s)).append(" "); //$NON-NLS-1$
+			int i = s.lastIndexOf("@"); //$NON-NLS-1$
 			if (i > 0) {
 				MailList o = ServiceLocator.instance().getMailListsService().findMailListByNameAndDomainName(s.substring(0,i), s.substring(i+1));
 				if (o != null)
@@ -560,7 +560,7 @@ public class MailShortcut implements ActionHandler {
 			}
 		}
 		else if (att.getType() == TypeEnumeration.NETWORK_TYPE) {
-			buffer.append(quote(s)).append(" ");
+			buffer.append(quote(s)).append(" "); //$NON-NLS-1$
 			Network o = ServiceLocator.instance().getNetworkService().findNetworkByName(s);
 			if (o != null)
 				buffer.append(quote(o.getDescription()));
@@ -569,20 +569,20 @@ public class MailShortcut implements ActionHandler {
 			buffer.append(quote(s));
 		}
 		else if (att.getType() == TypeEnumeration.OS_TYPE) {
-			buffer.append(quote(s)).append(" ");
+			buffer.append(quote(s)).append(" "); //$NON-NLS-1$
 			OsType o = ServiceLocator.instance().getNetworkService().findOSTypeByName(s);
 			if (o != null)
 				buffer.append(quote(o.getDescription()));
 		}
 		else if (att.getType() == TypeEnumeration.PASSWORD_TYPE) {
-			buffer.append("***************");
+			buffer.append("***************"); //$NON-NLS-1$
 		}
 		else if (att.getType() == TypeEnumeration.PHOTO_TYPE) {
-			buffer.append("");
+			buffer.append(""); //$NON-NLS-1$
 		}
 		else if (att.getType() == TypeEnumeration.ROLE_TYPE) {
-			buffer.append(quote(s)).append(" ");
-			int i = s.lastIndexOf("@");
+			buffer.append(quote(s)).append(" "); //$NON-NLS-1$
+			int i = s.lastIndexOf("@"); //$NON-NLS-1$
 			if (i > 0) {
 				Role o = ServiceLocator.instance().getApplicationService().findRoleByNameAndSystem(s.substring(0,i), s.substring(i+1));
 				if (o != null)
@@ -592,13 +592,13 @@ public class MailShortcut implements ActionHandler {
 		else if (att.getType() == TypeEnumeration.SEPARATOR) {
 		}
 		else if (att.getType() == TypeEnumeration.USER_TYPE) {
-			buffer.append(quote(s)).append(" ");
+			buffer.append(quote(s)).append(" "); //$NON-NLS-1$
 			User o = ServiceLocator.instance().getUserService().findUserByUserName(s);
 			if (o != null)
 				buffer.append(quote(o.getFullName()));
 		}
 		else if (att.getType() == TypeEnumeration.USER_TYPE_TYPE) {
-			buffer.append(quote(s)).append(" ");
+			buffer.append(quote(s)).append(" "); //$NON-NLS-1$
 			for (UserType ut: ServiceLocator.instance().getUserDomainService().findAllUserType()) {
 				if (ut.getName().equals(s))
 					buffer.append(quote(ut.getDescription()));
@@ -609,24 +609,43 @@ public class MailShortcut implements ActionHandler {
 	}
 
 	private void addGrants(StringBuffer buffer, String user, List<RoleRequestInfo> value) throws InternalErrorException {
-		buffer.append("<table class='perms'><tr><th>User</th><th>Application</th><th>Permission</th></tr>");
+		buffer.append("<table class='perms'><tr><th>User</th><th>Application</th><th>Permission</th></tr>"); //$NON-NLS-1$
 		for (RoleRequestInfo rri: value) {
-			if (rri.getTaskInstance().equals(executionContext.getTaskInstance().getId())) {
-				Role role = ServiceLocator.instance().getApplicationService().findRoleById(rri.getRoleId());
-				buffer.append("<tr><td>")
-					.append(quote(rri.getUserName()))
-					.append(" ")
-					.append(quote(rri.getUserFullName()))
-					.append("</td><td>")
-					.append(quote(role.getInformationSystemName()))
-					.append("</td><td>")
-					.append(quote(role.getName()))
-					.append(" ")
-					.append(quote(rri.getRoleDescription()))
-					.append("</td></tr>");
+			if (rri.getTaskInstance() != null && 
+					rri.getTaskInstance().equals(executionContext.getTaskInstance().getId())) {
+				Long roleId = rri.getRoleId();
+				if (roleId == null) {
+					Role role = ServiceLocator.instance().getApplicationService().findRoleById(rri.getPreviousRoleId());
+					buffer.append("<tr><td><span style='color:red'>") //$NON-NLS-1$
+						.append(com.soffid.iam.addons.bpm.handler.Messages.getString("MailShortcut.48")) //$NON-NLS-1$
+						.append("</span> ") //$NON-NLS-1$
+						.append(quote(rri.getUserName()))
+						.append(" ") //$NON-NLS-1$
+						.append(quote(rri.getUserFullName()))
+						.append("</td><td>") //$NON-NLS-1$
+						.append(quote(role.getInformationSystemName()))
+						.append("</td><td>") //$NON-NLS-1$
+						.append(quote(role.getName()))
+						.append(" ") //$NON-NLS-1$
+						.append(quote(rri.getRoleDescription()))
+						.append("</td></tr>"); //$NON-NLS-1$
+				} else {
+					Role role = ServiceLocator.instance().getApplicationService().findRoleById(rri.getRoleId());
+					buffer.append("<tr><td>") //$NON-NLS-1$
+						.append(quote(rri.getUserName()))
+						.append(" ") //$NON-NLS-1$
+						.append(quote(rri.getUserFullName()))
+						.append("</td><td>") //$NON-NLS-1$
+						.append(quote(role.getInformationSystemName()))
+						.append("</td><td>") //$NON-NLS-1$
+						.append(quote(role.getName()))
+						.append(" ") //$NON-NLS-1$
+						.append(quote(rri.getRoleDescription()))
+						.append("</td></tr>"); //$NON-NLS-1$
+				}
 			}
 		}
-		buffer.append("</table>");
+		buffer.append("</table>"); //$NON-NLS-1$
 	}
 
 	public void generateButtons(String user) throws UnsupportedEncodingException {
@@ -638,7 +657,7 @@ public class MailShortcut implements ActionHandler {
 		for (String key: keys) {
 			String link = buttons.get(key);
 			link = link + "."+hash; //$NON-NLS-1$
-			sb.append("<a href='"+quote(getExternalUrl()+"/soffid/anonymous/bpm/action.zul?shortcut="+ URLEncoder.encode(link, "UTF-8"))+"'>") //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			sb.append("<a href='"+quote(getExternalUrl()+"/soffid/anonymous/bpm/action.zul?shortcut="+ URLEncoder.encode(link, "UTF-8"))+"'>") //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 				.append("<div sclass='buttondiv'>") //$NON-NLS-1$
 				.append(key)
 				.append("</div></a>"); //$NON-NLS-1$
@@ -677,7 +696,7 @@ public class MailShortcut implements ActionHandler {
 	public void send(String fromAddress,
 			Set<InternetAddress> targetAddresses, String subject, String text) {
 		if ((targetAddresses == null) || (targetAddresses.isEmpty())) {
-			debug(Messages.getString("Mail.SkippingMail")); //$NON-NLS-1$
+			debug(""); //$NON-NLS-1$
 			return;
 		}
 
@@ -696,19 +715,19 @@ public class MailShortcut implements ActionHandler {
 
 					// System.out.println("Cannot send mail, now retrying: " +
 					// msgex);
-					error(String.format(Messages.getString("Mail.NotSendMailError"), msgex));  //$NON-NLS-1$
+					error(String.format("", msgex));  //$NON-NLS-1$
 					Thread.sleep(1000);
 				}
 			}
 		} catch (Exception e) {
-			throw new JbpmException(Messages.getString("Mail.NotSendMail"), e); //$NON-NLS-1$
+			throw new JbpmException("", e); //$NON-NLS-1$
 		}
 	}
 
 	protected void sendMailInternal(String fromAddress, Set<InternetAddress> targetAddresses,
 			String subject, String text) throws Exception {
 		
-		debug(String.format(Messages.getString("Mail.SendingMailMessage"), targetAddresses, subject)); //$NON-NLS-1$
+		debug(String.format("", targetAddresses, subject)); //$NON-NLS-1$
 		if (text != null && ! text.isEmpty())
 		{
 			while (subject != null && 
@@ -762,6 +781,8 @@ public class MailShortcut implements ActionHandler {
 		String externalURL = ConfigurationCache.getProperty("soffid.externalURL"); //$NON-NLS-1$
 		if (externalURL == null)
 			externalURL = ConfigurationCache.getProperty("AutoSSOURL"); //$NON-NLS-1$
+		if (externalURL == null)
+			externalURL = "http://localhost:8080/"; //$NON-NLS-1$
 		if (!externalURL.endsWith("/")) //$NON-NLS-1$
 			externalURL = externalURL + "/"; //$NON-NLS-1$
 		return externalURL;
