@@ -132,6 +132,13 @@ public class Deployer {
             prop.setName("type"); //$NON-NLS-1$
             prop.setValue(PredefinedProcessType.ROLE_GRANT_APPROVAL.getValue());
             ctx.getSession().save(prop);
+            
+            prop = new ProcessDefinitionProperty();
+            prop.setProcessDefinitionId(
+            		new Long(def.getId()));
+            prop.setName("appliesTo"); //$NON-NLS-1$
+            prop.setValue("privileged-account");
+            ctx.getSession().save(prop);
 		}
 	}
 
@@ -558,11 +565,16 @@ public class Deployer {
 			}
 			else if (node.getType().equals((NodeType.NT_FORK)))
 			{
-				n = new Fork();
+				Fork fork = new Fork();
+				n = fork;
+				
 			}
 			else if (node.getType().equals((NodeType.NT_JOIN)))
 			{
-				n = new Join();
+				Join join = new Join();
+				n = join;
+				join.setNOutOfM(-1);
+				join.setDiscriminator(false);
 			}
 			else
 			{
