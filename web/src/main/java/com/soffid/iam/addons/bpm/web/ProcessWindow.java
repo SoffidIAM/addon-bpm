@@ -76,7 +76,7 @@ public class ProcessWindow extends Window {
 	private EventListener onCancel = new EventListener() {
 		@Override
 		public void onEvent(Event event) throws Exception {
-			Missatgebox.confirmaOK_CANCEL("If you confirm to exit, any change will be dascarded", onConfirmCancel);
+			Missatgebox.confirmaOK_CANCEL(Labels.getLabel("bpm.discardChanges"), onConfirmCancel);
 		}
 	};
 
@@ -220,14 +220,23 @@ public class ProcessWindow extends Window {
 		public void onEvent(Event event) throws Exception {
 			edit(event.getTarget().getPreviousSibling(),
 					"{\"executionContext\":\"org.jbpm.graph.exe.ExecutionContext\","
-							  + "\"serviceLocator\":\"com.soffid.iam.ServiceLocator\"}");
+							  + "\"serviceLocator\":\"com.soffid.iam.ServiceLocator\"}",
+					"<b>executionContext</b>: JBPM Context<br>"
+					+ "<b>serviceLocator</b>: <a target='_blank' href='http://www.soffid.org/doc/console/latest/iam-core/apidocs/index.html'>Service locator</a><br>");
 		}
 	};
 
 	
 	public void editValidationScript (Event event) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException {
 		edit (event.getTarget().getPreviousSibling(),
-						"{\"serviceLocator\":\"com.soffid.iam.ServiceLocator\"}");
+						"{\"serviceLocator\":\"com.soffid.iam.ServiceLocator\"}",
+						"<b>serviceLocator</b>: <a target='_blank' href='http://www.soffid.org/doc/console/latest/iam-core/apidocs/index.html'>Service locator</a><br>"
+						+ "<b>inputFields</b>: Map of <a target='_blank' href='http://www.soffid.org/doc/console/latest/iam-web/apidocs/com/soffid/iam/web/component/InputField3.html'>input fields</a> by name<br>"
+						+ "<b>value</b>: New field value<br>"
+						+ "<b>attributes</b>: Map of current values. Contains the current field former value<br>"
+						+ "<b>inputField</b>: Current <a target='_blank' href='http://www.soffid.org/doc/console/latest/iam-web/apidocs/com/soffid/iam/web/component/InputField3.html' target='_black'>input field</a><br>"
+						+ "<b>ownerContext</b>: The workflow name<br><br>"
+						+ "Expected return value: null or true if the value is valid. false if not. Any other value will be displayed as a warning");
 
 	}
 
@@ -235,13 +244,28 @@ public class ProcessWindow extends Window {
 		edit (event.getTarget().getPreviousSibling(),
 						"{\"serviceLocator\":\"com.soffid.iam.EJBLocator\", "
 						+ "\"worflowWindow\":\"es.caib.bpm.toolkit.WorkflowWindow\", "
-						+ "\"task\":\"com.soffid.iam.bpm.api.TaskInstance\"}");
+						+ "\"task\":\"com.soffid.iam.bpm.api.TaskInstance\"}",
+
+						"<b>serviceLocator</b>: <a target='_blank' href='http://www.soffid.org/doc/console/latest/iam-core/apidocs/index.html'>Service locator</a><br>"
+						+ "<b>inputFields</b>: Map of <a target='_blank' href='http://www.soffid.org/doc/console/latest/iam-web/apidocs/com/soffid/iam/web/component/InputField3.html'>input fields</a> by name<br>"
+						+ "<b>value</b>: New field value<br>"
+						+ "<b>attributes</b>: Map of current values. Contains the current field former value<br>"
+						+ "<b>inputField</b>: Current <a target='_blank' href='http://www.soffid.org/doc/console/latest/iam-web/apidocs/com/soffid/iam/web/component/InputField3.html'>input field</a><br>"
+						+ "<b>ownerContext</b>: The workflow name<br>"
+						+ "<b>task</b>: <a target='_blank' href='http://www.soffid.org/doc/console/latest/iam-common/apidocs/com/soffid/iam/bpm/api/TaskInstance.html'>input fields</a> by name<br>");
 
 	}
 
 	public void editVisibilityScript (Event event) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException {
 		edit ( event.getTarget().getPreviousSibling(),
-						"{\"serviceLocator\":\"com.soffid.iam.ServiceLocator\"}");
+						"{\"serviceLocator\":\"com.soffid.iam.ServiceLocator\"}",
+						"<b>serviceLocator</b>: <a target='_blank' href='http://www.soffid.org/doc/console/latest/iam-core/apidocs/index.html'>Service locator</a><br>"
+								+ "<b>value</b>: New field value<br>"
+								+ "<b>attributes</b>: Map of current values. Contains the current field former value<br>"
+								+ "<b>inputField</b>: Current <a target='_blank' href='http://www.soffid.org/doc/console/latest/iam-web/apidocs/com/soffid/iam/web/component/InputField3.html'>input field</a><br>"
+								+ "<b>inputFields</b>: Map of <a target='_blank' href='http://www.soffid.org/doc/console/latest/iam-web/apidocs/com/soffid/iam/web/component/InputField3.html'>input fields</a> by name<br>"
+								+ "<b>ownerContext</b>: The workflow name<br><br>"
+								+ "Expected return value: true or false");
 
 	}
 
@@ -399,11 +423,11 @@ public class ProcessWindow extends Window {
 		this.version = version;
 	}
 
-	public void edit(Component component, String vars ) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException {
+	public void edit(Component component, String vars, String env ) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException {
 		if ("3".equals(version)) {
 			Class.forName("com.soffid.iam.web.popup.Editor")
-			.getMethod("edit", InputElement.class, String.class)
-			.invoke(null, component, vars);
+			.getMethod("edit", InputElement.class, String.class, String.class)
+			.invoke(null, component, vars, env);
 
 		} else {
 			Events.sendEvent(new Event ("onEdit", 
