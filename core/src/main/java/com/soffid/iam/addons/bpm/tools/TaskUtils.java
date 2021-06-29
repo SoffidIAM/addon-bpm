@@ -150,6 +150,7 @@ public class TaskUtils {
 						ri.setApplicationDescription(appDesc.getDescription());
 						ri.setUserName(null);
 						ri.setRoleId(r2.getId());
+						ri.setSuggestedRoleId(r2.getId());
 						ri.setParentRole(roleId);
 						ri.setRoleDescription(r2.getDescription());
 						grants.add(++i, ri);

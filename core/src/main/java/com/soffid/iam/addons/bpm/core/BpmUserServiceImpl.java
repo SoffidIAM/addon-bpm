@@ -9,21 +9,15 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-
-import javax.resource.spi.work.ExecutionContext;
 
 import org.jbpm.JbpmContext;
 import org.jbpm.graph.def.ProcessDefinition;
-import org.jbpm.taskmgmt.exe.TaskMgmtInstance;
 
 import com.soffid.iam.ServiceLocator;
 import com.soffid.iam.addons.bpm.common.Attribute;
 import com.soffid.iam.addons.bpm.common.Constants;
 import com.soffid.iam.addons.bpm.common.Field;
-import com.soffid.iam.addons.bpm.common.Node;
-import com.soffid.iam.addons.bpm.common.NodeType;
 import com.soffid.iam.addons.bpm.common.PageInfo;
 import com.soffid.iam.addons.bpm.common.RoleRequestInfo;
 import com.soffid.iam.addons.bpm.common.Trigger;
@@ -40,7 +34,6 @@ import com.soffid.iam.security.SoffidPrincipalImpl;
 import com.soffid.iam.service.AuthorizationService;
 import com.soffid.iam.utils.Security;
 
-import es.caib.seycon.ng.comu.AccountType;
 import es.caib.seycon.ng.exception.InternalErrorException;
 import es.caib.seycon.ng.exception.UnknownUserException;
 

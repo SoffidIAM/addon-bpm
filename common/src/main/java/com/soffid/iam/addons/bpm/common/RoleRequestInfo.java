@@ -30,6 +30,7 @@ public class RoleRequestInfo implements Serializable {
 	String comments;
 	private SoDRisk sodRisk;
 	RoleAccount roleAccount;
+	Long suggestedRoleId;
 	
 
 	public String getApplicationName() {
@@ -133,6 +134,12 @@ public class RoleRequestInfo implements Serializable {
 	}
 	public void setRoleAccount(RoleAccount roleAccount) {
 		this.roleAccount = roleAccount;
+	}
+	public Long getSuggestedRoleId() {
+		return suggestedRoleId;
+	}
+	public void setSuggestedRoleId(Long suggestedRoleId) {
+		this.suggestedRoleId = suggestedRoleId;
 	}
 
 

@@ -65,7 +65,10 @@ import com.soffid.iam.bpm.api.ProcessInstance;
 import com.soffid.iam.bpm.api.TaskInstance;
 import com.soffid.iam.service.ApplicationService;
 import com.soffid.iam.service.impl.bshjail.SecureInterpreter;
+import com.soffid.iam.web.WebDataType;
 import com.soffid.iam.web.component.CustomField3;
+import com.soffid.iam.web.component.InputField3;
+import com.soffid.iam.web.component.InputFieldContainer;
 
 import bsh.EvalError;
 import bsh.TargetError;
@@ -79,18 +82,19 @@ import es.caib.seycon.ng.utils.Security;
 import es.caib.zkib.binder.BindContext;
 import es.caib.zkib.component.DataListbox;
 import es.caib.zkib.component.DataTextbox;
+import es.caib.zkib.component.Databox.Type;
 import es.caib.zkib.datasource.XPathUtils;
 import es.caib.zkib.zkiblaf.ImageClic;
 import es.caib.zkib.zkiblaf.Missatgebox;
 
-public class StandardUserWindow extends WorkflowWindow {
+public class StandardUserWindow extends WorkflowWindow implements InputFieldContainer {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
 	private Div grid;
 	private List<RoleRequestInfo> grants;
-	private Grid grantsGrid;
+	private Div grantsGrid;
 	private Listbox approveGrantsGrid;
 	private PageInfo pageInfo;
 	private boolean grantsReadOnly;
@@ -155,7 +159,7 @@ public class StandardUserWindow extends WorkflowWindow {
 			}
 			generateFields();
 			
-			updateFieldsVisibility();
+			adjustVisibility();
 			
 		} catch (Exception e) {
 			throw new RuntimeException ("Error getting task information", e);
@@ -172,7 +176,9 @@ public class StandardUserWindow extends WorkflowWindow {
 			{
 				interpreter.set("serviceLocator", new com.soffid.iam.EJBLocator()); //$NON-NLS-1$
 				interpreter.set("task", getTask()); //$NON-NLS-1$
-				interpreter.set("workflowWindow", this); //$NON-NLS-1$
+				if (inputField != null && inputField instanceof InputField3)
+					interpreter.set("value", ((InputField3)inputField).getValue()); //$NON-NLS-1$
+				interpreter.set("attributes", getTask().getVariables()); //$NON-NLS-1$
 				interpreter.set("inputField", inputField); //$NON-NLS-1$
 				interpreter.set("inputFields", inputFields); //$NON-NLS-1$
 				
@@ -241,17 +247,11 @@ public class StandardUserWindow extends WorkflowWindow {
 		data.setSclass("container");
 		// data.setWidth("100%");
 		d.appendChild(data);
-		grantsGrid = new Grid();
+		grantsGrid = new Div();
+		grantsGrid.setStyle("display: table");
 		data.appendChild(grantsGrid);
 		grantsGrid.setSclass("noBorderGrid grantsGrid");
-		Columns cols = new Columns();
-		grantsGrid.appendChild(cols);
-		grantsGrid.setFixedLayout(true);
 		grantsGrid.setWidth("100%");
-		Column col1 = new Column(); col1.setWidth("150px");
-		cols.appendChild(col1);
-		Column col2 = new Column(); col2.setWidth("*");
-		cols.appendChild(col2);
 		grants = (List<RoleRequestInfo>) getVariables().get("grants");
 		if (grants == null)
 		{
@@ -260,7 +260,9 @@ public class StandardUserWindow extends WorkflowWindow {
 		}
 		grantsReadOnly = readonly || Boolean.TRUE.equals( field.getReadOnly() );
 		regenerateAppRows(grantsGrid);
-		if ( ! grantsReadOnly && pageInfo.getWorkflowType() == WorkflowType.WT_USER &&
+		if ( ! grantsReadOnly && 
+				( pageInfo.getWorkflowType() == WorkflowType.WT_USER || 
+				  pageInfo.getWorkflowType() == WorkflowType.WT_PERMISSION ) && 
 				pageInfo.getNodeType() != NodeType.NT_GRANT_SCREEN)
 		{
 			Button b = new Button( Labels.getLabel("bpm.addApplication"));
@@ -278,13 +280,8 @@ public class StandardUserWindow extends WorkflowWindow {
 		
 	}
 
-	private void regenerateAppRows(Grid grantsGrid) throws Exception {
-		if (grantsGrid.getRows() == null)
-		{
-			grantsGrid.appendChild( new Rows() );
-		}
-		
-		grantsGrid.getRows().getChildren().clear();
+	private void regenerateAppRows(Div grantsGrid) throws Exception {
+		grantsGrid.getChildren().clear();
 		int i = 1;
 		log.info("Generating screen for "+grants.size()+" grants");
 		for ( RoleRequestInfo grant: grants)
@@ -329,8 +326,9 @@ public class StandardUserWindow extends WorkflowWindow {
 			{
 				if (att.getCode().equals(field.getName()))
 				{
+					WebDataType wdt = new WebDataType(att);
 					f = new CustomField3();
-					f.setLabel(field.getLabel());
+					f.setLabel(field.getLabel() == null || field.getLabel().trim().isEmpty() ? wdt.getLabel(): field.getLabel());
 					f.setDataType(att.getType().toString());
 					f.setDataObjectType(att.getDataObjectType());
 					f.setBind( toBind ( att.getCode()) );
@@ -366,6 +364,7 @@ public class StandardUserWindow extends WorkflowWindow {
 		BindContext ctx = XPathUtils.getComponentContext(this);
 		f.setContext(ctx.getXPath());
 		f.setOwnerObject( getVariables());
+		f.setOwnerContext(getProcessInstance().getDescription());
 		
 		f.afterCompose();
 		f.addEventListener("onChange", onChangeField);
@@ -448,7 +447,6 @@ public class StandardUserWindow extends WorkflowWindow {
 			refresh();
 			generateFields();
 		}
-		updateFieldsVisibility();
 		if (pageInfo.getTriggers() != null) {
 			for ( Trigger trigger: pageInfo.getTriggers())
 			{
@@ -484,13 +482,13 @@ public class StandardUserWindow extends WorkflowWindow {
 					}
 				}
 			}
-			TaskUtils.populatePermissions(getTask().getVariables() , u);
+			TaskUtils.populatePermissions(getVariables() , u);
 			if (! "D".equals(getVariables().get("action")))
 			{
 				if (u.getActive().booleanValue())
-					getVariables().put("action", "E");
-				else
 					getVariables().put("action", "M");
+				else
+					getVariables().put("action", "E");
 			}
 			refresh ();
 		}
@@ -502,7 +500,7 @@ public class StandardUserWindow extends WorkflowWindow {
 		if (grantsGrid == null)
 			return;
 
-		for (Row row : new LinkedList<Row>((List<Row>) grantsGrid.getRows().getChildren())) {
+		for (Div row : new LinkedList<Div>((List<Div>) grantsGrid.getChildren())) {
 			if (row.getAttribute("permRow") != null)
 				row.setParent(null);
 		}
@@ -511,47 +509,6 @@ public class StandardUserWindow extends WorkflowWindow {
 		refresh();
 	}
 
-	protected void updateFieldsVisibility() {
-		String action = (String) getVariables().get("action");
-		boolean add = "A".equals(action);
-		boolean disable = "D".equals(action);
-		
-		for (Component div: (Collection<Div>) grid.getChildren())
-		{
-			if (div instanceof CustomField3)
-			{
-				CustomField3 customField = (CustomField3) div;
-				
-				Field fieldDef = (Field) customField.getAttribute("fieldDef");
-				DataType dataType = (DataType) customField.getAttribute("standardAttributeDefinition");
-				Attribute attribute = (Attribute) customField.getAttribute("processAttributeDefinition");
-				if (fieldDef.getReadOnly() != null && fieldDef.getReadOnly().booleanValue())
-					customField.setReadonly(true);
-				else if ("action".equals(customField.getBind()))
-				{
-					customField.setReadonly(false);
-					customField.adjustVisibility();
-				}
-				else if ("userSelector".equals(customField.getBind()))
-				{
-					customField.setVisible( ! add );
-					customField.setReadonly(false);
-				}
-				else if ( dataType != null)
-				{
-					customField.setReadonly( disable );
-					customField.adjustVisibility();
-				}
-				else
-				{
-					customField.setReadonly(false);
-					customField.adjustVisibility();
-				}
-				
-			}
-		}
-	}
-	
 	private SecureInterpreter createInterpreter(CustomField3 cf, Field fieldDefinition, Object value) throws EvalError {
 		Component grandpa = getParent().getParent();
 		SecureInterpreter i = new SecureInterpreter();
@@ -681,16 +638,29 @@ public class StandardUserWindow extends WorkflowWindow {
 		}
 	}
 	
-	private void generateApplicationRow(final Grid g, final int i, final RoleRequestInfo perm) throws Exception {
+	private void generateApplicationRow(final Div g, final int i, final RoleRequestInfo perm) throws Exception {
 		ApplicationService service = ServiceLocator.instance().getApplicationService();
 		
-		Row r = new Row();
-		r.setParent(g.getRows());
+		Div r = new Div();
+		r.setStyle("width: 100%; display: table-row");
+		r.setParent(g);
 		//new Label("Aplicación "+perm.getApplicationName()).setParent(r);
-		Label label = new Label((String) perm.getApplicationName());
-		label.setParent(r);
+			
+		Div r1 = new Div();
+		r1.setStyle("display: table-cell; width: 150px");
+		Label label = new Label();
+		if (i == 1 || 
+				! grants.get(i-2).getApplicationName().equals(perm.getApplicationName()))
+			label.setValue(perm.getApplicationName());
+		label.setParent(r1);
+		r1.setParent(r);
+		
+		Div rr = new Div();
+		rr.setStyle("display: table-cell; width: 48px; vertical-align: top; text-align: center");
+		r.appendChild(rr);
 		
 		final Div d = new Div();
+		d.setStyle("display: table-cell; width: auto; ");
 		d.setParent(r);
 		
 		if ( grantsReadOnly )
@@ -715,13 +685,6 @@ public class StandardUserWindow extends WorkflowWindow {
 				l.setParent(d);
 			}
 		} else {
-			DataListbox lb = new DataListbox();
-			lb.setBind("grants["+i+"]/roleId");
-			lb.addEventListener("onSelect", onChangeRole);
-			lb.setStyle("vertical-align: top");
-			lb.setMold("select");
-			lb.setParent(d);
-			lb.setDisabled(grantsReadOnly);
 			
 			Security.nestedLogin(Security.getCurrentAccount(), new String[] {
 				Security.AUTO_USER_QUERY+Security.AUTO_ALL,
@@ -730,67 +693,85 @@ public class StandardUserWindow extends WorkflowWindow {
 			});
 			try {
 				
-				if ( perm.getParentRole() == null )
+				if ( perm.getSuggestedRoleId() == null )
 				{
-					new Listitem("- No access -", null).setParent(lb);
-					List<Role> roles = new LinkedList<Role>( ServiceLocator.instance().getApplicationService().findRolesByApplicationName(perm.getApplicationName()));
-					Collections.sort(roles, new Comparator<Role>() {
-						public int compare(Role o1, Role o2) {
-							return o1.getDescription().compareTo(o2.getDescription());
-						}
-					});
-					for (Role rol: roles)
-					{
-						if (rol.getBpmEnforced().booleanValue())
-						{
-							Listitem listitem = new Listitem(rol.getDescription(), rol.getId());
-							lb.appendChild(listitem);
-							if (rol.getId().equals( perm.getRoleId()))
-								lb.setSelectedItem(listitem);
-						}
+					CustomField3 field = new CustomField3();
+					field.setNoLabel(true);
+					field.setRaisePrivileges(true);
+					field.setDataType("ROLE");
+					field.setHideUserName(true);
+					field.setFilterExpression("informationSystem.name eq \""+encodeScim (perm.getApplicationName())+"\" and manageableWF eq true") ;
+					if (perm.getRoleId() != null) {
+						Role rol = service.findRoleById( perm.getRoleId());
+						field.setValue(rol.getName()+"@"+rol.getSystem());
 					}
-					
-					lb.addEventListener("onSelect", new EventListener() {
-						public void onEvent(Event event) throws Exception {
-							updateStatus (event.getTarget(), i-1);
-							createChildRoles (g, i-1);
+					field.addEventListener("onChange", (event) -> {
+						Role role = (Role) field.getValueObject();
+						RoleRequestInfo grant = grants.get(i-1);
+						if (role == null) {
+							grant.setRoleId(null);
+							grant.setRoleDescription(null);
+						} else {
+							grant.setRoleId(role.getId());
+							grant.setRoleDescription(role.getDescription());
 						}
+						updateStatus (event.getTarget(), i-1);
+						createChildRoles (g, i-1);
 					});
+					d.appendChild(field);
+					field.afterCompose();
 					d.appendChild(new Label()); // Status label
-					updateStatus (lb, i-1);
+					updateStatus (field, i-1);
 				}
 				else
 				{
+					DataListbox lb = new DataListbox();
+					lb.setBind("grants["+i+"]/roleId");
+					lb.addEventListener("onSelect", onChangeRole);
+					lb.setStyle("vertical-align: middle");
+					lb.setMold("select");
+					lb.setParent(d);
+					lb.setDisabled(grantsReadOnly);
 					lb.setMold("label");
-					Role rol = service.findRoleById((Long) perm.getRoleId());
+					Role rol = service.findRoleById( perm.getSuggestedRoleId());
+					new Listitem("- No access -", null).setParent(lb);
 					Listitem listitem = new Listitem(rol.getDescription(), rol.getId());
 					lb.appendChild(listitem);
 					lb.setSelectedItem(listitem);
 					lb.setDisabled(true);
+					d.appendChild(new Label()); // Status label
+					updateStatus (lb, i-1);
 				}
 	
 	
-				if (perm.getParentRole() == null && perm.getPreviousRoleId() == null) 
+				if (perm.getParentRole() == null )
 				{
-					ImageClic ci = new ImageClic("~./img/list-remove.gif");
-					d.appendChild(ci);
-					ci.setTitle(Labels.getLabel("usuaris.zul.Esborrarolsseleccion"));
-					ci.addEventListener("onClick", new EventListener() {
-						
-						public void onEvent(Event event) throws Exception {
-							grants.remove(i-1);
-							regenerateAppRows(g);
+					if (perm.getRoleId() != null) {
+						ImageClic ci = new ImageClic("~./img/list-remove.gif");
+						rr.appendChild(ci);
+						ci.setTitle(Labels.getLabel("usuaris.zul.Esborrarolsseleccion"));
+						ci.addEventListener("onClick", new EventListener() {
 							
-						}
-			
-					});
-					DataTextbox dtb = new DataTextbox();
-					dtb.setBind("grants["+i+"]/comments");
-					dtb.setMultiline(true);
-					dtb.setRows(2);
-					dtb.setWidth("100%");
-					dtb.setReadonly(grantsReadOnly);
-					d.appendChild(dtb);
+							public void onEvent(Event event) throws Exception {
+								if (perm.getPreviousRoleId() == null)
+									grants.remove(i-1);
+								else
+									perm.setRoleId(null);
+								regenerateAppRows(g);
+							}
+				
+						});
+					}
+					if (perm.getPreviousRoleId() == null) {
+						DataTextbox dtb = new DataTextbox();
+						dtb.setBind("grants["+i+"]/comments");
+						dtb.setStyle("display: block; width: 100%; width: calc(100% - 64px); margin-left: 64px;");
+						dtb.setMultiline(true);
+						dtb.setRows(1);
+						dtb.setPlaceholder( Labels.getLabel("task.comentari"));
+						dtb.setReadonly(grantsReadOnly);
+						d.appendChild(dtb);
+					}
 				}
 	
 	
@@ -803,6 +784,7 @@ public class StandardUserWindow extends WorkflowWindow {
 
 	private void updateStatus(Component lb, int i) {
 		Label l = (Label) lb.getNextSibling();
+		l.setStyle("vertical-align: middle");
 		RoleRequestInfo perm = grants.get(i);
 		if (perm.getRoleId() == null)
 		{
@@ -831,7 +813,13 @@ public class StandardUserWindow extends WorkflowWindow {
 		
 	}
 
-	private void createChildRoles(Grid g, int i) throws Exception {
+	protected String encodeScim(String s) {
+		return s.replace("\\", "\\\\")
+				.replace("\"", "\\\"")
+				.replace("\'", "\\\'");
+	}
+	
+	private void createChildRoles(Div g, int i) throws Exception {
 		removeOrphanApps();
 
 		com.soffid.iam.addons.bpm.tools.TaskUtils.createChildRolesNoRefresh(grants, i);
@@ -1196,6 +1184,82 @@ public class StandardUserWindow extends WorkflowWindow {
 			((Checkbox)event.getTarget().getParent().getPreviousSibling().getFirstChild()).setChecked(false);
 		}
 	};
+
+	@Override
+	public Map<String, InputField3> getInputFieldsMap() {
+		Map<String,InputField3> m = new HashMap<>();
+		for (String key: inputFields.keySet()) {
+			Object o = inputFields.get(key);
+			if (o instanceof InputField3)
+				m.put(key, (InputField3) o);
+		}
+		return m;
+	}
+
+	@Override
+	public Map getAttributesMap() {
+		return getTask().getVariables();
+	}
+
+	@Override
+	public void adjustVisibility() {
+		String action = (String) getVariables().get("action");
+		boolean add = "A".equals(action);
+		boolean disable = "D".equals(action);
+
+		InputField3 container = null;
+		boolean visible = false;
+		for (Object o: inputFields.values())
+		{
+			if (o instanceof CustomField3) {
+				CustomField3  customField = (CustomField3) o;
+				Field fieldDef = (Field) customField.getAttribute("fieldDef");
+				DataType dataType = (DataType) customField.getAttribute("standardAttributeDefinition");
+				Attribute attribute = (Attribute) customField.getAttribute("processAttributeDefinition");
+				if (fieldDef.getReadOnly() != null && fieldDef.getReadOnly().booleanValue())
+					customField.setReadonly(true);
+				else if ("action".equals(customField.getBind()))
+				{
+					customField.setReadonly(false);
+					customField.adjustVisibility();
+				}
+				else if ("userSelector".equals(customField.getBind()))
+				{
+					customField.setVisible( ! add );
+					customField.setReadonly(false);
+				}
+				else if ( dataType != null)
+				{
+					customField.setReadonly( disable );
+					customField.adjustVisibility();
+				}
+				else
+				{
+					customField.setReadonly(false);
+					customField.adjustVisibility();
+				}
+
+				
+				if (customField.getDataType() != null && customField.getDataType().getType() == TypeEnumeration.SEPARATOR) {
+					if (container != null) {
+						container.setVisible(visible);
+						container.getParent().setVisible(visible);
+					}
+					container = customField;
+					visible = false;
+				}
+				customField.setOwnerObject(getTask()); 
+				customField.setOwnerContext(getTask().getProcessName());
+				boolean v = customField.attributeVisible();
+				if (customField != container && container != null && v) visible = true;
+				customField.setVisible(v);
+			}
+		}
+		if (container != null) {
+			container.setVisible(visible);
+			container.getParent().setVisible(visible);
+		}
+	}
 
 
 }
