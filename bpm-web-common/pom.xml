@@ -12,13 +12,13 @@
   		<dependency>
 			<groupId>com.soffid.iam.console</groupId>
 			<artifactId>iam-core</artifactId>
-			<version>3.0.9</version>
+			<version>3.0.10</version>
 			<scope>provided</scope>
 		</dependency>
  		<dependency>
 			<groupId>com.soffid.iam.console</groupId>
 			<artifactId>iam-web</artifactId>
-			<version>3.0.9</version>
+			<version>3.0.10</version>
 			<scope>provided</scope>
 			<classifier>classes</classifier>
 		</dependency>
