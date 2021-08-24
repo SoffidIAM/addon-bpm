@@ -218,6 +218,11 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 			if ( ! ignoreEmptyFields || vars.get(field.getName()) != null)
 				createField (field);
 		}
+		
+		for ( Component input: inputFields.values())
+			if (input instanceof InputField3)
+				((InputField3) input).runOnLoadTrigger();
+
 	}
 
 	private void createField(Field field) throws Exception {
@@ -1073,7 +1078,11 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 				label.setStyle("color: red");
 				permsCell.appendChild(label);
 			}
-	
+			if (grant.getComments() != null && ! grant.getComments().trim().isEmpty()) {
+				Label l = new Label(grant.getComments());
+				permsCell.appendChild(l);
+				l.setStyle("display: block; padding-left: 24px");
+			}
 			Listcell c = new Listcell();
 			item.appendChild(c);
 			Checkbox cb = new Checkbox();

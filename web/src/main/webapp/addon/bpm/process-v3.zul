@@ -203,37 +203,11 @@
 										<customfield3 label="${c:l('bpm.mailMessage') }" dataType="STRING" bind="mailMessage" multiline="true"/>
 									</div>
 									<div id="applyType">
-										<grid>
-											<columns>
-												<column/>
-											</columns>
-											<rows>
-												<row>
-													<div>
-														${c:l('bpm.applyUser') }: <switch bind="applyUserChanges" onCheck=""/>
-													</div>
-												</row>
-												<row>
-													<div>
-														${c:l('bpm.applyEntitlements') }: <switch bind="applyEntitlements" onCheck=""/>
-													</div>
-												</row>
-											</rows>
-										</grid>
+										<customfield3 label="${c:l('bpm.applyUser') }" bind="applyUserChanges" dataType="BOOLEAN"/>
+										<customfield3 label="${c:l('bpm.applyEntitlements') }" bind="applyEntitlements" dataType="BOOLEAN"/>
 									</div>
 									<div id="applyAccountType">
-										<grid>
-											<columns>
-												<column/>
-											</columns>
-											<rows>
-												<row>
-													<div>
-														${c:l('bpm.grantAccountAccess') }: <switch bind="applyUserChanges" onCheck=""/>
-													</div>
-												</row>
-											</rows>
-										</grid>
+										<customfield3 label="${c:l('bpm.grantAccountAccess') }" bind="applyUserChanges" dataType="BOOLEAN"/>
 									</div>
 									<div id="customType">
 										<customfield3 dataType="STRING" bind="customScript" 

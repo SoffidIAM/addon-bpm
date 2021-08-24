@@ -1,6 +1,7 @@
 package com.soffid.iam.addons.bpm.common;
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.Set;
 
 import com.soffid.iam.api.RoleAccount;
@@ -31,6 +32,8 @@ public class RoleRequestInfo implements Serializable {
 	private SoDRisk sodRisk;
 	RoleAccount roleAccount;
 	Long suggestedRoleId;
+	Date start;
+	Date end;
 	
 
 	public String getApplicationName() {
@@ -140,6 +143,18 @@ public class RoleRequestInfo implements Serializable {
 	}
 	public void setSuggestedRoleId(Long suggestedRoleId) {
 		this.suggestedRoleId = suggestedRoleId;
+	}
+	public Date getStart() {
+		return start;
+	}
+	public void setStart(Date start) {
+		this.start = start;
+	}
+	public Date getEnd() {
+		return end;
+	}
+	public void setEnd(Date end) {
+		this.end = end;
 	}
 
 

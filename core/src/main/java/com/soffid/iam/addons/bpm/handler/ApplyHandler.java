@@ -149,7 +149,8 @@ public class ApplyHandler implements ActionHandler {
 			ra.setUserCode(grant.getUserName());
 			ra.setRoleName(role.getName());
 			ra.setSystem(role.getSystem());
-			ra.setStartDate(new Date());
+			ra.setStartDate( grant.getStart() == null ?  new Date(): grant.getStart());
+			ra.setEndDate(grant.getEnd());
 			appService.create(ra);
 		}
 		String userName = grant.getUserName();
