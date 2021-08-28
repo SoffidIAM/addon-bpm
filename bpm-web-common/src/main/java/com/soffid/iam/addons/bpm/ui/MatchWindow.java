@@ -40,6 +40,7 @@ public class MatchWindow extends StandardUserWindow {
 	private JSONArray data;
 	private DataTable usersTable;
 	private String selectedUser;
+	String originalUser;
 
 	@Override
 	protected void load() {
@@ -68,6 +69,7 @@ public class MatchWindow extends StandardUserWindow {
 			}
 			data.put(createNewUserObject());
 			usersTable.setData(data);
+			originalUser = (String) getVariables().get("userName");
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		} finally {
@@ -199,7 +201,12 @@ public class MatchWindow extends StandardUserWindow {
 		super.prepareTransition(trasition);
 		if ( selectedUser == null) 
 			throw new UserWorkflowException("Please, select an option to merge or register a new user");
-		getVariables().put("userName", selectedUser);
+		String current = (String) getVariables().get("userName");
+		if (current == null || ! current.equals(originalUser)) {
+			getVariables().put("userName", selectedUser);
+			getVariables().put("userSelector", selectedUser);
+			getVariables().put("action", "M");
+		}
 	}
 		
 }
