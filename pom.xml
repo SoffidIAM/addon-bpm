@@ -4,14 +4,14 @@
   <groupId>com.soffid.iam.addon.bpm</groupId>
   <packaging>pom</packaging>
   <name>Business process editor</name>
-  <version>3.1.2-SNAPSHOT</version>
+  <version>3.1.2</version>
   <description>SOFFID IAM BPM addon</description>
   <prerequisites>
     <maven>2.0.1</maven>
   </prerequisites>
   <scm>
 	<connection>scm:git:ssh://git@stash.dev.lab:7999/iam2/addon-bpm.git</connection>
-    <tag>HEAD</tag>
+    <tag>bpm-3.1.2</tag>
   </scm>
   <licenses>
     <license>
