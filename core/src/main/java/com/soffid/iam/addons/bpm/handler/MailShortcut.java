@@ -211,12 +211,12 @@ public class MailShortcut implements ActionHandler {
 			String name =  "actions_"+executionContext.getTaskInstance().getId()+"_"+acceptRandom; //$NON-NLS-1$ //$NON-NLS-2$
 			String link = Long.toString(executionContext.getProcessInstance().getId())+"."+Long.toString(executionContext.getTaskInstance().getId())+"."+acceptRandom; //$NON-NLS-1$ //$NON-NLS-2$
 			executionContext.setVariable(name, "approve:"+pi.getApproveTransition()); //$NON-NLS-1$
-			buttons.put("", link); //$NON-NLS-1$
+			buttons.put( Messages.getString("MailShortcut.Approve"), link); //$NON-NLS-1$
 			String acceptRandom2 = randomString();
 			String name2 =  "actions_"+executionContext.getTaskInstance().getId()+"_"+acceptRandom2; //$NON-NLS-1$ //$NON-NLS-2$
 			String link2 = Long.toString(executionContext.getProcessInstance().getId())+"."+Long.toString(executionContext.getTaskInstance().getId())+"."+acceptRandom2; //$NON-NLS-1$ //$NON-NLS-2$
 			executionContext.setVariable(name2, "deny:"+pi.getDenyTransition()); //$NON-NLS-1$
-			buttons.put("", link2); //$NON-NLS-1$
+			buttons.put(Messages.getString("MailShortcut.Deny"), link2); //$NON-NLS-1$
 		} else {
 			for (Transition transition: executionContext.getNode().getLeavingTransitions()) {
 				String r = randomString();
@@ -445,14 +445,14 @@ public class MailShortcut implements ActionHandler {
 			if (i > 0) {
 				Account account = ServiceLocator.instance().getAccountService().findAccount(s.substring(0,i), s.substring(i+1));
 				if (account != null)
-					buffer.append(quote(account.getDescription()));
+					buffer.append(" (").append(quote(account.getDescription())).append(")");
 			}
 		}
 		else if (att.getType() == TypeEnumeration.APPLICATION_TYPE) {
 			buffer.append(quote(s)).append(" "); //$NON-NLS-1$
 			Application o = ServiceLocator.instance().getApplicationService().findApplicationByApplicationName(s);
 			if (o != null)
-				buffer.append(quote(o.getDescription()));
+				buffer.append(" (").append(quote(o.getDescription())).append(")");
 		}
 		else if (att.getType() == TypeEnumeration.BINARY_TYPE) {
 		}
@@ -466,7 +466,7 @@ public class MailShortcut implements ActionHandler {
 			buffer.append(quote(s)).append(" "); //$NON-NLS-1$
 			CustomObject o = ServiceLocator.instance().getCustomObjectService().findCustomObjectByTypeAndName(att.getDataObjectType(), s);
 			if (o != null)
-				buffer.append(quote(o.getDescription()));
+				buffer.append(" (").append(quote(o.getDescription())).append(")");
 		}
 		else if (att.getType() == TypeEnumeration.DATE_TIME_TYPE) {
 			Map<String, String> prefs = ServiceLocator.instance().getPreferencesService().findUserPreferences(user);
@@ -527,19 +527,19 @@ public class MailShortcut implements ActionHandler {
 			buffer.append(quote(s)).append(" "); //$NON-NLS-1$
 			Group o = ServiceLocator.instance().getGroupService().findGroupByGroupName(s);
 			if (o != null)
-				buffer.append(quote(o.getDescription()));
+				buffer.append(" (").append(quote(o.getDescription())).append(")");
 		}
 		else if (att.getType() == TypeEnumeration.GROUP_TYPE_TYPE) {
 			buffer.append(quote(s)).append(" "); //$NON-NLS-1$
 			OUType o = ServiceLocator.instance().getOrganizationalUnitTypeService().findOUTypeByName(s);
 			if (o != null)
-				buffer.append(quote(o.getDescription()));
+				buffer.append(" (").append(quote(o.getDescription())).append(")");
 		}
 		else if (att.getType() == TypeEnumeration.HOST_TYPE) {
 			buffer.append(quote(s)).append(" "); //$NON-NLS-1$
 			Host o = ServiceLocator.instance().getNetworkService().findHostByName(s);
 			if (o != null)
-				buffer.append(quote(o.getDescription()));
+				buffer.append(" (").append(quote(o.getDescription())).append(")");
 		}
 		else if (att.getType() == TypeEnumeration.HTML) {
 			buffer.append(s);
@@ -548,7 +548,7 @@ public class MailShortcut implements ActionHandler {
 			buffer.append(quote(s)).append(" "); //$NON-NLS-1$
 			MailDomain o = ServiceLocator.instance().getMailListsService().findMailDomainByName(s);
 			if (o != null)
-				buffer.append(quote(o.getDescription()));
+				buffer.append(" (").append(quote(o.getDescription())).append(")");
 		}
 		else if (att.getType() == TypeEnumeration.MAIL_LIST_TYPE) {
 			buffer.append(quote(s)).append(" "); //$NON-NLS-1$
@@ -556,14 +556,14 @@ public class MailShortcut implements ActionHandler {
 			if (i > 0) {
 				MailList o = ServiceLocator.instance().getMailListsService().findMailListByNameAndDomainName(s.substring(0,i), s.substring(i+1));
 				if (o != null)
-					buffer.append(quote(o.getDescription()));
+					buffer.append(" (").append(quote(o.getDescription())).append(")");
 			}
 		}
 		else if (att.getType() == TypeEnumeration.NETWORK_TYPE) {
 			buffer.append(quote(s)).append(" "); //$NON-NLS-1$
 			Network o = ServiceLocator.instance().getNetworkService().findNetworkByName(s);
 			if (o != null)
-				buffer.append(quote(o.getDescription()));
+				buffer.append(" (").append(quote(o.getDescription())).append(")");
 		}
 		else if (att.getType() == TypeEnumeration.NUMBER_TYPE) {
 			buffer.append(quote(s));
@@ -572,7 +572,7 @@ public class MailShortcut implements ActionHandler {
 			buffer.append(quote(s)).append(" "); //$NON-NLS-1$
 			OsType o = ServiceLocator.instance().getNetworkService().findOSTypeByName(s);
 			if (o != null)
-				buffer.append(quote(o.getDescription()));
+				buffer.append(" (").append(quote(o.getDescription())).append(")");
 		}
 		else if (att.getType() == TypeEnumeration.PASSWORD_TYPE) {
 			buffer.append("***************"); //$NON-NLS-1$
@@ -586,7 +586,7 @@ public class MailShortcut implements ActionHandler {
 			if (i > 0) {
 				Role o = ServiceLocator.instance().getApplicationService().findRoleByNameAndSystem(s.substring(0,i), s.substring(i+1));
 				if (o != null)
-					buffer.append(quote(o.getDescription()));
+					buffer.append(" (").append(quote(o.getDescription())).append(")");
 			}
 		}
 		else if (att.getType() == TypeEnumeration.SEPARATOR) {
@@ -595,13 +595,13 @@ public class MailShortcut implements ActionHandler {
 			buffer.append(quote(s)).append(" "); //$NON-NLS-1$
 			User o = ServiceLocator.instance().getUserService().findUserByUserName(s);
 			if (o != null)
-				buffer.append(quote(o.getFullName()));
+				buffer.append(" (").append(quote(o.getFullName())).append(")");
 		}
 		else if (att.getType() == TypeEnumeration.USER_TYPE_TYPE) {
 			buffer.append(quote(s)).append(" "); //$NON-NLS-1$
 			for (UserType ut: ServiceLocator.instance().getUserDomainService().findAllUserType()) {
 				if (ut.getName().equals(s))
-					buffer.append(quote(ut.getDescription()));
+					buffer.append(" (").append(quote(ut.getDescription())).append(")");
 			}
 		} else {
 			buffer.append(quote(s));

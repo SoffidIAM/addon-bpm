@@ -13,6 +13,7 @@ import java.util.Set;
 
 import org.jbpm.JbpmContext;
 import org.jbpm.graph.def.ProcessDefinition;
+import org.jbpm.logging.exe.LoggingInstance;
 
 import com.soffid.iam.ServiceLocator;
 import com.soffid.iam.addons.bpm.common.Attribute;
@@ -28,6 +29,7 @@ import com.soffid.iam.api.User;
 import com.soffid.iam.api.UserAccount;
 import com.soffid.iam.bpm.api.ProcessInstance;
 import com.soffid.iam.bpm.api.TaskInstance;
+import com.soffid.iam.bpm.model.AuthenticationLog;
 import com.soffid.iam.common.security.SoffidPrincipal;
 import com.soffid.iam.model.UserEntity;
 import com.soffid.iam.security.SoffidPrincipalImpl;
@@ -137,12 +139,14 @@ public class BpmUserServiceImpl extends BpmUserServiceBase {
 		
 		JbpmContext ctx = getBpmEngine().getContext();
 		try {
-			InputStream in;
+			ctx.setActorId(Security.getCurrentUser());
 			
 			org.jbpm.graph.exe.ProcessInstance p = ctx.getProcessInstance(Long.parseLong(split[0]));
 			org.jbpm.taskmgmt.exe.TaskInstance ti = ctx.getTaskInstance(Long.parseLong(split[1]));
 			if (ti.hasEnded() || ti == null || ti.getProcessInstance() != p)
 				throw new InternalErrorException ("This task has already been finished");
+			if (ti.getProcessInstance() != p)
+				throw new InternalErrorException ("Bad URL");
 			
 			
 			org.jbpm.graph.exe.ExecutionContext executionContext = new org.jbpm.graph.exe.ExecutionContext(p.getRootToken());
@@ -164,6 +168,7 @@ public class BpmUserServiceImpl extends BpmUserServiceBase {
 			SoffidPrincipal principal = handleGetAnonymousActionPrincipal(hash);
 			Security.nestedLogin(principal);
 			try {
+				startAuthenticationLog(p.getRootToken());
 				Set<String> perms = new HashSet<String>();
 				for ( String r: principal.getRoles()) perms.add("auth:"+r);
 				for ( String r: principal.getGroupsAndRoles()) perms.add(r);
@@ -188,12 +193,38 @@ public class BpmUserServiceImpl extends BpmUserServiceBase {
 				ti.end(transition);
 				
 				ctx.save(p);
+				endAuthenticationLog(p.getRootToken());
 			} finally {
 				Security.nestedLogoff();
 			}
 			return actionType;
 		} finally {
 			ctx.close();
+		}
+	}
+
+	public void startAuthenticationLog(org.jbpm.graph.exe.Token token) {
+		LoggingInstance li = (LoggingInstance) token.getProcessInstance()
+				.getInstance(LoggingInstance.class);
+		if (li == null) {
+			li = new LoggingInstance();
+			token.getProcessInstance().addInstance(li);
+		}
+		AuthenticationLog log = new AuthenticationLog();
+		log.setToken(token);
+		log.setActorId(Security.getCurrentUser());
+		li.startCompositeLog(log);
+	}
+
+	/**
+	 * convenience method for ending a composite log. Make sure you put this in
+	 * a finally block.
+	 */
+	public void endAuthenticationLog(org.jbpm.graph.exe.Token token) {
+		LoggingInstance li = (LoggingInstance) token.getProcessInstance()
+				.getInstance(LoggingInstance.class);
+		if (li != null) {
+			li.endCompositeLog();
 		}
 	}
 

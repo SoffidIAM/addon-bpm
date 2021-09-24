@@ -9,8 +9,6 @@
 	registerUrl="false"
 	id="frame" use="com.soffid.iam.addons.bpm.web.TaskUI" width="100%">
 
-	<timer id="timer" onTimer="ref:frame.processShortcut" delay="100" repeats="false" running="false" />
-	
 	<datamodel class="com.soffid.iam.web.bpm.BPMDataNode" id="model"/>
 
 	<div use="com.soffid.iam.web.component.NavigationBar" frame="frame">
