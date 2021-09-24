@@ -7,10 +7,12 @@ import javax.ejb.CreateException;
 import javax.naming.NamingException;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.logging.LogFactory;
 import org.zkoss.util.resource.Labels;
 import org.zkoss.zk.au.out.AuScript;
 import org.zkoss.zk.ui.Executions;
 import org.zkoss.zk.ui.event.Event;
+import org.zkoss.zk.ui.ext.AfterCompose;
 import org.zkoss.zul.Timer;
 
 import com.soffid.iam.EJBLocator;
@@ -25,7 +27,7 @@ import es.caib.seycon.ng.exception.InternalErrorException;
 import es.caib.zkib.zkiblaf.Application;
 import es.caib.zkib.zkiblaf.Missatgebox;
 
-public class TaskUI extends com.soffid.iam.web.bpm.TaskUI {
+public class TaskUI extends com.soffid.iam.web.bpm.TaskUI implements AfterCompose {
 
 	private String shortcut;
 	private SoffidPrincipal principal;
@@ -37,45 +39,62 @@ public class TaskUI extends com.soffid.iam.web.bpm.TaskUI {
 
 	}
 
-	public void onCreate ()  throws Exception {
-		super.onCreate();
-		if (shortcut != null) {
-			String[] split = shortcut.split("\\.");
-			if (split.length > 1) {
-				TaskInstance ti;
-				String id = split[1];
-				Long taskId = Long.decode(id);
-
-				Security.nestedLogin(Security.ALL_PERMISSIONS);
-				try {
-					principal = com.soffid.iam.addons.bpm.common.EJBLocator.getBpmUserService().getAnonymousActionPrincipal(shortcut);
-				} finally {
-					Security.nestedLogoff();
-				}
-				if (principal != null) {
-					com.soffid.iam.utils.Security.nestedLogin(principal);
+	public void onCreate() {
+	}
+	@Override
+	public void afterCompose() {
+		super.afterCompose();
+		try {
+			super.onCreate();
+			if (shortcut != null) {
+				String[] split = shortcut.split("\\.");
+				if (split.length > 1) {
+					TaskInstance ti;
+					String id = split[1];
+					Long taskId = Long.decode(id);
+	
+					Security.nestedLogin(Security.ALL_PERMISSIONS);
 					try {
-						BpmEngine engine = EJBLocator.getBpmEngine();
-						
-						ti = engine.getTask(taskId);
-						if (ti != null) {
-							openTaskInstance(ti);
-							Timer t = (Timer) getFellow("timer");
-							t.setRepeats(false);
-							t.start();
-							return;
-						}
+						principal = com.soffid.iam.addons.bpm.common.EJBLocator.getBpmUserService().getAnonymousActionPrincipal(shortcut);
 					} finally {
-						com.soffid.iam.utils.Security.nestedLogoff();
+						Security.nestedLogoff();
+					}
+					if (principal != null) {
+						com.soffid.iam.utils.Security.nestedLogin(principal);
+						try {
+							BpmEngine engine = EJBLocator.getBpmEngine();
+							
+							ti = engine.getTask(taskId);
+							if (ti != null) {
+								openTaskInstance(ti);
+								processShortcut2();
+//								Timer t = (Timer) getFellow("timer");
+//								t.setRepeats(true);
+//								t.start();
+								return;
+							}
+						} finally {
+							com.soffid.iam.utils.Security.nestedLogoff();
+						}
 					}
 				}
 			}
+		} catch (Exception e) {
+			LogFactory.getLog(getClass()).warn("Error loading anonymous task", e);
 		}
+		setVisible(false);
 		Missatgebox.avis(Labels.getLabel("bpm.alreadyClosed"));
 		
 	}
 	
 	public void processShortcut(Event event) throws ClassNotFoundException, IOException, SQLException, Exception {
+		Timer t = (Timer) getFellow("timer");
+		if (!t.isRunning()) return;
+		t.stop();
+		processShortcut2();
+	}
+	
+	public void processShortcut2() throws ClassNotFoundException, IOException, SQLException, Exception {
 		if (getCurrentTask().getEnd() != null) {
 			Missatgebox.avis(Labels.getLabel("bpm.alreadyClosed"));
 		} else {
