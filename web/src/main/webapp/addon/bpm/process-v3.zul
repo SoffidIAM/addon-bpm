@@ -40,38 +40,18 @@
 		}
 	</style>
 	<window id="w" visible="false" title="${c:l('bpm.processEditor') }" width="90%" use="com.soffid.iam.addons.bpm.web.ProcessWindow" version="3">
-		<div style="float:right;margin:12px;margin-right:8px">
+		<div style="text-align:right; width:100%; margin:12px;margin-right:8px">
 			<button label="${c:l('bpm.save') }" id="save"/>
 			<button label="${c:l('bpm.saveAndPublish') }" id="saveAndPublish"/>
 			<button label="${c:l('bpm.cancel') }" id="cancel"/>
 		</div>
 		<div style="width:100%; margin:12px">
-			<div>
-				<label value="${c:l('bpm.processName') }:" sclass="bpmLabel"/>
-				<textbox bind="@name" onChange=""/>
-			</div>
-			<div>
-			    <label value="${c:l('bpm.processType') }:" sclass="bpmLabel"/>
-				<listbox bind="type" dataPath="/model:/processType" mold="select" onSelect="" style="margin-top:4px;margin-bottom:4px"> 
-					<dataitem bind="value"><listcell bind="literal"/> </dataitem>
-				</listbox>
-			</div>
-			<div>
-				<label value="${c:l('bpm.processDescription') }:" sclass="bpmLabel" style="vertical-align:top"/>
-				<textbox bind="@description" onChange="" width="400px" multiline="true" rows="3"/>
-			</div>
-			<div>
-				<label value="${c:l('bpm.initiators') }:" sclass="bpmLabel"/>
-				<textbox bind="@initiators" onChange=""/>
-			</div>
-			<div>
-				<label value="${c:l('bpm.managers') }:" sclass="bpmLabel"/>
-				<textbox bind="@managers" onChange=""/>
-			</div>
-			<div>
-				<label value="${c:l('bpm.observers') }:"  sclass="bpmLabel"/>
-				<textbox bind="@observers" onChange=""/>
-			</div>
+			<customfield3 label="${c:l('bpm.processName') }" dataType="string" bind="@name" onChange="" maxLength="250" />
+			<customfield3 label="${c:l('bpm.processType') }" dataType="string" bind="type" onChange="" enumeration="com.soffid.iam.addons.bpm.common.WorkflowType" />
+			<customfield3 label="${c:l('bpm.processDescription') }" dataType="string" bind="@description" multiline="true" onChange="" maxLength="250" />
+			<customfield3 label="${c:l('bpm.initiators') }" dataType="string" bind="@initiators" onChange="" maxLength="100" />
+			<customfield3 label="${c:l('bpm.managers') }" dataType="string" bind="@managers" onChange="" maxLength="100" />
+			<customfield3 label="${c:l('bpm.observers') }" dataType="string" bind="@observers" onChange="" maxLength="100" />
 		</div>
 		<tabbox>
 			<tabs>
@@ -104,7 +84,7 @@
 							</columns>
 							<rows>
 								<row>
-									<customfield3 label="${c:l('bpm.stepName') }:" dataType="string" bind="@name" onChange=""/>
+									<customfield3 label="${c:l('bpm.stepName') }:" dataType="string" bind="@name" onChange="" maxLength="100" />
 								</row>
 								<row>
 									<customfield3 label="${c:l('bpm.stepType') }"
@@ -115,6 +95,7 @@
 								<row>
 									<customfield3 label="${c:l('bpm.description') }"
 											dataType="STRING"
+											maxLength="100"
 											multiline="true"
 											bind="description"/>
 								</row>

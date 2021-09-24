@@ -29,7 +29,7 @@ public class ProcessEntity {
 	@Column(name="PRO_NAME")
 	String name;
 	
-	@Column(name="PRO_DESCRI")
+	@Column(name="PRO_DESCRI", length = 250)
 	@Nullable
 	String description;
 	
