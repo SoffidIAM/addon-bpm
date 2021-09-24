@@ -202,7 +202,7 @@ public class MatchWindow extends StandardUserWindow {
 		if ( selectedUser == null) 
 			throw new UserWorkflowException("Please, select an option to merge or register a new user");
 		String current = (String) getVariables().get("userName");
-		if (current == null || ! current.equals(originalUser)) {
+		if (current == null || ! current.equals(selectedUser)) {
 			getVariables().put("userName", selectedUser);
 			getVariables().put("userSelector", selectedUser);
 			getVariables().put("action", "M");
