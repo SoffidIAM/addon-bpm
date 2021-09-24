@@ -7,11 +7,13 @@ import java.io.ObjectOutputStream;
 import java.io.PrintStream;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
@@ -567,7 +569,6 @@ public class Deployer {
 			{
 				Fork fork = new Fork();
 				n = fork;
-				
 			}
 			else if (node.getType().equals((NodeType.NT_JOIN)))
 			{
@@ -585,6 +586,13 @@ public class Deployer {
 			n.setProcessDefinition(def);
 			def.addNode(n);
 			nodesMap.put ( node, n );
+			Set<String> names = new HashSet<String>();
+			for (TransitionEntity transition: node.getOutTransitions()) {
+				if (names.contains(transition.getName())) {
+					throw new InternalErrorException("The node "+node.getName()+" has two transitions with the same name ["+transition.getName()+"]");
+				}
+				names.add(transition.getName());
+			}
 		}
 		
 	}
