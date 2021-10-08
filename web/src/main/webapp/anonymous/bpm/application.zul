@@ -42,11 +42,4 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:zk="http://www.zkoss
 	<popup id="searchBox" use="com.soffid.iam.web.main.SearchBoxWindow" sclass="main-search ctxpopup">
 		<timer id="timer" running="false" repeats="true" delay="200" onTimer="ref:searchBox.onTimer"/>	
 	</popup>
-	<script src="/js/ssokm.js"/>
-	<h:div id="soffidAraleExtensionDetector"/>
-	<html><![CDATA[
-	<form id="pamLauncherForm" action="/" target="_blank" method="POST">
-		<input type="hidden" id="pamLauncherFormSessionId" name="sessionId"/>
-	</form>	
-	]]></html>
 </window>
