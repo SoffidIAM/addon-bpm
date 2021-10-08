@@ -54,7 +54,6 @@ import org.jbpm.taskmgmt.exe.PooledActor;
 import org.jbpm.taskmgmt.exe.SwimlaneInstance;
 import org.jbpm.taskmgmt.exe.TaskInstance;
 
-import com.soffid.iam.EJBLocator;
 import com.soffid.iam.ServiceLocator;
 import com.soffid.iam.addons.bpm.common.Attribute;
 import com.soffid.iam.addons.bpm.common.Field;
@@ -302,7 +301,7 @@ public class MailShortcut implements ActionHandler {
 				
 				User usuari = ServiceLocator.instance().getUserService().findUserByUserName(user);
 				
-				Map<String, String> prefs = EJBLocator.getPreferencesService().findUserPreferences(user);
+				Map<String, String> prefs = ServiceLocator.instance().getPreferencesService().findUserPreferences(user);
 				String lang = prefs.get("lang"); //$NON-NLS-1$
 				if (lang != null)
 					MessageFactory.setThreadLocale(new Locale (lang));
