@@ -1236,6 +1236,7 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 				{
 					customField.setVisible( ! add );
 					customField.setReadonly(false);
+					continue; // Do not apply attributeVisibl expression
 				}
 				else if ( dataType != null)
 				{
