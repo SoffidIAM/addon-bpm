@@ -10,20 +10,14 @@ import org.apache.commons.logging.LogFactory;
 import org.jbpm.graph.def.ActionHandler;
 import org.jbpm.graph.exe.ExecutionContext;
 import org.jbpm.graph.node.TaskNode;
+import org.jbpm.jpdl.el.VariableResolver;
 import org.jbpm.jpdl.el.impl.JbpmExpressionEvaluator;
 
 import com.soffid.iam.ServiceLocator;
-import com.soffid.iam.addons.bpm.common.Constants;
-import com.soffid.iam.addons.bpm.common.Field;
 import com.soffid.iam.addons.bpm.common.Filter;
 import com.soffid.iam.addons.bpm.common.PageInfo;
-import com.soffid.iam.addons.bpm.common.RoleRequestInfo;
-import com.soffid.iam.addons.bpm.core.BpmEditorService;
 import com.soffid.iam.addons.bpm.core.BpmUserService;
 import com.soffid.iam.api.User;
-import com.soffid.iam.bpm.api.BPMUser;
-import com.soffid.iam.bpm.api.TaskInstance;
-import com.soffid.iam.bpm.business.VOFactory;
 import com.soffid.iam.service.ApplicationService;
 import com.soffid.iam.service.UserService;
 import com.soffid.iam.utils.Security;
@@ -54,7 +48,11 @@ public class ComputeMatchesNodeHandler implements ActionHandler {
 					if (weight == null)
 						weight = new Long(1);
 					List<User> usersList;
-					String q = (String) JbpmExpressionEvaluator.evaluate(filter.getQuery(), executionContext);
+					VariableResolver vr = new DateFormatterVariableResolver();
+					String q = (String) JbpmExpressionEvaluator.evaluate(filter.getQuery(), 
+							executionContext, 
+							vr, 
+							JbpmExpressionEvaluator.getUsedFunctionMapper());
 					if (filter.getType().equals("scim")) {
 						usersList = userService.findUserByJsonQuery(q, 0, 1000).getResources();
 					} else {

@@ -114,10 +114,10 @@ public class Deployer {
 			saveTaskNodeInformation(nodesMap, proc, fd);
 			generateUiXml( fd, procEntity.getVersion() );
 			generateZuls (fd, procEntity, def);
+			ctx.getSession().saveOrUpdate(def);
 			saveWorkflowType (procEntity, def, ctx);
 			saveActors (procEntity, def);
 			saveVersion(procEntity, def);
-			ctx.getGraphSession().saveProcessDefinition(def);
 			
 			upgradeProcess(def);
 		} finally {
@@ -305,6 +305,7 @@ public class Deployer {
 					pageInfo.setTriggers(node.getTriggers().toArray( new Trigger[ node.getTriggers().size()] ) );
 					if (node.getFilters() != null)
 						pageInfo.setFilters(node.getFilters().toArray( new Filter[node.getFilters().size()] ));
+					pageInfo.setMatchThreshold(node.getMatchThreshold());
 					pageInfo.setWorkflowType(proc.getType());
 					pageInfo.setApproveTransition(node.getApproveTransition());
 					pageInfo.setDenyTransition(node.getDenyTransition());
