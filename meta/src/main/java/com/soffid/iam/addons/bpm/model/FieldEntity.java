@@ -26,6 +26,10 @@ public class FieldEntity {
 	Boolean readOnly;
 
 	@Nullable
+	@Column(name="FIE_REQUIR")
+	Boolean required;
+
+	@Nullable
 	@Column(name="FIE_LABEL")
 	String label;
 

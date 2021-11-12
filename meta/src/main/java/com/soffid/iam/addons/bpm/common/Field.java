@@ -22,6 +22,9 @@ public class Field {
 	Boolean readOnly;
 
 	@Nullable
+	Boolean required;
+
+	@Nullable
 	String allowedValues;
 	
 	@Nullable

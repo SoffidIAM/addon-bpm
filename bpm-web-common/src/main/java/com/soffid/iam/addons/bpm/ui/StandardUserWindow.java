@@ -181,6 +181,7 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 				interpreter.set("attributes", getTask().getVariables()); //$NON-NLS-1$
 				interpreter.set("inputField", inputField); //$NON-NLS-1$
 				interpreter.set("inputFields", inputFields); //$NON-NLS-1$
+				interpreter.set("workflowWindow", this); //$NON-NLS-1$
 				
 				interpreter.eval(trigger.getAction());
 				
@@ -314,6 +315,7 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 				f.setDataObjectType(att.getDataObjectType());
 				f.setBind( toBind ( att.getName()) );
 				f.setReadonly( field.getReadOnly() != null && field.getReadOnly().booleanValue());
+				f.setRequired(Boolean.TRUE.equals(field.getRequired()));
 				f.setMaxLength(att.getSize());
 				if (att.getMultiValued() != null)
 					f.setMultiValue(att.getMultiValued());
@@ -339,6 +341,7 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 					f.setBind( toBind ( att.getCode()) );
 					f.setMaxLength(att.getSize());
 					f.setReadonly(field.getReadOnly() != null && field.getReadOnly().booleanValue());
+					f.setRequired(Boolean.TRUE.equals(field.getRequired()));
 					f.setMultiValue(att.isMultiValued());
 					if (att.getValues() != null)
 						f.setListOfValues(att.getValues().toArray(new String[0]));
@@ -936,6 +939,22 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 			ri.setApplicationName(appName);
 			ri.setApplicationDescription(appDesc);
 			ri.setParentRole(parentRole);
+			
+			Role r = null;
+			for (Role role: ServiceLocator.instance().getApplicationService().findRolesByApplicationName(app.getName())) {
+				if (Boolean.TRUE.equals( role.getBpmEnabled())) {
+					if (r == null) 
+						r = role;
+					else {
+						r = null;
+						break;
+					}
+				}
+			}
+			if (r != null) {
+				ri.setRoleId(r.getId());
+				ri.setRoleDescription(r.getDescription());
+			}
 
 			grants.add(ri);
 
