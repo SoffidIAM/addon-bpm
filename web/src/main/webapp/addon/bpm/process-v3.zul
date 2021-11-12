@@ -48,7 +48,7 @@
 		<div style="width:100%; margin:12px">
 			<customfield3 label="${c:l('bpm.processName') }" dataType="string" bind="@name" onChange="" maxLength="250" />
 			<customfield3 label="${c:l('bpm.processType') }" dataType="string" bind="type" onChange="" enumeration="com.soffid.iam.addons.bpm.common.WorkflowType" />
-			<customfield3 label="${c:l('bpm.processDescription') }" dataType="string" bind="@description" multiline="true" onChange="" maxLength="250" />
+			<customfield3 label="${c:l('bpm.processDescription') }" dataType="string" bind="@description" multiline="true" onChange="" maxLength="4000" />
 			<customfield3 label="${c:l('bpm.initiators') }" dataType="string" bind="@initiators" onChange="" maxLength="100" />
 			<customfield3 label="${c:l('bpm.managers') }" dataType="string" bind="@managers" onChange="" maxLength="100" />
 			<customfield3 label="${c:l('bpm.observers') }" dataType="string" bind="@observers" onChange="" maxLength="100" />
@@ -95,7 +95,7 @@
 								<row>
 									<customfield3 label="${c:l('bpm.description') }"
 											dataType="STRING"
-											maxLength="100"
+											maxLength="4000"
 											multiline="true"
 											bind="description"/>
 								</row>
@@ -202,7 +202,8 @@
 											<column label="${c:l('bpm.field.order') }" width="80px"/>
 											<column label="${c:l('bpm.field.label') }" width="150px"/>
 											<column label="${c:l('bpm.field.name') }" width="300px"/>
-											<column label="${c:l('bpm.field.readOnly') }" width="80px"/>
+											<column label="${c:l('bpm.field.readOnly') }" width="40px"/>
+											<column label="${c:l('bpm.field.required') }" width="40px"/>
 											<column label="${c:l('bpm.field.validationScript') }" width="80px"/>
 											<column label="${c:l('bpm.field.visibilityScript') }" width="80px"/>
 											<column label="." width="32px"/>
@@ -214,6 +215,7 @@
 											<textbox bind="@label" width="150px"></textbox>
 											<combobox use="com.soffid.iam.addons.bpm.web.AttributesCombo" bind="@name" width="300px"/>
 											<checkbox bind="@readOnly"/>
+											<checkbox bind="@required"/>
 											<div>
 												<textbox bind="@validationScript" visible="false" multiline="true"/>
 												<imageclic src="/img/pencil.svg" onClick="ref:w.editValidationScript(event)"/>
