@@ -32,7 +32,7 @@ public class NodeEntity {
 	@Nullable
 	String taskName;
 	
-	@Column(name="NOD_DESCRI")
+	@Column(name="NOD_DESCRI", length = 4000)
 	@Nullable
 	String description;
 	
