@@ -79,7 +79,6 @@ import com.soffid.iam.api.RoleGrant;
 import com.soffid.iam.api.User;
 import com.soffid.iam.api.UserData;
 import com.soffid.iam.api.UserType;
-import com.soffid.iam.bpm.mail.Messages;
 import com.soffid.iam.lang.MessageFactory;
 import com.soffid.iam.model.SystemEntity;
 import com.soffid.iam.model.SystemEntityDao;
@@ -306,7 +305,7 @@ public class MailShortcut implements ActionHandler {
 				if (lang != null)
 					MessageFactory.setThreadLocale(new Locale (lang));
 				
-				String subject = Messages.getString(header); //$NON-NLS-1$
+				String subject = com.soffid.iam.bpm.mail.Messages.getString(header); //$NON-NLS-1$
 				InputStream in = getMailContent();
 				InputStreamReader reader = new InputStreamReader(in);
 				StringBuffer buffer = new StringBuffer ();
@@ -665,7 +664,8 @@ public class MailShortcut implements ActionHandler {
 	}
 
 	private String quote(String string) {
-		return string.replace("&", "&amp;") //$NON-NLS-1$ //$NON-NLS-2$
+		return string == null? "":
+			string.replace("&", "&amp;") //$NON-NLS-1$ //$NON-NLS-2$
 				.replace("\"", "&quot;") //$NON-NLS-1$ //$NON-NLS-2$
 				.replace("\'", "&apos;") //$NON-NLS-1$ //$NON-NLS-2$
 				.replace("<", "&lt;") //$NON-NLS-1$ //$NON-NLS-2$
@@ -1069,23 +1069,27 @@ public class MailShortcut implements ActionHandler {
 						SystemEntity defaultDispatcher = dao.findSoffidSystem();
     					dispatcher = defaultDispatcher.getName();
     				}
-    				i = roleName.lastIndexOf('/');
-    				if (i >= 0)
-    				{
-    					scope = roleName.substring(i+1);
-    					roleName = roleName.substring(0, i);
-    				}
-        			debug ("Resolving role "+roleName+"@"+dispatcher); //$NON-NLS-1$ //$NON-NLS-2$
-    				ApplicationService aplicacioService = ServiceLocator.instance().getApplicationService();
-					for (Role role : aplicacioService.findRolesByFilter(roleName, "%", "%", dispatcher, "%", "%")) { //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-                        debug("Resolving role grantees: " + role.getName() + "@" + role.getSystem()); //$NON-NLS-1$ //$NON-NLS-2$
-                        for (RoleGrant grant : aplicacioService.findEffectiveRoleGrantsByRoleId(role.getId())) {
-                            if (scope == null || scope.equals(grant.getDomainValue())) {
-                            	if (grant.getUser() != null)
-                            		result.add(grant.getUser());
-                            }
-                        }
-                    }
+    				
+    				i = -1;
+    				do {
+    					i = roleName.indexOf('/', i+1);
+	    				if (i >= 0)
+	    				{
+	    					scope = roleName.substring(i+1);
+	    					roleName = roleName.substring(0, i);
+	    				}
+	        			debug ("Resolving role "+roleName+"@"+dispatcher); //$NON-NLS-1$ //$NON-NLS-2$
+	    				ApplicationService aplicacioService = ServiceLocator.instance().getApplicationService();
+						for (Role role : aplicacioService.findRolesByFilter(roleName, "%", "%", dispatcher, "%", "%")) { //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+	                        debug("Resolving role grantees: " + role.getName() + "@" + role.getSystem()); //$NON-NLS-1$ //$NON-NLS-2$
+	                        for (RoleGrant grant : aplicacioService.findEffectiveRoleGrantsByRoleId(role.getId())) {
+	                            if (scope == null || scope.equals(grant.getDomainValue())) {
+	                            	if (grant.getUser() != null)
+	                            		result.add(grant.getUser());
+	                            }
+	                        }
+	                    }
+    				} while (i >= 0);
     				return result;
     			}
     		}
