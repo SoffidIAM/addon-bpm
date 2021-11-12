@@ -1,5 +1,6 @@
 package com.soffid.iam.addons.bpm.handler;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -85,6 +86,7 @@ public class ComputeMatchesNodeHandler implements ActionHandler {
 		}
 		if (skip) {
 			executionContext.getTaskInstance().setSignalling(false); // To leave node
+			executionContext.getTaskInstance().cancel(); // To cancel task
 		}
 	}
 
