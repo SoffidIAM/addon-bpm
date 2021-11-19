@@ -297,6 +297,7 @@ public class BpmEditorServiceImpl extends BpmEditorServiceBase {
 		{
 			getTransitionEntityDao().remove(ne.getOutTransitions());
 			getFieldEntityDao().remove(ne.getFields());
+			getTriggerEntityDao().remove(ne.getTriggers());
 		}
 		getAttributeEntityDao().remove(procEntity.getAttributes());
 		getNodeEntityDao().remove(procEntity.getNodes());
