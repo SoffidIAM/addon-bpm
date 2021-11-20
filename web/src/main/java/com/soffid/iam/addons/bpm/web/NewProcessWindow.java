@@ -1,5 +1,6 @@
 package com.soffid.iam.addons.bpm.web;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -13,6 +14,7 @@ import org.zkoss.zul.Listbox;
 import org.zkoss.zul.Textbox;
 import org.zkoss.zul.Window;
 
+import com.google.common.collect.Lists;
 import com.soffid.iam.EJBLocator;
 import com.soffid.iam.addons.bpm.common.Attribute;
 import com.soffid.iam.addons.bpm.common.Field;
@@ -84,6 +86,25 @@ public class NewProcessWindow extends Window {
 		Node nodeApprove = new Node();
 		Node nodeApply = new Node();
 		Node nodeEnd = new Node();
+		
+		Attribute att = new Attribute();
+		att.setLabel(Labels.getLabel("com.soffid.iam.api.User.action"));
+		att.setName("action");
+		att.setValues(Arrays.asList("A:New%20user","M:Modify%20user","D:Disable%20user","E:Enable%20user"));
+		att.setOrder(1L);
+		p.getAttributes().add(att);
+
+		att = new Attribute();
+		att.setLabel(Labels.getLabel("com.soffid.iam.api.User.userSelector"));
+		att.setName("userSelector");
+		att.setOrder(2L);
+		p.getAttributes().add(att);
+
+		att = new Attribute();
+		att.setLabel(Labels.getLabel("com.soffid.iam.api.User.grants"));
+		att.setName("grants");
+		att.setOrder(3L);
+		p.getAttributes().add(att);
 		
 		nodeStart.setName("Start");
 		nodeStart.setDescription("Request new user management process");
@@ -255,7 +276,7 @@ public class NewProcessWindow extends Window {
 
 	static String defaultFields[] = {
 		"action",
-		"userName",
+		"userSelector",
 	};
 	
 	private void addFields(Node node, boolean readOnly) throws InternalErrorException, NamingException, CreateException {
