@@ -1,5 +1,10 @@
 package com.soffid.iam.addons.bpm.handler;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+
 import org.jbpm.graph.def.ActionHandler;
 import org.jbpm.graph.exe.ExecutionContext;
 
@@ -14,9 +19,9 @@ import es.caib.seycon.ng.exception.InternalErrorException;
 
 public class CustomActionHandler implements ActionHandler {
 	String script;
-	
 	@Override
 	public void execute(ExecutionContext executionContext) throws Exception {
+		loadFile(executionContext);
 		SecureInterpreter interpreter = new SecureInterpreter();
 
 		interpreter.set("executionContext", executionContext); //$NON-NLS-1$
@@ -61,9 +66,33 @@ public class CustomActionHandler implements ActionHandler {
 	public String getScript() {
 		return script;
 	}
-
+	
 	public void setScript(String script) {
 		this.script = script;
 	}
+	
+	String file; 
+	private void loadFile(ExecutionContext executionContext) throws InternalErrorException, IOException {
+		if (file != null) {
+			InputStream in = executionContext.getProcessDefinition().getFileDefinition().getInputStream(file);
+			if (in == null)
+				throw new InternalErrorException("Cannot find resource "+file);
+			ByteArrayOutputStream out = new ByteArrayOutputStream();
+			for (int read = in.read(); read >= 0; read = in.read())
+				out.write(read);
+			in.close();
+			out.close();
+			script = out.toString("UTF-8");
+		}
+	}
+
+	public String getFile() {
+		return file;
+	}
+
+	public void setFile(String file) {
+		this.file = file;
+	}
+	
 
 }

@@ -1,5 +1,8 @@
 package com.soffid.iam.addons.bpm.handler;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.Date;
 import java.util.EnumSet;
@@ -54,6 +57,7 @@ public class GrantTaskNodeHandler implements ActionHandler {
 
 	@Override
 	public void execute(ExecutionContext executionContext) throws Exception {
+		loadFile(executionContext);
 		TaskNode tn = (TaskNode) executionContext.getNode();
 		log.info("Creating tasks for node " +tn.getName()+" type "+type);
 		List<RoleRequestInfo> roles = (List<RoleRequestInfo>) executionContext.getVariable(Constants.ROLES_VAR); // $NON-NLS-1$
@@ -311,5 +315,29 @@ public class GrantTaskNodeHandler implements ActionHandler {
 	public void setShortcut(String shortcut) {
 		this.shortcut = shortcut;
 	}
+
+	String file; 
+	private void loadFile(ExecutionContext executionContext) throws InternalErrorException, IOException {
+		if (file != null) {
+			InputStream in = executionContext.getProcessDefinition().getFileDefinition().getInputStream(file);
+			if (in == null)
+				throw new InternalErrorException("Cannot find resource "+file);
+			ByteArrayOutputStream out = new ByteArrayOutputStream();
+			for (int read = in.read(); read >= 0; read = in.read())
+				out.write(read);
+			in.close();
+			out.close();
+			script = out.toString("UTF-8");
+		}
+	}
+
+	public String getFile() {
+		return file;
+	}
+
+	public void setFile(String file) {
+		this.file = file;
+	}
+	
 
 }

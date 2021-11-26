@@ -1,10 +1,12 @@
 package com.soffid.iam.addons.bpm.core;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -79,15 +81,15 @@ public class Deployer {
 	private NodeEntityDao nodeDao;
 	private JbpmContext ctx;
 	AuditEntityDao auditEntityDao; 
+	int scriptNumber = 0;
 	
 	public void deploy ( ProcessEntity procEntity, com.soffid.iam.addons.bpm.common.Process proc ) throws InternalErrorException, IOException
 	{
 		ctx = bpmEngine.getContext();
-		
 		try {
+			ProcessDefinition def = new ProcessDefinition();
 			ProcessDefinition def0 = findExistingDefinition ( ctx, procEntity );
 			
-			ProcessDefinition def = new ProcessDefinition();
 			def.setDescription( procEntity.getDescription() );
 			def.setName( procEntity.getName() );
 			def.setTerminationImplicit(true);
@@ -118,8 +120,8 @@ public class Deployer {
 			saveWorkflowType (procEntity, def, ctx);
 			saveActors (procEntity, def);
 			saveVersion(procEntity, def);
-			
-			upgradeProcess(def);
+			ctx.getSession().flush();
+			upgradeProcess(def);			
 		} finally {
 			ctx.close();
 		}
@@ -229,7 +231,7 @@ public class Deployer {
 		}
 	}
 
-	private void saveTransitions(ProcessDefinition def, ProcessEntity procEntity, Map<NodeEntity, Node> nodesMap) {
+	private void saveTransitions(ProcessDefinition def, ProcessEntity procEntity, Map<NodeEntity, Node> nodesMap) throws UnsupportedEncodingException {
 		for (NodeEntity nodeEntity: nodesMap.keySet())
 		{
 			Node jbpmNode = nodesMap.get(nodeEntity);
@@ -250,9 +252,14 @@ public class Deployer {
 					Delegation d = new Delegation();
 					d.setClassName(CustomActionHandler.class.getName());
 					d.setConfigType("bean");
-					d.setConfiguration("<script>" + 
-							escape (t.getScript())+
-							"</script>");
+					String s = escape (t.getScript());
+					if (s.length() > 3500) {
+						String fileName = "script-"+(++scriptNumber);
+						def.getFileDefinition().addFile(fileName, new ByteArrayInputStream(t.getScript().getBytes("UTF-8")));
+						d.setConfiguration("<file>" +fileName+"</file>");
+					} else {
+						d.setConfiguration("<script>" +s+ "</script>");
+					}
 					Action a = new Action();
 					a.setName(t.getName());
 					a.setActionDelegation( d );
@@ -364,7 +371,7 @@ public class Deployer {
 		
 	}
 
-	private void saveNodes(ProcessDefinition def, ProcessEntity proc, TaskMgmtDefinition tmd, Map<NodeEntity, Node> nodesMap) throws InternalErrorException {
+	private void saveNodes(ProcessDefinition def, ProcessEntity proc, TaskMgmtDefinition tmd, Map<NodeEntity, Node> nodesMap) throws InternalErrorException, UnsupportedEncodingException {
 
 		for ( NodeEntity node: proc.getNodes())
 		{
@@ -383,9 +390,14 @@ public class Deployer {
 				Delegation d = new Delegation();
 				d.setClassName(CustomActionHandler.class.getName());
 				d.setConfigType("bean");
-				d.setConfiguration("<script>" + 
-						escape (node.getCustomScript())+
-						"</script>");
+				String s = escape (node.getCustomScript());
+				if (s.length() > 3500) {
+					String fileName = "script-"+(++scriptNumber);
+					def.getFileDefinition().addFile(fileName, new ByteArrayInputStream(node.getCustomScript().getBytes("UTF-8")));
+					d.setConfiguration("<file>" +fileName+"</file>");
+				} else {
+					d.setConfiguration("<script>" +s+ "</script>");
+				}
 				Action a = new Action();
 				a.setName(node.getName());
 				a.setActionDelegation( d );
@@ -427,9 +439,14 @@ public class Deployer {
 					Delegation d = new Delegation();
 					d.setClassName(AssignmentHandler.class.getName());
 					d.setConfigType("bean");
-					d.setConfiguration("<script>" + 
-							escape (node.getCustomScript())+
-							"</script>");
+					String s = escape (node.getCustomScript());
+					if (s.length() > 3500) {
+						String fileName = "script-"+(++scriptNumber);
+						def.getFileDefinition().addFile(fileName, new ByteArrayInputStream(node.getCustomScript().getBytes("UTF-8")));
+						d.setConfiguration("<file>" +fileName+"</file>");
+					} else {
+						d.setConfiguration("<script>" +s+ "</script>");
+					}
 					t.setAssignmentDelegation( d );
 				} else {
 					t.setActorIdExpression("previous");
@@ -465,18 +482,35 @@ public class Deployer {
 				
 				d2.setClassName(GrantTaskNodeHandler.class.getName());
 				d2.setConfigType("bean");
-				d2.setConfiguration("<script>" + 
-						escape (node.getCustomScript())+
-						"</script><actor>"+
-						escape (node.getMailActor())+
-						"</actor>"+
-						"<shortcut>"+
-						(Boolean.TRUE.equals(node.getMailShortcut()) ? "true" : "false")+
-						"</shortcut>"+
-						"<type>"+
-						escape (node.getGrantScreenType())+
-						"</type>"
-						);
+				String s = escape (node.getCustomScript());
+				if (s.length() > 3000) {
+					String fileName = "script-"+(++scriptNumber);
+					def.getFileDefinition().addFile(fileName, new ByteArrayInputStream(node.getCustomScript().getBytes("UTF-8")));
+					d2.setConfiguration("<file>" +fileName+"</file>"+
+							"<actor>"+
+							escape (node.getMailActor())+
+							"</actor>"+
+							"<shortcut>"+
+							(Boolean.TRUE.equals(node.getMailShortcut()) ? "true" : "false")+
+							"</shortcut>"+
+							"<type>"+
+							escape (node.getGrantScreenType())+
+							"</type>"
+							);
+				} else {
+					d2.setConfiguration("<script>" + 
+							s+
+							"</script><actor>"+
+							escape (node.getMailActor())+
+							"</actor>"+
+							"<shortcut>"+
+							(Boolean.TRUE.equals(node.getMailShortcut()) ? "true" : "false")+
+							"</shortcut>"+
+							"<type>"+
+							escape (node.getGrantScreenType())+
+							"</type>"
+							);
+				}
 
 				action.setEvent(ev);
 				action.setName("Create tasks");
@@ -497,9 +531,14 @@ public class Deployer {
 					Delegation d = new Delegation();
 					d.setClassName(AssignmentHandler.class.getName());
 					d.setConfigType("bean");
-					d.setConfiguration("<script>" + 
-							escape (node.getCustomScript())+
-							"</script>");
+					String s = escape (node.getCustomScript());
+					if (s.length() > 3500) {
+						String fileName = "script-"+(++scriptNumber);
+						def.getFileDefinition().addFile(fileName, new ByteArrayInputStream(node.getCustomScript().getBytes("UTF-8")));
+						d.setConfiguration("<file>" +fileName+"</file>");
+					} else {
+						d.setConfiguration("<script>" +s+ "</script>");
+					}
 					t.setAssignmentDelegation( d );
 				} else {
 					t.setActorIdExpression("previous");
@@ -559,6 +598,8 @@ public class Deployer {
 						.append(escape(node.getMailMessage()))
 						.append("</text>");
 				}
+				if (mailConfig.length() >= 4000)
+					throw new InternalErrorException("Mail configuration for node "+node.getName()+" is too large");
 				d.setConfiguration(mailConfig.toString());
 				Action a = new Action();
 				a.setName(node.getName());
@@ -680,16 +721,15 @@ public class Deployer {
 	}
 
 
-	private void upgradeProcess(ProcessDefinition processDefinition) {
-        List definitions = ctx.getGraphSession()
-                .findAllProcessDefinitionVersions(processDefinition.getName());
+	private void upgradeProcess(ProcessDefinition l) {
+        List definitions = ctx.getGraphSession().findAllProcessDefinitionVersions(l.getName());
         ProcessDefinitionPropertyDal propertyDal = new ProcessDefinitionPropertyDal();
         propertyDal.setContext(ctx);
         
         for (Iterator it = definitions.iterator(); it.hasNext();) {
             ProcessDefinition def = (ProcessDefinition) it.next();
-            if (def.getId() != processDefinition.getId()) {
-            	doDefinitionUpgrade(def, processDefinition);
+            if (def.getId() != l.getId()) {
+            	doDefinitionUpgrade(def, l);
             }
             ctx.getSession().flush();
             ctx.getSession().clear();
