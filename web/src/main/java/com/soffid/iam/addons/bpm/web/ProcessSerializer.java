@@ -128,6 +128,7 @@ public class ProcessSerializer {
 			if (field.getName() != null) builder2.add("name", field.getName());
 			if (field.getOrder() != null) builder2.add("order", field.getOrder());
 			if (field.getReadOnly() != null) builder2.add("readOnly", field.getReadOnly());
+			if (field.getRequired() != null) builder2.add("required", field.getRequired());
 			if (field.getValidationScript() != null) builder2.add("validationScript", field.getValidationScript());
 			if (field.getVisibilityScript() != null) builder2.add("visibilityScript", field.getVisibilityScript());
 			builder.add(builder2);
@@ -305,6 +306,7 @@ public class ProcessSerializer {
 				target.setName(src.getString("name", null));
 				if (src.containsKey("order")) target.setOrder(src.getJsonNumber("order").longValue());
 				target.setReadOnly(src.getBoolean("readOnly", false));
+				target.setRequired(src.getBoolean("required", false));
 				target.setValidationScript(src.getString("validationScript", null));
 				l.add(target);
 			}
@@ -345,7 +347,8 @@ public class ProcessSerializer {
 				target.setMultiValued(src.getBoolean("multiValued", false));
 				target.setName(src.getString("name", null));
 				target.setOrder( new Long( src.getInt("order", 1)));
-				target.setType(TypeEnumeration.fromString(src.getString("type")));
+				if (src.containsKey("type"))
+					target.setType(TypeEnumeration.fromString(src.getString("type")));
 				if (src.containsKey("size"))
 				target.setSize( src.getJsonNumber("size").intValue());
 				target.setValues(loadStringList(src.getJsonArray("values")));
