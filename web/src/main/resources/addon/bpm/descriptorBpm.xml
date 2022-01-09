@@ -38,7 +38,7 @@
 				statusList.add(WorkflowType.WT_USER);
 				statusList.add(WorkflowType.WT_PERMISSION);
 				statusList.add(WorkflowType.WT_ACCOUNT_RESERVATION);
-//				statusList.add(WorkflowType.WT_REQUEST);
+				statusList.add(WorkflowType.WT_REQUEST);
 
 				return statusList;
 			</script-finder>
