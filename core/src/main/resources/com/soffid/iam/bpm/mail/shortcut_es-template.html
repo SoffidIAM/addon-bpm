@@ -3,14 +3,17 @@
 		<style>
 		div.buttonsbar {
 			width: 100%;
-			text-align: center;
+			text-align: left;
 		}
 		div.buttonsbar div {
 		    display: inline-block;
 		    border-radius: 8px;
 		    border: solid 4px #a6d100;
 		    background-color: #a6d100;
-		    padding: 20px;
+		    padding-left: 20px;
+		    padding-right: 20px;
+		    padding-top: 5px;
+		    padding-bottom: 5px;
 		    margin: 15px;
 		    font-size: large;
 		    color: black;
@@ -50,17 +53,16 @@
 		<br>
 		Se le ha asignado una tarea en el sistema de gestión de identidades Soffid:
 		<br><b> ${taskInstance.name} </b> <br>
-		<pre>${taskInstance.description}</pre>
+		${taskInstance.description}<br>
 		<br>
-		Fecha l&iacute;mite: ${taskInstance.dueDate}<br>
-		<br>
+		<b>Información de la tarea</b>:<br>
 		${body}
 		<div class="buttonsbar">
 		${buttons}
 		</div>
 		<br>
-		Siga el siguiente <a target="_new" href="${AutoSSOURL}soffid/wf/task.zul?id=${taskInstance.id}">enlace</a> para ver los detalles de la tarea.
-		<br><br>
+		Si quire ver los detalles de la tarea en Soffid, siga el siguiente <a target="_new" href="${AutoSSOURL}soffid/wf/task.zul?id=${taskInstance.id}">enlace</a>
+		<br>
 		Para ver la lista completa de tareas, <a href="${AutoSSOURL}soffid/wf/inbox.zul">pulse aqu&iacute;</a>.
 		<br>
 	</body>

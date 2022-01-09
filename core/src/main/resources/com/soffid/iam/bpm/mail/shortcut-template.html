@@ -3,14 +3,17 @@
 		<style>
 		div.buttonsbar {
 			width: 100%;
-			text-align: center;
+			text-align: left;
 		}
 		div.buttonsbar div {
 		    display: inline-block;
 		    border-radius: 8px;
 		    border: solid 4px #a6d100;
 		    background-color: #a6d100;
-		    padding: 20px;
+		    padding-left: 20px;
+		    padding-right: 20px;
+		    padding-top: 5px;
+		    padding-bottom: 5px;
 		    margin: 15px;
 		    font-size: large;
 		    color: black;
@@ -50,10 +53,9 @@
 		<br>
 		You have been assigned a new task on Soffid Identity Management System:
 		<br><b> ${taskInstance.name} </b> <br>
-		<pre>${taskInstance.description}</pre>
+		${taskInstance.description}<br>
 		<br>
-		DueDate: ${taskInstance.dueDate}<br>
-		<br>
+		<b>Task details:</b><br>
 		${body}
 		<div class="buttonsbar">
 		${buttons}
@@ -61,7 +63,7 @@
 		<br>
 		<br>
 		Please, follow this <a target="_new" href="${AutoSSOURL}soffid/wf/task.zul?id=${taskInstance.id}">link</a> to view the task details.
-		<br><br>
+		<br>
 		To see your full task list, follow <a href="${AutoSSOURL}soffid/wf/inbox.zul">this  one</a>.
 		<br>
 	</body>
