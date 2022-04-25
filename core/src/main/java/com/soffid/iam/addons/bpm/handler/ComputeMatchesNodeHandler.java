@@ -71,7 +71,7 @@ public class ComputeMatchesNodeHandler implements ActionHandler {
 				List<String> userNames = new LinkedList<String>();
 				for (String userName: users.keySet()) {
 					Long w = users.get(userName);
-					if (pi.getMatchThreshold() == null || pi.getMatchThreshold().longValue() < w.longValue()) {
+					if (pi.getMatchThreshold() == null || pi.getMatchThreshold().longValue() <= w.longValue()) {
 						userNames.add(userName);
 					}
 				}

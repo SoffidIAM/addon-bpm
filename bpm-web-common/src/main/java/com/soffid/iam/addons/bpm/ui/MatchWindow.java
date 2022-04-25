@@ -41,6 +41,7 @@ public class MatchWindow extends StandardUserWindow {
 	private DataTable usersTable;
 	private String selectedUser;
 	String originalUser;
+	private Boolean merge;
 
 	@Override
 	protected void load() {
@@ -141,11 +142,14 @@ public class MatchWindow extends StandardUserWindow {
 		for (int i = 0; i < data.length(); i++) {
 			JSONObject user = data.getJSONObject(i);
 			if (i == usersTable.getSelectedIndex()) {
+				String userName = user.optString("userName", null);
 				if (user.has("id") && ! user.optString("id").trim().isEmpty() ) {
 					user.put("$action", Labels.getLabel("bpm.action.Merge"));
-					selectedUser = user.getString("userName");
+					selectedUser = userName;
+					merge = true;
 				} else {
-					getVariables().put("userName", user.getString("userName"));
+					merge = false;
+					getVariables().put("userName", userName);
 					user.put("$action", Labels.getLabel("bpm.action.New"));
 					selectedUser = (String) getVariables().get("userName");
 				}
@@ -199,10 +203,10 @@ public class MatchWindow extends StandardUserWindow {
 	@Override
 	protected void prepareTransition(String trasition) throws WorkflowException {
 		super.prepareTransition(trasition);
-		if ( selectedUser == null) 
+		if ( merge == null) 
 			throw new UserWorkflowException("Please, select an option to merge or register a new user");
 		String current = (String) getVariables().get("userName");
-		if (current == null || ! current.equals(selectedUser)) {
+		if (merge.booleanValue()) {
 			getVariables().put("userName", selectedUser);
 			getVariables().put("userSelector", selectedUser);
 			getVariables().put("action", "M");

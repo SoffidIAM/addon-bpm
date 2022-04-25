@@ -1,13 +1,12 @@
 package com.soffid.iam.addons.bpm.handler;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
 import org.jbpm.jpdl.el.ELException;
 import org.jbpm.jpdl.el.VariableResolver;
 import org.jbpm.jpdl.el.impl.JbpmVariableResolver;
-
-import com.ibm.icu.text.SimpleDateFormat;
 
 public class DateFormatterVariableResolver extends JbpmVariableResolver implements VariableResolver {
 
