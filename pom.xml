@@ -4,7 +4,7 @@
   <groupId>com.soffid.iam.addon.bpm</groupId>
   <packaging>pom</packaging>
   <name>Business process editor</name>
-  <version>3.1.7-SNAPSHOT</version>
+  <version>3.1.8-SNAPSHOT</version>
   <description>SOFFID IAM BPM addon</description>
   <prerequisites>
     <maven>2.0.1</maven>
