@@ -19,6 +19,7 @@ import com.soffid.iam.addons.bpm.common.Filter;
 import com.soffid.iam.addons.bpm.common.PageInfo;
 import com.soffid.iam.addons.bpm.core.BpmUserService;
 import com.soffid.iam.api.User;
+import com.soffid.iam.bpm.mail.Mail;
 import com.soffid.iam.service.ApplicationService;
 import com.soffid.iam.service.UserService;
 import com.soffid.iam.utils.Security;
@@ -87,6 +88,10 @@ public class ComputeMatchesNodeHandler implements ActionHandler {
 		if (skip) {
 			executionContext.getTaskInstance().setSignalling(false); // To leave node
 			executionContext.getTaskInstance().cancel(); // To cancel task
+		} else {
+			Mail m = new com.soffid.iam.bpm.mail.Mail();
+			m.setTemplate("task-assign");
+			m.execute(executionContext);
 		}
 	}
 

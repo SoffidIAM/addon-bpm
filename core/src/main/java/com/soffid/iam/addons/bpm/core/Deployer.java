@@ -566,7 +566,7 @@ public class Deployer {
 				tn.addEvent(ev);
 				
 				// Add mail notification
-				addMailNotification(node, tn, t);
+//				addMailNotification(node, tn, t);
 			}
 			else if (node.getType().equals((NodeType.NT_MAIL)))
 			{
