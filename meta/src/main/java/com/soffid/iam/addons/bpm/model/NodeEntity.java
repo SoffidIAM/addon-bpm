@@ -84,4 +84,9 @@ public class NodeEntity {
 	@Column(name="NOD_DENTRA")
 	@Nullable
 	String denyTransition;
+
+	@Column(name="NOD_UPLDOC")
+	@Nullable
+	Boolean uploadDocuments;
+	
 }

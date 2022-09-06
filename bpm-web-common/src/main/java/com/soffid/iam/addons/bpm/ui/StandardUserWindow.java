@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -60,6 +61,7 @@ import com.soffid.iam.api.DataType;
 import com.soffid.iam.api.MetadataScope;
 import com.soffid.iam.api.Role;
 import com.soffid.iam.api.RoleAccount;
+import com.soffid.iam.api.SoDRule;
 import com.soffid.iam.api.User;
 import com.soffid.iam.bpm.api.ProcessInstance;
 import com.soffid.iam.bpm.api.TaskInstance;
@@ -140,6 +142,10 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 				ProcessInstance proc = ProcessInstance.toProcessInstance( getProcessInstance() );
 				pageInfo = EJBLocator.getBpmUserService().getPageInfo( proc );
 				ignoreEmptyFields = true;
+			}
+			
+			if (pageInfo != null && pageInfo.getUploadDocuments() != null) {
+				setCanAddAttachments(pageInfo.getUploadDocuments().booleanValue());
 			}
 			
 			if (pageInfo.getTriggers() != null) {
@@ -284,6 +290,32 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 		}
 		inputFields.put (field.getName(), d);
 		
+	}
+
+	private void calculateRisks() throws InternalErrorException {
+		LinkedList<RoleAccount> ra = new LinkedList<>();
+		HashSet<String> users = new HashSet<>();
+		long i  = 0;
+		for (RoleRequestInfo grant: grants) {
+			if (grant.getRoleId() != null) {
+				RoleAccount r = new RoleAccount();
+				r.setInformationSystemName(grant.getApplicationName());
+				Role role = ServiceLocator.instance().getApplicationService().findRoleById(grant.getRoleId());
+				r.setRoleName(role.getName());
+				r.setSystem(role.getSystem());
+				r.setUserCode(grant.getUserName());
+				r.setId(i);
+				ra.add(r);
+			}
+			i++;
+		}
+		
+		ServiceLocator.instance().getSoDRuleService().qualifyRolAccountList(ra);
+		for (RoleAccount r: ra) {
+			RoleRequestInfo grant = grants.get(r.getId().intValue());
+			grant.setSodRisk(r.getSodRisk());
+			grant.setSodRules(r.getSodRules());
+		}
 	}
 
 	private void regenerateAppRows(Div grantsGrid) throws Exception {
@@ -1020,6 +1052,7 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 			grants = new LinkedList<RoleRequestInfo>();
 			getVariables().put("grants", grants);
 		}
+		calculateRisks();
 		grantsReadOnly = readonly || Boolean.TRUE.equals( field.getReadOnly() );
 		regenerateApproveAppRows(approveGrantsGrid);
 		inputFields.put (field.getName(), d);
@@ -1071,11 +1104,13 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 			Long previousRoleId = (Long) grant.getPreviousRoleId();
 			if (roleId != null && previousRoleId == null)
 			{
+				addRisk (permsCell, grant);
 				Role role = ServiceLocator.instance().getApplicationService().findRoleById(roleId);
 				permsCell.appendChild(new Label(role.getName()+": "+role.getDescription()));
 			}
 			else if (roleId != null)
 			{
+				addRisk (permsCell, grant);
 				// New role
 				Role role = ServiceLocator.instance().getApplicationService().findRoleById(roleId);
 				Div d = new Div();
@@ -1128,6 +1163,18 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 		}
 	}
 	
+	private void addRisk(Listcell permsCell, RoleRequestInfo grant) {
+		if (grant.getSodRisk() != null) {
+			ImageClic ic = new ImageClic();
+			ic.setSrc("/img/risk." + grant.getSodRisk().getValue()+".svg");
+			ic.setStyle("vertical-align: middle");
+			ic.setTitle(Labels.getLabel("com.soffid.iam.api.RoleAccount.sodRules"));
+			ic.addEventListener("onClick", onClickSoD);
+			ic.setAttribute("grant", grant);
+			permsCell.appendChild(ic);
+		}
+	}
+
 	private void addIconPermissions(Listcell listCell, final User u) {
 		if (getTask() != null && getTask().isOpen())
 		{
@@ -1177,7 +1224,7 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 							else
 							{
 								Image image = new Image();
-								image.setSrc("/img/risk-" + roleAccount.getSodRisk().getValue()+".png");
+								image.setSrc("/img/risk." + roleAccount.getSodRisk().getValue()+".svg");
 								r.appendChild(image);
 							}
 							
@@ -1193,6 +1240,27 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 			w.doHighlighted();
 		}
 	};
+	
+	EventListener onClickSoD = new EventListener() {
+		public void onEvent(Event event) throws Exception {
+			RoleRequestInfo u = (RoleRequestInfo) event.getTarget().getAttribute("grant");
+			Window w = (Window) getFellow("sod");
+			StringBuffer sb = new StringBuffer();
+			List<SoDRule> rules = (List<SoDRule>) u.getSodRules();
+			for (SoDRule rule: rules) {
+				if (rule.getRisk() != null)
+					sb.append("<img class='small-icon' src='"+getDesktop().getExecution().getContextPath()+"/img/risk."+rule.getRisk().getValue()+".svg'> </img>");
+				sb.append(rule.getName());
+				sb.append("<BR>");
+			}
+			CustomField3 risk = (CustomField3) w.getFellow("sodRisk");
+			risk.setValue(u.getSodRisk());
+			CustomField3 rf = (CustomField3) w.getFellow("sodRules");
+			rf.setValue(sb.toString());
+			w.doHighlighted();
+		}
+	};
+
 	EventListener onApprove = new EventListener() {
 		public void onEvent(Event event) throws Exception {
 			Listitem item = (Listitem) event.getTarget().getParent().getParent();
@@ -1289,6 +1357,5 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 			container.getParent().setVisible(visible);
 		}
 	}
-
 
 }

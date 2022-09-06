@@ -272,6 +272,8 @@ public class ProcessWindow extends Window {
 	private CustomField3 typeListbox;
 	private Listbox nodesListbox;
 	private CustomField3 grantTypeListbox;
+
+	private CustomField3 grantStartTypeListbox;
 	
 	public void onCreate() {
 		getFellow("save").addEventListener("onClick", onSave);
@@ -282,6 +284,10 @@ public class ProcessWindow extends Window {
 		typeListbox.addEventListener("onChange", onSelectType);
 		grantTypeListbox = (CustomField3) getFellow("grantScreenListbox");
 		grantTypeListbox.addEventListener("onSelect", onSelectType);
+
+		grantStartTypeListbox = (CustomField3) getFellow("startGrantType");
+		grantStartTypeListbox.addEventListener("onSelect", onSelectType);
+
 		getParent().getFellow("form").addEventListener("onChangeXPath", onChangeXPath);
 		getFellow("container").addEventListener("onChangeXPath", onChangeXPath);
 		nodesListbox = ((Listbox) getFellow("nodes"));
@@ -318,12 +324,13 @@ public class ProcessWindow extends Window {
 	{
 		if ( typeListbox.getValue() != null && nodesListbox.getSelectedItem() != null)
 		{
-			String grantType = (String) grantTypeListbox.getValue();
 			Node node = (Node) nodesListbox.getSelectedItem().getValue();
 			WorkflowType processType = (WorkflowType) XPathUtils.getValue(this, "type");
 			NodeType type = (NodeType) typeListbox.getValue();
+			getFellow("startType").setVisible(type == NodeType.NT_START );
+			getFellow("startGrantType").setVisible(type == NodeType.NT_START && processType.equals(WorkflowType.WT_PERMISSION));
 			getFellow("screenType").setVisible(type == NodeType.NT_SCREEN || ( type == NodeType.NT_START && processType.equals(WorkflowType.WT_USER)));
-			getFellow("grantScreenType").setVisible(type == NodeType.NT_GRANT_SCREEN || (type == NodeType.NT_START && processType.equals(WorkflowType.WT_PERMISSION)));
+			getFellow("grantScreenType").setVisible(type == NodeType.NT_GRANT_SCREEN);
 			getFellow("fieldsTab").setVisible(
 					type == NodeType.NT_SCREEN || 
 					type == NodeType.NT_MATCH_SCREEN || 
@@ -338,24 +345,20 @@ public class ProcessWindow extends Window {
 			getFellow("actorRow2").setVisible(type == NodeType.NT_GRANT_SCREEN);
 			getFellow("customType").setVisible(type == NodeType.NT_CUSTOM);
 			if (type == NodeType.NT_START)
-				grantTypeListbox.setListOfValues(new String[] {
+				grantStartTypeListbox.setListOfValues(new String[] {
 						"enter: " + Labels.getLabel("bpm.grantTypeList"),
 						"request: " + Labels.getLabel("bpm.grantTypeRequest"),
-//						"displayPending: " + Labels.getLabel("bpm.grantTypeDisplayPending"),
-//						"displayAll: " + Labels.getLabel("bpm.grantTypeDisplayAll"),
-//						"displayApproved: " + Labels.getLabel("bpm.grantTypeDisplayApproved"),
-//						"displayRejected:" + Labels.getLabel("bpm.grantTypeDisplayRejected")
 				});
 			else
 				grantTypeListbox.setListOfValues(new String[] {
 						"enter: " + Labels.getLabel("bpm.grantTypeList"),
-//						"request: " + Labels.getLabel("bpm.grantTypeRequest"),
 						"displayPending: " + Labels.getLabel("bpm.grantTypeDisplayPending"),
 						"displayAll: " + Labels.getLabel("bpm.grantTypeDisplayAll"),
 						"displayApproved: " + Labels.getLabel("bpm.grantTypeDisplayApproved"),
 						"displayRejected:" + Labels.getLabel("bpm.grantTypeDisplayRejected")
 				});
 			
+			grantStartTypeListbox.updateMetadata();
 			grantTypeListbox.updateMetadata();
 
 			getFellow("mailType").setVisible(type == NodeType.NT_MAIL);

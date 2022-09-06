@@ -49,6 +49,7 @@ public class StartHandler implements ActionHandler {
 				rri.setComments(null);
 				rri.setDenied(false);
 				rri.setSodRisk ( ra.getSodRisk());
+				rri.setSodRules(ra.getSodRules());
 				rri.setOwners(null);
 				rri.setOwnersString(null);
 				rri.setParentRole(null);

@@ -89,4 +89,7 @@ public class Node {
 
 	@Nullable
 	String denyTransition;
+
+	@Nullable
+	Boolean uploadDocuments;
 }

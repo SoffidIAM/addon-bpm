@@ -316,6 +316,7 @@ public class Deployer {
 					pageInfo.setWorkflowType(proc.getType());
 					pageInfo.setApproveTransition(node.getApproveTransition());
 					pageInfo.setDenyTransition(node.getDenyTransition());
+					pageInfo.setUploadDocuments(node.getUploadDocuments());
 					ByteArrayOutputStream os = new ByteArrayOutputStream();
 					new ObjectOutputStream(os).writeObject( pageInfo );
 					fd.addFile("task#"+jbpmNode.getId(), os.toByteArray());
@@ -333,6 +334,7 @@ public class Deployer {
 				pageInfo.setAttributes(proc.getAttributes().toArray(new Attribute[proc.getAttributes().size()]));
 				pageInfo.setTriggers(node.getTriggers().toArray( new Trigger[ node.getTriggers().size()] ) );
 				pageInfo.setWorkflowType(proc.getType());
+				pageInfo.setUploadDocuments(node.getUploadDocuments());
 				ByteArrayOutputStream os = new ByteArrayOutputStream();
 				new ObjectOutputStream(os).writeObject( pageInfo );
 				fd.addFile("task#start", os.toByteArray());

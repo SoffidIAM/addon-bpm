@@ -30,6 +30,7 @@ public class RoleRequestInfo implements Serializable {
 	Long parentRole; 
 	String comments;
 	private SoDRisk sodRisk;
+	private java.util.Collection<com.soffid.iam.api.SoDRule> sodRules;
 	RoleAccount roleAccount;
 	Long suggestedRoleId;
 	Date start;
@@ -155,6 +156,12 @@ public class RoleRequestInfo implements Serializable {
 	}
 	public void setEnd(Date end) {
 		this.end = end;
+	}
+	public java.util.Collection<com.soffid.iam.api.SoDRule> getSodRules() {
+		return sodRules;
+	}
+	public void setSodRules(java.util.Collection<com.soffid.iam.api.SoDRule> sodRules) {
+		this.sodRules = sodRules;
 	}
 
 

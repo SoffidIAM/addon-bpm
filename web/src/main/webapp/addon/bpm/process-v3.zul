@@ -112,6 +112,11 @@
 							</tabs>
 							<tabpanels>
 								<tabpanel>
+									<div id="startType">
+										<customfield3 label="${c:l('bpm.grantScreenType') }"
+												bind="grantScreenType" dataType="STRING" id="startGrantType" />
+										<customfield3 label="${c:l('bpm.canUploadAttachments') }:" dataType="BOOLEAN" bind="uploadDocuments" onChange=""/>
+									</div>
 									<div id="screenType">
 										<div  id="actorRow">
 											<customfield3 label="${c:l('bpm.taskName') }" bind="taskName" dataType="STRING" onChange="" required="true"/>
@@ -128,6 +133,7 @@
 											<customfield3 label="${c:l('bpm.actorScript') }" bind="customScript" dataType="STRING" 
 												multiline="true" selectIcon="/img/pencil.svg"/>
 											<customfield3 label="${c:l('bpm.mailShortcut') }:" dataType="BOOLEAN" bind="mailShortcut" onChange="ref:w.updateMailShortcut"/>
+											<customfield3 label="${c:l('bpm.canUploadAttachments') }:" dataType="BOOLEAN" bind="uploadDocuments" onChange=""/>
 										</div>
 									</div>
 									<div id="screenMatchType">

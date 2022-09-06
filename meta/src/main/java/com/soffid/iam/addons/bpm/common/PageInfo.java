@@ -25,4 +25,7 @@ public class PageInfo {
 
 	@Nullable
 	String denyTransition;
+
+	@Nullable
+	Boolean uploadDocuments;
 }
