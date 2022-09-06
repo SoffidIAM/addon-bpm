@@ -9,9 +9,10 @@
   <prerequisites>
     <maven>2.0.1</maven>
   </prerequisites>
-  <scm>
-	<connection>scm:git:ssh://git@stash.dev.lab:7999/iam2/addon-bpm.git</connection>
-    <tag>HEAD</tag>
+	<scm>
+		<connection>scm:git:ssh://git@github.com:/SoffidIAM/addon-bpm.git</connection>
+		<developerConnection>scm:git:ssh://git@github.com:/SoffidIAM/addon-bpm.git</developerConnection>
+	  <tag>HEAD</tag>
   </scm>
   <licenses>
     <license>
@@ -59,6 +60,22 @@
             </execution>
           </executions>
         </plugin>
+		      <plugin>
+		        <groupId>org.apache.maven.plugins</groupId>
+		        <artifactId>maven-release-plugin</artifactId>
+			      <version>2.4.2</version>
+			      <dependencies>
+			        <dependency>
+			          <groupId>org.apache.maven.scm</groupId>
+			          <artifactId>maven-scm-provider-gitexe</artifactId>
+			          <version>1.8.1</version>
+			        </dependency>
+			       </dependencies>
+		        <configuration>
+		          <preparationGoals>clean install integration-test</preparationGoals>
+		          <goals>clean install deploy</goals>
+		        </configuration>
+		      </plugin>
         <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
         <plugin>
           <groupId>org.eclipse.m2e</groupId>
@@ -117,35 +134,31 @@
   <pluginRepositories>
     <pluginRepository>
       <id>soffid-open</id>
-      <url>http://www.soffid.com/maven</url>
+			<url>https://download.soffid.com/maven</url>
     </pluginRepository>
   </pluginRepositories>
-  <repositories>
-    <repository>
-      <id>central</id>
-      <url>http://repo1.maven.org/maven2</url>
-    </repository>
-    <repository>
-      <id>soffid-open</id>
-      <url>http://www.soffid.com/maven</url>
-    </repository>
-    <repository>
-      <id>jboss</id>
-      <url>https://repository.jboss.org/nexus/content/repositories/releases</url>
-    </repository>
-  </repositories>
-  <distributionManagement>
-    <repository>
-      <uniqueVersion>true</uniqueVersion>
-      <id>soffid-open</id>
-      <name>Soffid Maven repository</name>
-      <url>${soffid.deploy.url}</url>
-    </repository>
-    <site>
-      <id>soffid-open</id>
-      <name>Soffid Maven site repository</name>
-      <url>${soffid.deploy.site.url}</url>
-    </site>
-  </distributionManagement>
+	<repositories>
+		<repository>
+			<id>central</id>
+			<url>http://repo1.maven.org/maven2</url>
+		</repository>
+		<repository>
+			<id>soffid-open</id>
+			<url>https://download.soffid.com/maven</url>
+		</repository>
+	</repositories>
+	<distributionManagement>
+		<repository>
+			<uniqueVersion>true</uniqueVersion>
+			<id>soffid-open</id>
+			<name>Soffid Maven repository</name>
+			<url>${soffid.deploy.url}</url>
+		</repository>
+		<site>
+			<id>soffid-open-site</id>
+			<name>Soffid Maven site repository</name>
+			<url>${soffid.deploy.site.url}</url>
+		</site>
+	</distributionManagement>
   <artifactId>bpm</artifactId>
 </project>
