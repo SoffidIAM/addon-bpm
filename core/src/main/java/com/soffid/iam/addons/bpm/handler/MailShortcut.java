@@ -1104,6 +1104,8 @@ public class MailShortcut implements ActionHandler {
 	
 	private InternetAddress getUserAddress (User usuari) throws UnsupportedEncodingException, InternalErrorException
 	{
+		if (! usuari.getActive().booleanValue())
+			return null;
 		if (usuari.getShortName() != null && usuari.getMailDomain() != null)
 		{
 			return new InternetAddress( 
