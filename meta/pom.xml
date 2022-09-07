@@ -53,7 +53,7 @@
     <dependency>
       <groupId>com.soffid.tools</groupId>
       <artifactId>mdagenerator</artifactId>
-      <version xmlns:maven="http://maven.apache.org/POM/4.0.0">2.1.2</version>
+      <version xmlns:maven="http://maven.apache.org/POM/4.0.0">2.1.1</version>
     </dependency>
     <dependency>
       <groupId>com.soffid.iam.console</groupId>
