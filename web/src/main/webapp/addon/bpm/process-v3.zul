@@ -115,11 +115,10 @@
 									<div id="startType">
 										<customfield3 label="${c:l('bpm.grantScreenType') }"
 												bind="grantScreenType" dataType="STRING" id="startGrantType" />
-										<customfield3 label="${c:l('bpm.canUploadAttachments') }:" dataType="BOOLEAN" bind="uploadDocuments" onChange=""/>
 									</div>
 									<div id="screenType">
-										<div  id="actorRow">
-											<customfield3 label="${c:l('bpm.taskName') }" bind="taskName" dataType="STRING" onChange="" required="true"/>
+										<customfield3 label="${c:l('bpm.taskName') }" bind="taskName" dataType="STRING" onChange="" required="true"/>
+										<div id="actorRow">
 											<div  style="width:100%; padding-bottom: 16px">
 												Write an expression to identify the actor depending on the requested role.<h:br/>
 												One can use EL expressions based on role and application attributes.<h:br/>
@@ -132,9 +131,33 @@
 											</div>
 											<customfield3 label="${c:l('bpm.actorScript') }" bind="customScript" dataType="STRING" 
 												multiline="true" selectIcon="/img/pencil.svg"/>
-											<customfield3 label="${c:l('bpm.mailShortcut') }:" dataType="BOOLEAN" bind="mailShortcut" onChange="ref:w.updateMailShortcut"/>
-											<customfield3 label="${c:l('bpm.canUploadAttachments') }:" dataType="BOOLEAN" bind="uploadDocuments" onChange=""/>
+											<customfield3 label="${c:l('bpm.mailShortcut') }" dataType="BOOLEAN" bind="mailShortcut" onChange="ref:w.updateMailShortcut"/>
 										</div>
+										<customfield3 label="${c:l('bpm.canUploadAttachments') }" dataType="BOOLEAN" bind="uploadDocuments" onChange=""/>
+									</div>
+									<div id="roleSelection">
+										<customfield3 label="${c:l('bpm.roleFilter') }" bind="roleFilter" dataType="STRING" 
+											javascript='{"taks":"com.soffid.iam.api.Task","role":"com.soffid.iam.api.Role","selfRequest":"java.lang.Boolean","isGranted":"java.lang.Boolean"}'
+											multiline="true" selectIcon="/img/pencil.svg">
+											<custom-attributes javascripthelp="
+											   &lt;b&gt;task&lt;/b&gt; Contains the current &lt;a href='https://download.soffid.com/doc/console/latest/uml/com/soffid/iam/bpm/api/TaskInstance.html' target='_blank'&gt;task&lt;/a&gt; object&lt;br&gt;
+											   &lt;b&gt;role&lt;/b&gt; Contains the current &lt;a href='https://download.soffid.com/doc/console/latest/uml/com/soffid/iam/api/Role.html' target='_blank'&gt;role&lt;/a&gt; object&lt;br&gt;
+											   &lt;b&gt;isGranted&lt;/b&gt; is true if the role has been granted to the requester user (not the target user)&lt;br&gt;
+											   &lt;b&gt;selfRequest&lt;/b&gt; is true if the user is asking permissions for him/herself&lt;br&gt;
+											   Use &lt;b&gt;serviceLocator&lt;/b&gt; to get additional data when neeeded&lt;br&gt;
+											   &lt;b&gt;Return true to let the user select the current role&lt;/b&gt;" />
+										</customfield3>
+										<customfield3 label="${c:l('bpm.applicationFilter') }" bind="applicationFilter" dataType="STRING" 
+											multiline="true" selectIcon="/img/pencil.svg" 
+											javascript='{"taks":"com.soffid.iam.api.Task","application":"com.soffid.iam.api.Application","selfRequest":"java.lang.Boolean","isGranted":"java.lang.Boolean"}'>
+											<custom-attributes javascripthelp="
+											   &lt;b&gt;task&lt;/b&gt; Contains the current &lt;a href='https://download.soffid.com/doc/console/latest/uml/com/soffid/iam/bpm/api/TaskInstance.html' target='_blank'&gt;task&lt;/a&gt; object&lt;br&gt;
+											   &lt;b&gt;application&lt;/b&gt; Contains the current &lt;a href='https://download.soffid.com/doc/console/latest/uml/com/soffid/iam/api/Application.html' target='_blank'&gt;application&lt;/a&gt; object&lt;br&gt;
+											   &lt;b&gt;isGranted&lt;/b&gt; is true if the role has been granted to the requester user (not the target user)&lt;br&gt;
+											   &lt;b&gt;selfRequest&lt;/b&gt; is true if the user is asking permissions for him/herself&lt;br&gt;
+											   Use &lt;b&gt;serviceLocator&lt;/b&gt; to get additional data when neeeded&lt;br&gt;
+											   &lt;b&gt;Return true to let the user select the current application&lt;/b&gt;" />
+										</customfield3>
 									</div>
 									<div id="screenMatchType">
 										<customfield3 label="${c:l('bpm.taskName') }" bind="taskName" dataType="STRING" onChange="" required="true"/>

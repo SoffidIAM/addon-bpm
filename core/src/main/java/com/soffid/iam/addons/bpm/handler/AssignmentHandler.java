@@ -3,6 +3,7 @@ package com.soffid.iam.addons.bpm.handler;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Array;
 import java.util.List;
 
 import org.jbpm.JbpmException;
@@ -40,11 +41,14 @@ public class AssignmentHandler implements org.jbpm.taskmgmt.def.AssignmentHandle
 				throw new JbpmException("Script for task assignment returned null: "+script);
 			if (o instanceof String)
 			{
-				assignable.setPooledActors(new String[] {o.toString()});
+				assignable.setPooledActors(o.toString().split(" *[,]+ *"));
 			}
-			else if (o instanceof String[]) 
-			{
-				assignable.setPooledActors((String[]) o);
+			else if (o.getClass().isArray()) {
+				String[] r = new String[Array.getLength(o)];
+				for ( int i = 0; i < r.length; i++) {
+					r[i] = Array.get(o, i).toString();					
+				}
+				assignable.setPooledActors(r);
 			}
 			else if (o instanceof List)
 			{

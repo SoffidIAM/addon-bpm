@@ -1,5 +1,6 @@
 package com.soffid.iam.addons.bpm.common;
 
+import com.soffid.mda.annotation.Description;
 import com.soffid.mda.annotation.Nullable;
 import com.soffid.mda.annotation.ValueObject;
 
@@ -28,4 +29,12 @@ public class PageInfo {
 
 	@Nullable
 	Boolean uploadDocuments;
+
+	@Nullable
+	@Description("Script to filter out roles to request")
+	String roleFilter;
+	
+	@Nullable
+	@Description("Script to filter out applications to request")
+	String applicationFilter;
 }

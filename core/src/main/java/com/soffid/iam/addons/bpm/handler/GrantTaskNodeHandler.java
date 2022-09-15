@@ -3,6 +3,7 @@ package com.soffid.iam.addons.bpm.handler;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.Date;
 import java.util.EnumSet;
@@ -250,10 +251,17 @@ public class GrantTaskNodeHandler implements ActionHandler {
 
 			if (o == null)
 				return null;
-			else if (o instanceof String[])
-				return (String[]) o;
+			else if (o.getClass().isArray()) {
+				String[] r = new String[Array.getLength(o)];
+				for ( int i = 0; i < r.length; i++) {
+					r[i] = Array.get(o, i).toString();					
+				}
+				return r;
+			}
+			else if (o instanceof List)
+				return (String[]) ((List)o).toArray(new String[0]);
 			else
-				return o.toString().split("[, ]+");
+				return o.toString().split(" *[,]+ *");
 
 		} catch (TargetError e) {
 			throw new DelegationException("script evaluation exception", e.getTarget());

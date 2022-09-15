@@ -1,6 +1,8 @@
 package com.soffid.iam.addons.bpm.ui;
 
+import java.io.IOException;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -31,6 +33,7 @@ import com.soffid.iam.api.Application;
 import com.soffid.iam.api.Role;
 import com.soffid.iam.api.RoleGrant;
 import com.soffid.iam.api.User;
+import com.soffid.iam.interp.Evaluator;
 //import com.soffid.bpm.consum.data.RequestInfo;
 import com.soffid.iam.utils.Security;
 
@@ -128,7 +131,7 @@ public class RequestWindow extends StandardUserWindow
 		}
 	}
 	
-	public void removeRole ( Role role ) throws InternalErrorException, NamingException, CreateException
+	public void removeRole ( Role role ) throws Exception
 	{
 		RoleRequestInfo i = new RoleRequestInfo();
 		User me = com.soffid.iam.EJBLocator.getUserService().getCurrentUser();
@@ -157,7 +160,7 @@ public class RequestWindow extends StandardUserWindow
 
 	};
 
-	private void selectApp(Event event) throws InternalErrorException, NamingException, CreateException {
+	private void selectApp(Event event) throws Exception {
 		Div div = (Div) event.getTarget();
 		ApplicationTree tree = (ApplicationTree) event.getTarget().getAttribute("app");
 		Integer levels = (Integer) div.getAttribute("levels");
@@ -213,6 +216,7 @@ public class RequestWindow extends StandardUserWindow
 		}
 	};
 	private Collection<RoleGrant> currentGrants;
+	private Collection<RoleGrant> myGrants;
 
 	
 	
@@ -237,9 +241,12 @@ public class RequestWindow extends StandardUserWindow
 		}
 
 		super.load();
+		String myName = Security.getCurrentUser();
 		Security.nestedLogin(Security.ALL_PERMISSIONS);
 		try {
 			try {
+				User my = EJBLocator.getUserService().findUserByUserName(myName);
+				myGrants = EJBLocator.getApplicationService().findEffectiveRoleGrantByUser(my.getId());
 				loadApplications();
 				treeNavigation.clear();
 				currentApplication = applicationTree;
@@ -254,6 +261,7 @@ public class RequestWindow extends StandardUserWindow
 		((Textbox)getFellow("appSelector")).focus();
 	}
 
+	
 	private void fillApplicationButtons() {
 		Textbox appSelector = (Textbox) getFellow("appSelector");
 		appSelector.setValue("");
@@ -319,7 +327,7 @@ public class RequestWindow extends StandardUserWindow
 		}
 	}
 	
-	public void menu(Event event) throws InternalErrorException, NamingException, CreateException {
+	public void menu(Event event) throws IOException, Exception {
 		Integer pos = (Integer) event.getTarget().getAttribute("pos");
 		while (treeNavigation.size() > pos.intValue() ) 
 			treeNavigation.remove (pos.intValue());
@@ -337,7 +345,7 @@ public class RequestWindow extends StandardUserWindow
 		}
 	}
 
-	private void fillRoles() throws InternalErrorException, NamingException, CreateException {
+	private void fillRoles() throws IOException, Exception {
 		Div r = (Div) getFellow("roles");
 		r.getChildren().clear();
 		if (currentApplication.app != null) {
@@ -346,7 +354,7 @@ public class RequestWindow extends StandardUserWindow
 			boolean any = false;
 			for ( Role role: roles)
 			{
-				if (role.getBpmEnforced() != null && role.getBpmEnforced().booleanValue() && !inCart(role))
+				if (role.getBpmEnforced() != null && role.getBpmEnforced().booleanValue() && !inCart(role) && isAcceptable(role))
 				{
 					Div d = new Div();
 					d.setAttribute("role", role);
@@ -372,10 +380,37 @@ public class RequestWindow extends StandardUserWindow
 			}
 			getFellow("roleSelectorDiv").setVisible(any);
 		} else {
-			getFellow("appSelectorDiv").setVisible(false);
+			getFellow("roleSelectorDiv").setVisible(false);
 
 		}
 	}
+
+	private boolean isAcceptable(Role role) throws InternalErrorException, IOException, Exception {
+		if (pageInfo.getRoleFilter() == null || pageInfo.getRoleFilter().trim().isEmpty())
+			return true;
+		HashMap<String, Object> m = new HashMap<>();
+		m.put("task", getTask());
+		m.put("role", role);
+		m.put("isGranted", false);
+		for (RoleGrant grant: myGrants) {
+			if (grant.getRoleName().equals(role.getName())) {
+				m.put("isGranted", true);
+				break;
+			}
+		}
+		String userName = (String) getTask().getVariables().get("userSelector");
+		String current = Security.getSoffidPrincipal().getUserName();
+		if (userName == null || userName.trim().isEmpty() || userName.equals(current) || ("*"+userName).equals(current))
+			m.put("selfRequest", true);
+		else
+			m.put("selfRequest", false);
+		Object r = Evaluator.instance().evaluate(pageInfo.getRoleFilter(), 
+				m, 
+				"role filter");
+		return r != null && !Boolean.FALSE.equals( r );
+				
+	}
+
 
 	private boolean inCart(Role role) {
 		for (RoleRequestInfo grant: perms) {
@@ -394,13 +429,41 @@ public class RequestWindow extends StandardUserWindow
 		return false;
 	}
 
-	private void loadApplications() throws InternalErrorException, NamingException, CreateException {
+	private void loadApplications() throws IOException, Exception {
 		applicationTree = new ApplicationTree();
 		applicationTree.children = new LinkedList<ApplicationTree>();
 		for (Application app: EJBLocator.getApplicationService().findApplicationByJsonQuery("bpmEnabled eq true")) {
-			ApplicationTree parentTree = findApplicationTree(app.getParent());
-			addApplicationToTree(app, parentTree);
+			if (isAcceptable(app)) {
+				ApplicationTree parentTree = findApplicationTree(app.getParent());
+				addApplicationToTree(app, parentTree);
+			}
 		}
+	}
+
+	private boolean isAcceptable(Application app) throws InternalErrorException, IOException, Exception {
+		if (pageInfo.getApplicationFilter() == null || pageInfo.getApplicationFilter().trim().isEmpty())
+			return true;
+		HashMap<String, Object> m = new HashMap<>();
+		m.put("task", getTask());
+		m.put("application", app);
+		m.put("isGranted", false);
+		for (RoleGrant grant: myGrants) {
+			if (grant.getInformationSystem().equals(app.getName())) {
+				m.put("isGranted", true);
+				break;
+			}
+		}
+		String userName = (String) getTask().getVariables().get("userSelector");
+		String current = Security.getSoffidPrincipal().getUserName();
+		if (userName == null || userName.trim().isEmpty() || userName.equals(current) || ("*"+userName).equals(current))
+			m.put("selfRequest", true);
+		else
+			m.put("selfRequest", false);
+		Object r = Evaluator.instance().evaluate(pageInfo.getApplicationFilter(), 
+				m, 
+				"application filter");
+		return r != null && !Boolean.FALSE.equals( r );
+				
 	}
 
 	private ApplicationTree findApplicationTree(String parent) throws InternalErrorException, NamingException, CreateException {
@@ -501,10 +564,13 @@ public class RequestWindow extends StandardUserWindow
 	}
 
 	private void loadCurrentGrants() throws InternalErrorException, NamingException, CreateException {
+		String myName = Security.getCurrentUser();
 		Security.nestedLogin(Security.ALL_PERMISSIONS);
 		try {
 			currentGrants = new LinkedList<RoleGrant>();
 			String userName = (String) getTask().getVariables().get("userSelector");
+			if (userName == null || userName.trim().isEmpty())
+				userName = myName;
 			if (userName != null && ! userName.trim().isEmpty()) {
 				User user = EJBLocator.getUserService().findUserByUserName(userName);
 				if (user != null) {
@@ -514,6 +580,17 @@ public class RequestWindow extends StandardUserWindow
 		} finally {
 			Security.nestedLogoff();
 		}
+	}
+
+	@Override
+	protected void generateFields() throws Exception {
+		super.generateFields();
+		loadApplications();
+		treeNavigation.clear();
+		currentApplication = applicationTree;
+		fillNavigationBar();
+		fillApplicationButtons();
+		fillRoles();
 	}
 }
 

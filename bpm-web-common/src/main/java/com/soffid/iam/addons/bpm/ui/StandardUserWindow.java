@@ -98,7 +98,7 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 	private List<RoleRequestInfo> grants;
 	private Div grantsGrid;
 	private Listbox approveGrantsGrid;
-	private PageInfo pageInfo;
+	protected PageInfo pageInfo;
 	private boolean grantsReadOnly;
 	private boolean readonly;
 	private boolean ignoreEmptyFields;
@@ -210,7 +210,7 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 		}
 	}
 
-	private void generateFields() throws Exception {
+	protected void generateFields() throws Exception {
 		grid.getChildren().clear();
 		Arrays.sort(pageInfo.getFields(), new Comparator<Field>() {
 			public int compare(Field o1, Field o2) {

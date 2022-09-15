@@ -89,4 +89,12 @@ public class NodeEntity {
 	@Nullable
 	Boolean uploadDocuments;
 	
+	@Column(name="NOD_ROLFIL")
+	@Nullable
+	String roleFilter;
+	
+	@Column(name="NOD_APLFIL")
+	@Nullable
+	String applicationFilter;
+	
 }

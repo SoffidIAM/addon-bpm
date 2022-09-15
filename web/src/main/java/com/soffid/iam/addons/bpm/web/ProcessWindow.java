@@ -342,6 +342,9 @@ public class ProcessWindow extends Window {
 				getFellowIfAny("screenMatchType").setVisible(type == NodeType.NT_MATCH_SCREEN);
 			} catch (ComponentNotFoundException e) { }
 			getFellow("actorRow").setVisible(type == NodeType.NT_SCREEN);
+			getFellow("roleSelection").setVisible(type == NodeType.NT_SCREEN || 
+					type == NodeType.NT_START && processType.equals(WorkflowType.WT_USER) ||
+					type == NodeType.NT_START && processType.equals(WorkflowType.WT_PERMISSION));
 			getFellow("actorRow2").setVisible(type == NodeType.NT_GRANT_SCREEN);
 			getFellow("customType").setVisible(type == NodeType.NT_CUSTOM);
 			if (type == NodeType.NT_START)

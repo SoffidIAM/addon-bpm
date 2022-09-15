@@ -92,4 +92,13 @@ public class Node {
 
 	@Nullable
 	Boolean uploadDocuments;
+
+	@Nullable
+	@Description("Script to filter out roles to request")
+	String roleFilter;
+	
+	@Nullable
+	@Description("Script to filter out applications to request")
+	String applicationFilter;
+	
 }
