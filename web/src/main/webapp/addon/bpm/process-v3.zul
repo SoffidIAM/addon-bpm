@@ -213,7 +213,7 @@
 										<customfield3 label="${c:l('bpm.mailMessage') }" dataType="STRING" bind="mailMessage" multiline="true"/>
 									</div>
 									<div id="applyType">
-										<customfield3 label="${c:l('bpm.applyUser') }" bind="applyUserChanges" dataType="BOOLEAN"/>
+										<customfield3 label="${c:l('bpm.applyUser') }" bind="applyUserChanges" dataType="BOOLEAN" id="applyUserChanges"/>
 										<customfield3 label="${c:l('bpm.applyEntitlements') }" bind="applyEntitlements" dataType="BOOLEAN"/>
 									</div>
 									<div id="applyAccountType">

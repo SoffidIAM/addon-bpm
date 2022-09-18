@@ -8,11 +8,15 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import javax.ejb.CreateException;
+import javax.naming.NamingException;
 
 import org.apache.commons.beanutils.PropertyUtils;
 
+import com.soffid.iam.EJBLocator;
 import com.soffid.iam.ServiceLocator;
 import com.soffid.iam.addons.bpm.common.RoleRequestInfo;
+import com.soffid.iam.api.Account;
 import com.soffid.iam.api.Application;
 import com.soffid.iam.api.DataType;
 import com.soffid.iam.api.MetadataScope;
@@ -23,6 +27,7 @@ import com.soffid.iam.api.User;
 import com.soffid.iam.bpm.api.TaskInstance;
 import com.soffid.iam.service.ApplicationService;
 
+import es.caib.seycon.ng.comu.AccountType;
 import es.caib.seycon.ng.exception.InternalErrorException;
 import es.caib.seycon.ng.utils.Security;
 
@@ -93,27 +98,49 @@ public class TaskUtils {
 
 			Long role = null;
 			for (RoleAccount ra : userGrants) {
-				Role r = appSvc.findRoleByNameAndSystem(ra.getRoleName(), ra.getSystem());
-
-				if (r.getBpmEnforced() != null && r.getBpmEnforced().booleanValue()) {
-					Application app = appSvc.findApplicationByApplicationName(r.getInformationSystemName());
-					if (app.getBpmEnforced() != null && app.getBpmEnforced().booleanValue()) {
-						RoleRequestInfo ri = new RoleRequestInfo();
-						ri.setApplicationName( r.getInformationSystemName());
-						ri.setPreviousRoleId(r.getId());
-						ri.setPreviousRoleDescription(r.getDescription());
-						ri.setRoleId(r.getId());
-						ri.setUserName(ra.getUserCode());
-						ri.setUserFullName( app.getDescription());
-						ri.setRoleDescription(r.getDescription());
-						grants.add(ri);
-						createChildRolesNoRefresh(grants, grants.size()-1);
-					}
+				RoleRequestInfo ri = null;
+				ri = generateRoleRequestInfo(ra);
+				if (ri != null) {
+					grants.add(ri);
+					createChildRolesNoRefresh(grants, grants.size()-1);
 				}
 			}
 		} finally {
 			Security.nestedLogoff();
 		}
+	}
+
+	public static RoleRequestInfo generateRoleRequestInfo(RoleAccount ra) 
+			throws InternalErrorException, NamingException, CreateException {
+		RoleRequestInfo ri = null;
+		ApplicationService appSvc = ServiceLocator.instance().getApplicationService();
+		Role r = appSvc.findRoleByNameAndSystem(ra.getRoleName(), ra.getSystem());
+		if (r.getBpmEnforced() != null && r.getBpmEnforced().booleanValue()) {
+			Application app = appSvc.findApplicationByApplicationName(r.getInformationSystemName());
+			if (app.getBpmEnforced() != null && app.getBpmEnforced().booleanValue()) {
+				ri  = new RoleRequestInfo();
+				ri.setApplicationName( r.getInformationSystemName());
+				ri.setPreviousRoleId(r.getId());
+				ri.setPreviousRoleDescription(r.getDescription());
+				ri.setRoleId(r.getId());
+				ri.setUserName(ra.getUserCode());
+				ri.setUserFullName( app.getDescription());
+				ri.setRoleDescription(r.getDescription());
+				ri.setDelegateTo(ra.getDelegateAccount());
+				ri.setDelegateUntil(ra.getDelegateUntil());
+				ri.setPreviousDelegateTo(ra.getDelegateAccount());
+				ri.setPreviousDelegateUntil(ra.getDelegateUntil());
+				ri.setApplicationDescription(app.getDescription());
+				ri.setRoleAccountId(ra.getId());
+				if (ri.getDelegateTo() != null) {
+					Account account = EJBLocator.getAccountService().findAccount(ri.getDelegateTo(), ra.getSystem());
+					if (account != null && account.getType() == AccountType.USER) 
+						ri.setDelegateToUser(account.getOwnerUsers().iterator().next());
+						
+				}
+			}
+		}
+		return ri;
 	}
 
 	public static void createChildRolesNoRefresh(List<RoleRequestInfo> grants, int i) throws Exception {

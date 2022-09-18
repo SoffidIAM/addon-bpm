@@ -25,6 +25,7 @@ import com.soffid.iam.addons.bpm.common.Transition;
 import com.soffid.iam.addons.bpm.common.WorkflowType;
 import com.soffid.iam.api.DataType;
 import com.soffid.iam.api.MetadataScope;
+import com.soffid.iam.web.WebDataType;
 
 import es.caib.seycon.ng.comu.TypeEnumeration;
 import es.caib.seycon.ng.exception.InternalErrorException;
@@ -65,6 +66,8 @@ public class NewProcessWindow extends Window {
 			createUserTemplate(p);
 		else if (t == WorkflowType.WT_ACCOUNT_RESERVATION)
 			createAccountTemplate(p);
+		else if (t == WorkflowType.WT_DELEGATION)
+			createDelegationTemplate(p);
 		else
 			createPermissionsTemplate(p);
 		
@@ -113,6 +116,7 @@ public class NewProcessWindow extends Window {
 		p.getNodes().add(nodeStart);
 		
 		nodeApprove.setName("Approve");
+		nodeApprove.setTaskName("Approve changes on #{fullName}");
 		nodeApprove.setDescription("Approve ");
 		nodeApprove.setType(NodeType.NT_SCREEN);
 		addFields (nodeApprove, true);
@@ -132,6 +136,49 @@ public class NewProcessWindow extends Window {
 		addTransition (nodeStart, nodeApprove, "Request");
 		addTransition (nodeApprove, nodeApply, "Approve");
 		addTransition (nodeApprove, nodeEnd, "Reject");
+		addTransition (nodeApply, nodeEnd, "");
+	}
+
+	private void createDelegationTemplate(Process p) throws InternalErrorException, NamingException, CreateException {
+		Node nodeStart = new Node();
+		Node nodeApply = new Node();
+		Node nodeEnd = new Node();
+		
+		Attribute att = new Attribute();
+		att.setLabel(Labels.getLabel("com.soffid.iam.api.User.userSelector"));
+		att.setName("userSelector");
+		att.setOrder(1L);
+		p.getAttributes().add(att);
+
+		att = new Attribute();
+		att.setLabel(Labels.getLabel("com.soffid.iam.api.User.grants"));
+		att.setName("grants");
+		att.setOrder(0L);
+		p.getAttributes().add(att);
+		
+		nodeStart.setName("Start");
+		nodeStart.setDescription("Add or revoke delegations");
+		nodeStart.setType(NodeType.NT_START);
+		// Add grants item
+		Field f = new Field();
+		f.setLabel("Permissions");
+		f.setName("grants");
+		f.setOrder(1L);
+		nodeStart.getFields().add(f);
+		p.getNodes().add(nodeStart);
+		
+		nodeApply.setName("Apply changes");
+		nodeApply.setType(NodeType.NT_APPLY);
+		nodeApply.setDescription("Apply changes");
+		nodeApply.setApplyEntitlements(true);
+		p.getNodes().add(nodeApply);
+		
+		nodeEnd.setName("End");
+		nodeEnd.setDescription("End");
+		nodeEnd.setType(NodeType.NT_END);
+		p.getNodes().add(nodeEnd);
+		
+		addTransition (nodeStart, nodeApply, "Apply");
 		addTransition (nodeApply, nodeEnd, "");
 	}
 
@@ -294,11 +341,12 @@ public class NewProcessWindow extends Window {
 		for (DataType ad: EJBLocator.getAdditionalDataService().findDataTypes2(MetadataScope.USER))
 		{
 			Field f = new Field();
-			f.setLabel( ad.getLabel() );
-			f.setName( ad.getCode());
+			WebDataType wdt = new WebDataType(ad);
+			f.setLabel( wdt.getLabel() );
+			f.setName( wdt.getName());
 			f.setOrder( new Long (order ++));
-			f.setValidationScript(ad.getVisibilityExpression());
-			f.setVisibilityScript(ad.getVisibilityExpression());
+			f.setValidationScript(wdt.getVisibilityExpression());
+			f.setVisibilityScript(wdt.getVisibilityExpression());
 			node.getFields().add(f);
 		}
 	}

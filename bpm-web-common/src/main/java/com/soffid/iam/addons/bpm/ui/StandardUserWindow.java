@@ -61,10 +61,12 @@ import com.soffid.iam.api.DataType;
 import com.soffid.iam.api.MetadataScope;
 import com.soffid.iam.api.Role;
 import com.soffid.iam.api.RoleAccount;
+import com.soffid.iam.api.RoleGrant;
 import com.soffid.iam.api.SoDRule;
 import com.soffid.iam.api.User;
 import com.soffid.iam.bpm.api.ProcessInstance;
 import com.soffid.iam.bpm.api.TaskInstance;
+import com.soffid.iam.interp.Evaluator;
 import com.soffid.iam.service.ApplicationService;
 import com.soffid.iam.service.impl.bshjail.SecureInterpreter;
 import com.soffid.iam.web.WebDataType;
@@ -94,15 +96,15 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	private Div grid;
-	private List<RoleRequestInfo> grants;
-	private Div grantsGrid;
+	protected Div grid;
+	protected List<RoleRequestInfo> grants;
+	protected Div grantsGrid;
 	private Listbox approveGrantsGrid;
 	protected PageInfo pageInfo;
 	private boolean grantsReadOnly;
 	private boolean readonly;
 	private boolean ignoreEmptyFields;
-	private Map<String, Component > inputFields = new HashMap<String, Component>();
+	protected Map<String, Component > inputFields = new HashMap<String, Component>();
 	
 	public void onCreate () {
 	}
@@ -123,7 +125,16 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 			a.appendChild(grid);
 		else
 			appendChild(grid);
+		
 		try {
+			String myName = Security.getCurrentUser();
+			Security.nestedLogin(Security.ALL_PERMISSIONS);
+			try {
+				User my = com.soffid.iam.EJBLocator.getUserService().findUserByUserName(myName);
+				myGrants = com.soffid.iam.EJBLocator.getApplicationService().findEffectiveRoleGrantByUser(my.getId());
+			} finally {
+				Security.nestedLogoff();
+			}
 			if (getTask() != null)
 			{
 				TaskInstance task = TaskInstance.toTaskInstance( getTask() );
@@ -1280,6 +1291,7 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 			((Checkbox)event.getTarget().getParent().getPreviousSibling().getFirstChild()).setChecked(false);
 		}
 	};
+	protected Collection<RoleGrant> myGrants;
 
 	@Override
 	public Map<String, InputField3> getInputFieldsMap() {
@@ -1356,6 +1368,58 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 			container.setVisible(visible);
 			container.getParent().setVisible(visible);
 		}
+	}
+
+	public boolean isAcceptable(Role role) throws InternalErrorException, IOException, Exception {
+		if (pageInfo.getRoleFilter() == null || pageInfo.getRoleFilter().trim().isEmpty())
+			return true;
+		HashMap<String, Object> m = new HashMap<>();
+		m.put("task", getTask());
+		m.put("role", role);
+		m.put("isGranted", false);
+		for (RoleGrant grant: myGrants) {
+			if (grant.getRoleName().equals(role.getName())) {
+				m.put("isGranted", true);
+				break;
+			}
+		}
+		String userName = (String) getTask().getVariables().get("userSelector");
+		String current = Security.getSoffidPrincipal().getUserName();
+		if (userName == null || userName.trim().isEmpty() || userName.equals(current) || ("*"+userName).equals(current))
+			m.put("selfRequest", true);
+		else
+			m.put("selfRequest", false);
+		Object r = Evaluator.instance().evaluate(pageInfo.getRoleFilter(), 
+				m, 
+				"role filter");
+		return r != null && !Boolean.FALSE.equals( r );
+				
+	}
+
+	protected boolean isAcceptable(Application app) throws InternalErrorException, IOException, Exception {
+		if (pageInfo.getApplicationFilter() == null || pageInfo.getApplicationFilter().trim().isEmpty())
+			return true;
+		HashMap<String, Object> m = new HashMap<>();
+		m.put("task", getTask());
+		m.put("application", app);
+		m.put("isGranted", false);
+		for (RoleGrant grant: myGrants) {
+			if (grant.getInformationSystem().equals(app.getName())) {
+				m.put("isGranted", true);
+				break;
+			}
+		}
+		String userName = (String) getTask().getVariables().get("userSelector");
+		String current = Security.getSoffidPrincipal().getUserName();
+		if (userName == null || userName.trim().isEmpty() || userName.equals(current) || ("*"+userName).equals(current))
+			m.put("selfRequest", true);
+		else
+			m.put("selfRequest", false);
+		Object r = Evaluator.instance().evaluate(pageInfo.getApplicationFilter(), 
+				m, 
+				"application filter");
+		return r != null && !Boolean.FALSE.equals( r );
+				
 	}
 
 }

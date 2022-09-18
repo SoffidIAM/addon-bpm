@@ -35,7 +35,12 @@ public class RoleRequestInfo implements Serializable {
 	Long suggestedRoleId;
 	Date start;
 	Date end;
-	
+	String delegateTo;
+	String delegateToUser;
+	Date delegateUntil;
+	String previousDelegateTo;
+	Date previousDelegateUntil;
+	Long roleAccountId;
 
 	public String getApplicationName() {
 		return applicationName;
@@ -162,6 +167,42 @@ public class RoleRequestInfo implements Serializable {
 	}
 	public void setSodRules(java.util.Collection<com.soffid.iam.api.SoDRule> sodRules) {
 		this.sodRules = sodRules;
+	}
+	public String getDelegateTo() {
+		return delegateTo;
+	}
+	public void setDelegateTo(String delegateTo) {
+		this.delegateTo = delegateTo;
+	}
+	public Date getDelegateUntil() {
+		return delegateUntil;
+	}
+	public void setDelegateUntil(Date delegateUntil) {
+		this.delegateUntil = delegateUntil;
+	}
+	public String getPreviousDelegateTo() {
+		return previousDelegateTo;
+	}
+	public void setPreviousDelegateTo(String previousDelegateTo) {
+		this.previousDelegateTo = previousDelegateTo;
+	}
+	public Date getPreviousDelegateUntil() {
+		return previousDelegateUntil;
+	}
+	public void setPreviousDelegateUntil(Date previousDelegateUntil) {
+		this.previousDelegateUntil = previousDelegateUntil;
+	}
+	public String getDelegateToUser() {
+		return delegateToUser;
+	}
+	public void setDelegateToUser(String delegateToUser) {
+		this.delegateToUser = delegateToUser;
+	}
+	public Long getRoleAccountId() {
+		return roleAccountId;
+	}
+	public void setRoleAccountId(Long roleAccountId) {
+		this.roleAccountId = roleAccountId;
 	}
 
 

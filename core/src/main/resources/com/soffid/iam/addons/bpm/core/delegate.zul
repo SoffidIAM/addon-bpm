@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zk xmlns="http://www.zkoss.org/2005/zul"
+	xmlns:h="http://www.w3.org/1999/xhtml"
+	xmlns:zk="http://www.zkoss.org/2005/zk"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.zkoss.org/2005/zul http://www.zkoss.org/2005/zul/zul.xsd">
+	<task id="window"
+		use="com.soffid.iam.addons.bpm.ui.DelegateWindow">
+		<window id = "selectUser" position="top,center"  width="80%" closable="false" visible="false" title="${c:l('selfService.NewDelegation') }">
+			<customfield3 dataType="ROLE" label="${c:l('agents.zul.Rol') }" id="role"  raisePrivileges="true" readonly="true" />
+			<customfield3 dataType="USER" label="${c:l('accounts.user') }" id="user" raisePrivileges="true" required="true" onChange="ref:window.onChangeDelegateUser"/>
+			<customfield3 dataType="STRING" label="${c:l('pamSession.accountName') }" id="account" required="true"/>
+			<customfield3 dataType="DATE" label="${c:l('attributeQuery.Until') }" id="date" required="true"/>
+			<div style="text-align: right; width: 100%">
+				<button image="/img/undo-r.svg" label="${c:l('selfService.cancelDelegation')}" 
+					onClick="ref:window.closeDelegateWindow" />
+				<button image="/img/save-r.svg" label="${c:l('selseleccionUsuario.btnDelegar') }"
+					onClick="ref:window.addDelegate"/>
+			</div>
+		</window>
+	</task>
+</zk>

@@ -48,6 +48,7 @@ import com.soffid.iam.addons.bpm.common.PageInfo;
 import com.soffid.iam.addons.bpm.common.Trigger;
 import com.soffid.iam.addons.bpm.common.WorkflowType;
 import com.soffid.iam.addons.bpm.handler.ApplyAccountHandler;
+import com.soffid.iam.addons.bpm.handler.ApplyDelegationHandler;
 import com.soffid.iam.addons.bpm.handler.ApplyHandler;
 import com.soffid.iam.addons.bpm.handler.AssignmentHandler;
 import com.soffid.iam.addons.bpm.handler.ComputeMatchesNodeHandler;
@@ -182,6 +183,8 @@ public class Deployer {
 		if ( procEntity.getType() == WorkflowType.WT_PERMISSION  && grantType!=null &&
 				grantType.equals( "request") )
 			generateZul(fd, "ui/start.zul", "request.zul");
+		else if ( procEntity.getType() == WorkflowType.WT_DELEGATION)
+			generateZul(fd, "ui/start.zul", "delegate.zul");
 		else
 			generateDefaultZul(fd, "ui/start.zul");
 
@@ -419,6 +422,8 @@ public class Deployer {
 				Delegation d = new Delegation();
 				if (proc.getType() == WorkflowType.WT_ACCOUNT_RESERVATION)
 					d.setClassName(ApplyAccountHandler.class.getName());
+				else if (proc.getType() == WorkflowType.WT_DELEGATION)
+					d.setClassName(ApplyDelegationHandler.class.getName());
 				else
 					d.setClassName(ApplyHandler.class.getName());
 				d.setConfigType("bean");

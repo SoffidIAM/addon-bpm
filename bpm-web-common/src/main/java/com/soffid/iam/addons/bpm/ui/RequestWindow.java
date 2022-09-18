@@ -2,7 +2,6 @@ package com.soffid.iam.addons.bpm.ui;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -33,7 +32,6 @@ import com.soffid.iam.api.Application;
 import com.soffid.iam.api.Role;
 import com.soffid.iam.api.RoleGrant;
 import com.soffid.iam.api.User;
-import com.soffid.iam.interp.Evaluator;
 //import com.soffid.bpm.consum.data.RequestInfo;
 import com.soffid.iam.utils.Security;
 
@@ -216,10 +214,6 @@ public class RequestWindow extends StandardUserWindow
 		}
 	};
 	private Collection<RoleGrant> currentGrants;
-	private Collection<RoleGrant> myGrants;
-
-	
-	
 	@Override
 	protected void load()
 	{
@@ -245,8 +239,6 @@ public class RequestWindow extends StandardUserWindow
 		Security.nestedLogin(Security.ALL_PERMISSIONS);
 		try {
 			try {
-				User my = EJBLocator.getUserService().findUserByUserName(myName);
-				myGrants = EJBLocator.getApplicationService().findEffectiveRoleGrantByUser(my.getId());
 				loadApplications();
 				treeNavigation.clear();
 				currentApplication = applicationTree;
@@ -385,33 +377,6 @@ public class RequestWindow extends StandardUserWindow
 		}
 	}
 
-	private boolean isAcceptable(Role role) throws InternalErrorException, IOException, Exception {
-		if (pageInfo.getRoleFilter() == null || pageInfo.getRoleFilter().trim().isEmpty())
-			return true;
-		HashMap<String, Object> m = new HashMap<>();
-		m.put("task", getTask());
-		m.put("role", role);
-		m.put("isGranted", false);
-		for (RoleGrant grant: myGrants) {
-			if (grant.getRoleName().equals(role.getName())) {
-				m.put("isGranted", true);
-				break;
-			}
-		}
-		String userName = (String) getTask().getVariables().get("userSelector");
-		String current = Security.getSoffidPrincipal().getUserName();
-		if (userName == null || userName.trim().isEmpty() || userName.equals(current) || ("*"+userName).equals(current))
-			m.put("selfRequest", true);
-		else
-			m.put("selfRequest", false);
-		Object r = Evaluator.instance().evaluate(pageInfo.getRoleFilter(), 
-				m, 
-				"role filter");
-		return r != null && !Boolean.FALSE.equals( r );
-				
-	}
-
-
 	private boolean inCart(Role role) {
 		for (RoleRequestInfo grant: perms) {
 			if (grant.getRoleId().equals(role.getId()))
@@ -438,32 +403,6 @@ public class RequestWindow extends StandardUserWindow
 				addApplicationToTree(app, parentTree);
 			}
 		}
-	}
-
-	private boolean isAcceptable(Application app) throws InternalErrorException, IOException, Exception {
-		if (pageInfo.getApplicationFilter() == null || pageInfo.getApplicationFilter().trim().isEmpty())
-			return true;
-		HashMap<String, Object> m = new HashMap<>();
-		m.put("task", getTask());
-		m.put("application", app);
-		m.put("isGranted", false);
-		for (RoleGrant grant: myGrants) {
-			if (grant.getInformationSystem().equals(app.getName())) {
-				m.put("isGranted", true);
-				break;
-			}
-		}
-		String userName = (String) getTask().getVariables().get("userSelector");
-		String current = Security.getSoffidPrincipal().getUserName();
-		if (userName == null || userName.trim().isEmpty() || userName.equals(current) || ("*"+userName).equals(current))
-			m.put("selfRequest", true);
-		else
-			m.put("selfRequest", false);
-		Object r = Evaluator.instance().evaluate(pageInfo.getApplicationFilter(), 
-				m, 
-				"application filter");
-		return r != null && !Boolean.FALSE.equals( r );
-				
 	}
 
 	private ApplicationTree findApplicationTree(String parent) throws InternalErrorException, NamingException, CreateException {

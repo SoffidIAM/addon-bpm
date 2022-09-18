@@ -366,6 +366,7 @@ public class ProcessWindow extends Window {
 
 			getFellow("mailType").setVisible(type == NodeType.NT_MAIL);
 			getFellow("applyType").setVisible(type == NodeType.NT_APPLY && processType != WorkflowType.WT_ACCOUNT_RESERVATION);
+			getFellow("applyUserChanges").setVisible(processType != WorkflowType.WT_DELEGATION);
 			getFellow("applyAccountType").setVisible(type == NodeType.NT_APPLY && processType == WorkflowType.WT_ACCOUNT_RESERVATION);
 			if (node != null && node.getFields() != null)
 			{
