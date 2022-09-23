@@ -404,18 +404,20 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 			f.setBind( toBind ( field.getName()) );
 			f.setMultiValue( false );
 		}
+
 		grid.appendChild(f);
+		
+		BindContext ctx = XPathUtils.getComponentContext(this);
+		f.setContext(ctx.getXPath());
+		f.setOwnerObject( getTask() == null ? getProcessInstance() : getTask());
+		f.setOwnerContext(getProcessInstance().getDescription());
+
 		f.setReadonly( getTask() == null || getTask().getStart() == null ||
 				Boolean.TRUE.equals(field.getReadOnly()));
 		if (field.getValidationScript() != null && !field.getValidationScript().trim().isEmpty())
 			f.setValidationScript(field.getValidationScript());
 		if (field.getVisibilityScript() != null && !field.getVisibilityScript().trim().isEmpty())
 			f.setVisibilityScript(field.getVisibilityScript());
-		
-		BindContext ctx = XPathUtils.getComponentContext(this);
-		f.setContext(ctx.getXPath());
-		f.setOwnerObject( getVariables());
-		f.setOwnerContext(getProcessInstance().getDescription());
 		
 		f.afterCompose();
 		f.addEventListener("onChange", onChangeField);
@@ -526,10 +528,12 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 					{
 						Object o = PropertyUtils.getProperty(u, dt.getCode());
 						getVariables().put(dt.getCode(), o);
+						getVariables().put("old/"+dt.getCode(), o);
 					}
 					else
 					{
 						getVariables().put(dt.getCode(), atts.get(dt.getCode()));
+						getVariables().put("old/"+dt.getCode(), atts.get(dt.getCode()));
 					}
 				}
 			}
