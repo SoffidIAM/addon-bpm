@@ -254,13 +254,16 @@ public class ApplyHandler implements ActionHandler {
 		ContextInstance ci = executionContext.getContextInstance();
 		for( DataType metadata: ServiceLocator.instance().getAdditionalDataService().findDataTypes2(MetadataScope.USER))
 		{
-			if (ci.hasVariable(metadata.getCode(), executionContext.getToken()))
+			if (! metadata.isReadOnly() && ci.hasVariable(metadata.getCode(), executionContext.getToken()))
 			{
 				Object value = ci.getVariable(metadata.getCode());
-				if (metadata.getBuiltin() != null && metadata.getBuiltin().booleanValue())
-					PropertyUtils.setProperty(user, metadata.getCode(), value);
-				else
-					attributes.put(metadata.getCode(), value);
+				Object oldValue = ci.getVariable("old/"+metadata.getCode());
+				if (value != null && oldValue != null && !oldValue.equals(value)) {
+					if (metadata.getBuiltin() != null && metadata.getBuiltin().booleanValue())
+						PropertyUtils.setProperty(user, metadata.getCode(), value);
+					else
+						attributes.put(metadata.getCode(), value);
+				}
 			}
 		}
 	}
