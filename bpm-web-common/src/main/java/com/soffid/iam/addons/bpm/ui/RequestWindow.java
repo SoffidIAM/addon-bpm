@@ -406,7 +406,7 @@ public class RequestWindow extends StandardUserWindow
 	}
 
 	private ApplicationTree findApplicationTree(String parent) throws InternalErrorException, NamingException, CreateException {
-		if (parent == null) return applicationTree;
+		if (parent == null || parent.trim().isEmpty()) return applicationTree;
 		else {
 			Application app = EJBLocator.getApplicationService().findApplicationByApplicationName(parent);
 			if (app == null) return applicationTree;
