@@ -179,7 +179,7 @@ public class BpmUserServiceImpl extends BpmUserServiceBase {
 					List<RoleRequestInfo> roles = (List<RoleRequestInfo>) executionContext.getVariable(Constants.ROLES_VAR); // $NON-NLS-1$
 					for (RoleRequestInfo role : roles) {
 						Set<String> owners = role.getOwners();
-						if ( ! Collections.disjoint(perms, owners)) {
+						if ( owners != null && ! Collections.disjoint(perms, owners)) {
 							if (! role.isApproved() && !role.isDenied()) {
 								if (actionType.equalsIgnoreCase("approve"))
 									role.setApproved(true);
