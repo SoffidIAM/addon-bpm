@@ -128,6 +128,8 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 		
 		try {
 			String myName = Security.getCurrentUser();
+			if (myName.startsWith("*"))
+				myName = myName.substring(1);
 			Security.nestedLogin(Security.ALL_PERMISSIONS);
 			try {
 				User my = com.soffid.iam.EJBLocator.getUserService().findUserByUserName(myName);
