@@ -308,6 +308,7 @@ public class ProcessSerializer {
 				target.setReadOnly(src.getBoolean("readOnly", false));
 				target.setRequired(src.getBoolean("required", false));
 				target.setValidationScript(src.getString("validationScript", null));
+				target.setVisibilityScript(src.getString("visibilityScript", null));
 				l.add(target);
 			}
 		}
