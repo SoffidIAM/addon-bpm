@@ -117,7 +117,7 @@ public class GrantTaskNodeHandler implements ActionHandler {
 
 			}
 
-			if (ownersSet.isEmpty())
+			if (ownersSet == null || ownersSet.isEmpty())
 			{
 				executionContext.leaveNode();
 			} else {
