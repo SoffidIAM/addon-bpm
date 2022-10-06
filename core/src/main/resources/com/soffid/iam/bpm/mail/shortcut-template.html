@@ -1,22 +1,20 @@
 <html>
 	<head>
 		<style>
-		div.buttonsbar {
-			width: 100%;
-			text-align: left;
+		.buttonstable {
+		    border-spacing: 15px;
 		}
-		div.buttonsbar div {
-		    display: inline-block;
+		.buttonsa {
+		    text-decoration: none;
+		}
+		.buttonstd .buttonsdiv {
+		    border: 9px solid #a6d100;
 		    border-radius: 8px;
-		    border: solid 4px #a6d100;
-		    background-color: #a6d100;
-		    padding-left: 20px;
-		    padding-right: 20px;
-		    padding-top: 5px;
-		    padding-bottom: 5px;
-		    margin: 15px;
+		    background-color:#a6d100;
 		    font-size: large;
 		    color: black;
+		    text-align: center;
+		    width:150px;
 		}
 		table.formdata {
 			border: none;
@@ -51,20 +49,19 @@
 	<body>
 		This is an automatic mail. Please do not reply.
 		<br>
-		You have been assigned a new task on Soffid Identity Management System:
-		<br><b> ${taskInstance.name} </b> <br>
+		You have been assigned a new task on Soffid Identity Management System.
+		<br><br><b> ${taskInstance.name} </b> <br>
 		${taskInstance.description}<br>
 		<br>
-		<b>Task details:</b><br>
+		<b>Task details</b><br>
 		${body}
 		<div class="buttonsbar">
 		${buttons}
 		</div>
 		<br>
-		<br>
 		Please, follow this <a target="_new" href="${AutoSSOURL}soffid/wf/task.zul?id=${taskInstance.id}">link</a> to view the task details.
 		<br>
-		To see your full task list, follow <a href="${AutoSSOURL}soffid/wf/inbox.zul">this  one</a>.
-		<br>
+		To see your full task list, follow <a href="${AutoSSOURL}soffid/wf/inbox.zul">this one</a>.
+		<br><br><br>
 	</body>
 </html>

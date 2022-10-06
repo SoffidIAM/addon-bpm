@@ -652,14 +652,20 @@ public class MailShortcut implements ActionHandler {
 		StringBuffer sb = new StringBuffer();
 		List<String> keys = new LinkedList<String> (buttons.keySet());
 		Collections.sort(keys);
+		sb.append("<table class='buttonstable'><tr>");
 		for (String key: keys) {
 			String link = buttons.get(key);
 			link = link + "."+hash; //$NON-NLS-1$
-			sb.append("<a href='"+quote(getExternalUrl()+"/soffid/anonymous/bpm/action.zul?shortcut="+ URLEncoder.encode(link, "UTF-8"))+"'>") //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-				.append("<div sclass='buttondiv'>") //$NON-NLS-1$
-				.append(key)
-				.append("</div></a>"); //$NON-NLS-1$
+
+			sb.append("<td class='buttonstd'>");
+			sb.append("<a class='buttonsa' href='"+quote(getExternalUrl()+"/soffid/anonymous/bpm/action.zul?shortcut="+ URLEncoder.encode(link, "UTF-8"))+"'>");
+			sb.append("<div class='buttonsdiv'>");
+			sb.append(key);
+			sb.append("</div>");
+			sb.append("</a>");
+			sb.append("</td>");
 		}
+		sb.append("</tr></table>");
 		buttonsText = sb.toString();
 	}
 
