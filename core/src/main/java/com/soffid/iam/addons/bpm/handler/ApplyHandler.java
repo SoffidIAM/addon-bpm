@@ -258,7 +258,7 @@ public class ApplyHandler implements ActionHandler {
 			{
 				Object value = ci.getVariable(metadata.getCode());
 				Object oldValue = ci.getVariable("old/"+metadata.getCode());
-				if (value != null && oldValue != null && !oldValue.equals(value)) {
+				if (value != null && (oldValue == null || !oldValue.equals(value))) {
 					if (metadata.getBuiltin() != null && metadata.getBuiltin().booleanValue())
 						PropertyUtils.setProperty(user, metadata.getCode(), value);
 					else
