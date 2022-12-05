@@ -50,18 +50,23 @@
 			div.role span.roleName { font-weight: bold; display: block; text-align: center}
 			div.role span.roleDescription { font-size: 12px; font-weight: normal;}
 			div.role img.cancel {display: none;}
+			div.role span.remove {display: none;}
 
 			div.selected { background: #80ff80;
 				width: 180px; 
-				height: 30px;
+				min-height: 30px;
 				margin: 16px;
 				display: block;
 				padding: 8px;
 				border-radius: 6px;
 				cursor: pointer}
+			div.selected.disabled { background: #80c080; }
 			div.selected img.cancel {display: none;}
 			div.selected:hover img.cancel {width: 16px; height: 16px; float: right;  z-index: 2; display: block;}
+			div.selected span.remove {display: none}
+			div.selected.disabled span.remove { font-weight: bold; display: block; text-align: center}
 			div.selected span.roleName { font-weight: bold; display: block; text-align: center}
+			div.selected.disabled span.roleName { display: none; }
 			div.selected span.roleDescription { display: none;}
 
 		</style>

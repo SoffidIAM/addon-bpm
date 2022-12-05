@@ -1363,8 +1363,14 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 					container = customField;
 					visible = false;
 				}
-				customField.setOwnerObject(getTask()); 
-				customField.setOwnerContext(getTask().getProcessName());
+				
+				if (getTask() == null) {
+					customField.setOwnerObject(getProcessInstance()); 
+					customField.setOwnerContext(getProcessInstance().getDescription());
+				} else {
+					customField.setOwnerObject(getTask()); 
+					customField.setOwnerContext(getTask().getProcessName());
+				}
 				boolean v = customField.attributeVisible();
 				if (customField != container && container != null && v) visible = true;
 				customField.setVisible(v);

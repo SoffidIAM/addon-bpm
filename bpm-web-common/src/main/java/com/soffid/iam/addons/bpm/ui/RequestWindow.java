@@ -39,6 +39,7 @@ import es.caib.bpm.toolkit.exception.SystemWorkflowException;
 import es.caib.bpm.toolkit.exception.UserWorkflowException;
 import es.caib.bpm.toolkit.exception.WorkflowException;
 import es.caib.seycon.ng.exception.InternalErrorException;
+import es.caib.zkib.zkiblaf.Missatgebox;
 
 public class RequestWindow extends StandardUserWindow
 {
@@ -129,6 +130,38 @@ public class RequestWindow extends StandardUserWindow
 		}
 	}
 	
+	public void revokeRole ( Role role ) throws InternalErrorException, NamingException, CreateException
+	{
+		RoleRequestInfo i = new RoleRequestInfo();
+		User me = com.soffid.iam.EJBLocator.getUserService().getCurrentUser();
+		Security.nestedLogin(Security.ALL_PERMISSIONS);
+		try 
+		{	
+			Application app = com.soffid.iam.EJBLocator.getApplicationService().findApplicationByApplicationName(role.getInformationSystemName());
+			i.setApplicationName(role.getInformationSystemName());
+			i.setApplicationDescription(app.getDescription());
+			i.setApproved(false);
+			i.setComments("");
+			i.setDenied(false);
+			i.setOwners(null);
+			i.setOwnersString(null);
+			i.setParentRole(null);
+			i.setPreviousRoleDescription(null);
+			i.setPreviousRoleId(role.getId());
+			i.setRoleId(null);
+			i.setRoleDescription(role.getDescription());
+			i.setUserFullName(Security.getSoffidPrincipal().getFullName());
+			i.setUserName(me.getUserName());
+			
+			perms.add(i);
+			getTask().getVariables().put("grants", perms);
+			getFellow("selected").setVisible(perms.size() > 0);
+		}
+		finally {
+			Security.nestedLogoff();
+		}
+	}
+
 	public void removeRole ( Role role ) throws Exception
 	{
 		RoleRequestInfo i = new RoleRequestInfo();
@@ -139,7 +172,8 @@ public class RequestWindow extends StandardUserWindow
 			for ( Iterator<RoleRequestInfo> it = perms.iterator(); it.hasNext(); )
 			{
 				RoleRequestInfo perm = it.next();
-				if (perm.getRoleId().equals(role.getId()))
+				if (role.getId().equals(perm.getRoleId()) || 
+						role.getId().equals(perm.getPreviousRoleId()) )
 					it.remove();
 			}
 			getTask().getVariables().put("grants", perms);
@@ -210,6 +244,38 @@ public class RequestWindow extends StandardUserWindow
 				}
 				
 				
+			}
+		}
+	};
+	
+	EventListener onRevokeRole = new EventListener() {
+		public void onEvent(Event event) throws Exception {
+			Div div = (Div) event.getTarget();
+			Role role = (Role) event.getTarget().getAttribute("role");
+			if (div.getSclass().equals("selected disabled"))
+			{
+				removeRole(role);
+				div.detach();
+			} 
+			else
+			{
+				Missatgebox.confirmaYES_NO(Labels.getLabel("bpm.confirmRevoke"),
+						(ev) -> {
+							if (ev.getName().equals("onYes")) {
+								revokeRole(role);
+								Div p = (Div) getFellow("roles");
+								for ( Object o: p.getChildren())
+								{
+									Div d = (Div) o;
+									if (d == event.getTarget())
+									{
+										d.setParent(getFellow("selected"));
+										d.setSclass("selected disabled");
+										return;
+									}
+								}
+							}
+						});
 			}
 		}
 	};
@@ -350,15 +416,19 @@ public class RequestWindow extends StandardUserWindow
 				{
 					Div d = new Div();
 					d.setAttribute("role", role);
-					if (isAlreadyGranted(role)) 
+					if (isAlreadyGranted(role))  {
 						d.setSclass("role disabled");
-					else {
+						d.addEventListener("onClick", onRevokeRole);
+					} else {
 						d.setSclass("role");
 						d.addEventListener("onClick", onSelectRole);
 					}
 					Image i = new Image("~./img/remove.png");
 					i.setSclass("cancel");
 					d.appendChild(i);
+					Label l0 = new Label(String.format(Labels.getLabel("bpm.remove"), role.getName()));
+					l0.setSclass("remove");
+					d.appendChild(l0);
 					Label l = new Label(role.getName());
 					l.setSclass("roleName");
 					d.appendChild(l);
@@ -379,7 +449,8 @@ public class RequestWindow extends StandardUserWindow
 
 	private boolean inCart(Role role) {
 		for (RoleRequestInfo grant: perms) {
-			if (grant.getRoleId().equals(role.getId()))
+			if (role.getId().equals(grant.getRoleId()) ||
+					role.getId().equals(grant.getPreviousRoleId()))
 				return true;
 		}
 		return false;

@@ -8,6 +8,7 @@ import java.util.Map;
 
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.logging.LogFactory;
+import org.jbpm.JbpmException;
 import org.jbpm.context.exe.ContextInstance;
 import org.jbpm.graph.def.ActionHandler;
 import org.jbpm.graph.exe.ExecutionContext;
@@ -248,6 +249,12 @@ public class ApplyHandler implements ActionHandler {
 			userService.update(user);
 			userService.updateUserAttributes(user.getUserName(), attributes);
 		}
+		else if ("grant".equals(action) || "revoke".equals(action))
+		{
+			// Ignore
+		}
+		else
+			throw new JbpmException("Invalid action "+action);
 	}
 
 	private void updateAttributes(User user, Map<String, Object> attributes, ExecutionContext executionContext) throws InternalErrorException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {

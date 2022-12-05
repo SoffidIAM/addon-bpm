@@ -261,7 +261,7 @@ public class GrantTaskNodeHandler implements ActionHandler {
 			else if (o instanceof List)
 				return (String[]) ((List)o).toArray(new String[0]);
 			else
-				return o.toString().split(" *[,]+ *");
+				return o.toString().split(" *, *");
 
 		} catch (TargetError e) {
 			throw new DelegationException("script evaluation exception", e.getTarget());
@@ -289,7 +289,7 @@ public class GrantTaskNodeHandler implements ActionHandler {
 		else if (o instanceof String[])
 			return (String[]) o;
 		else
-			return o.toString().split("[, ]+");
+			return o.toString().split(" *, *");
 	}
 
 	public String getScript() {
