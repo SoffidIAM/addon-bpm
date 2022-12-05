@@ -1,5 +1,8 @@
 package com.soffid.iam.addons.bpm.handler;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import org.jbpm.graph.def.ActionHandler;
 import org.jbpm.graph.exe.ExecutionContext;
 
@@ -30,6 +33,13 @@ public class StartAccountHandler implements ActionHandler {
 			}
 			AccountService accSvc = ServiceLocator.instance().getAccountService();
 			Account account = accSvc.findAccount(accountName, dispatcherName);
+			if (account == null)
+				throw new UserWorkflowException("Cannot find account "+accountName+" at "+dispatcherName);
+			List<String> owners = new LinkedList<String>();
+			if (account.getOwnerUsers() != null) owners.addAll(account.getOwnerUsers());
+			if (account.getOwnerRoles() != null) owners.addAll(account.getOwnerRoles());
+			if (account.getOwnerGroups() != null) owners.addAll(account.getOwnerGroups());
+			executionContext.setVariable("owners", owners);
 			accSvc.registerAccountReservationProcess(account, user, executionContext.getProcessInstance().getId());
 		} finally {
 			Security.nestedLogoff();
