@@ -33,4 +33,6 @@ public class Field {
 	@Nullable
 	String visibilityScript;
 	
+	@Nullable
+	String filterExpression;
 }

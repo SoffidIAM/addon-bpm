@@ -131,6 +131,7 @@ public class ProcessSerializer {
 			if (field.getRequired() != null) builder2.add("required", field.getRequired());
 			if (field.getValidationScript() != null) builder2.add("validationScript", field.getValidationScript());
 			if (field.getVisibilityScript() != null) builder2.add("visibilityScript", field.getVisibilityScript());
+			if (field.getFilterExpression() != null) builder2.add("filterExpression", field.getFilterExpression());
 			builder.add(builder2);
 		}
 		return builder;
@@ -309,6 +310,7 @@ public class ProcessSerializer {
 				target.setRequired(src.getBoolean("required", false));
 				target.setValidationScript(src.getString("validationScript", null));
 				target.setVisibilityScript(src.getString("visibilityScript", null));
+				target.setFilterExpression(src.getString("filterExpression", null));
 				l.add(target);
 			}
 		}

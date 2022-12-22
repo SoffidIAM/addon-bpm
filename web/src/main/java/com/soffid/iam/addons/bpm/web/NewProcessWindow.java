@@ -1,20 +1,20 @@
 package com.soffid.iam.addons.bpm.web;
 
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
 import javax.ejb.CreateException;
+import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
 import org.zkoss.util.resource.Labels;
-import org.zkoss.zk.ui.UiException;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zul.Listbox;
 import org.zkoss.zul.Textbox;
 import org.zkoss.zul.Window;
 
-import com.google.common.collect.Lists;
 import com.soffid.iam.EJBLocator;
 import com.soffid.iam.addons.bpm.common.Attribute;
 import com.soffid.iam.addons.bpm.common.Field;
@@ -23,15 +23,20 @@ import com.soffid.iam.addons.bpm.common.NodeType;
 import com.soffid.iam.addons.bpm.common.Process;
 import com.soffid.iam.addons.bpm.common.Transition;
 import com.soffid.iam.addons.bpm.common.WorkflowType;
+import com.soffid.iam.addons.bpm.core.ejb.BpmEditorService;
+import com.soffid.iam.addons.bpm.core.ejb.BpmEditorServiceHome;
+import com.soffid.iam.api.Application;
 import com.soffid.iam.api.DataType;
+import com.soffid.iam.api.DomainType;
 import com.soffid.iam.api.MetadataScope;
+import com.soffid.iam.api.Role;
+import com.soffid.iam.utils.Security;
 import com.soffid.iam.web.WebDataType;
 
 import es.caib.seycon.ng.comu.TypeEnumeration;
 import es.caib.seycon.ng.exception.InternalErrorException;
 import es.caib.zkib.component.DataListbox;
 import es.caib.zkib.component.DataModel;
-import es.caib.zkib.component.Form;
 import es.caib.zkib.datasource.XPathUtils;
 import es.caib.zkib.zkiblaf.Missatgebox;
 
@@ -93,6 +98,7 @@ public class NewProcessWindow extends Window {
 		Attribute att = new Attribute();
 		att.setLabel(Labels.getLabel("com.soffid.iam.api.User.action"));
 		att.setName("action");
+		att.setType(TypeEnumeration.STRING_TYPE);
 		att.setValues(Arrays.asList("A:New%20user","M:Modify%20user","D:Disable%20user","E:Enable%20user"));
 		att.setOrder(1L);
 		p.getAttributes().add(att);
@@ -100,6 +106,7 @@ public class NewProcessWindow extends Window {
 		att = new Attribute();
 		att.setLabel(Labels.getLabel("com.soffid.iam.api.User.userSelector"));
 		att.setName("userSelector");
+		att.setType(TypeEnumeration.USER_TYPE);
 		att.setOrder(2L);
 		p.getAttributes().add(att);
 
@@ -112,6 +119,7 @@ public class NewProcessWindow extends Window {
 		nodeStart.setName("Start");
 		nodeStart.setDescription("Request new user management process");
 		nodeStart.setType(NodeType.NT_START);
+		nodeStart.setUploadDocuments(true);
 		addFields (nodeStart, false);
 		p.getNodes().add(nodeStart);
 		
@@ -119,6 +127,9 @@ public class NewProcessWindow extends Window {
 		nodeApprove.setTaskName("Approve changes on #{fullName}");
 		nodeApprove.setDescription("Approve ");
 		nodeApprove.setType(NodeType.NT_SCREEN);
+		nodeApprove.setMailActor(getGroupOwner());
+		nodeApprove.setUploadDocuments(true);
+		nodeApprove.setMailShortcut(true);
 		addFields (nodeApprove, true);
 		p.getNodes().add(nodeApprove);
 		
@@ -198,7 +209,12 @@ public class NewProcessWindow extends Window {
 		nodeApprove.setName("Approve");
 		nodeApprove.setDescription("Approve ");
 		nodeApprove.setType(NodeType.NT_GRANT_SCREEN);
-		nodeApprove.setMailActor("admin");
+		nodeApprove.setMailActor(getApplicationOwner());
+		nodeApprove.setTaskName("Approve permissions for #{fullName}");
+		nodeApprove.setGrantScreenType("displayPending");
+		nodeApprove.setMailShortcut(true);
+		nodeApprove.setApproveTransition("Approve");
+		nodeApprove.setDenyTransition("Reject");
 		addPermFields (nodeApprove, false);
 		p.getNodes().add(nodeApprove);
 		
@@ -218,6 +234,50 @@ public class NewProcessWindow extends Window {
 		addTransition (nodeApprove, nodeApply, "Approve");
 		addTransition (nodeApprove, nodeEnd, "Reject");
 		addTransition (nodeApply, nodeEnd, "");
+	}
+
+	private String getApplicationOwner() throws InternalErrorException, NamingException, CreateException {
+		for (Role role: EJBLocator.getApplicationService().findRolesByApplicationName("SOFFID")) {
+			if (DomainType.APPLICATIONS.equals(role.getDomain()))
+				return role.getName()+"/#{applicationName}";
+		}
+		
+		Application app = EJBLocator.getApplicationService().findApplicationByApplicationName("SOFFID");
+		if (app != null) {
+			Role role = new Role();
+			role.setInformationSystemName(app.getName());
+			role.setDescription("Application supervisor");
+			role.setBpmEnabled(false);
+			role.setName("SOFFID_APP_OWNER");
+			role.setSystem(EJBLocator.getDispatcherService().findSoffidDispatcher().getName());
+			role.setDomain(DomainType.APPLICATIONS);
+			role = EJBLocator.getApplicationService().create(role);
+			return role.getName()+"/#{applicationName}";
+		} else {
+			return Security.getCurrentUser();
+		}
+	}
+
+	private String getGroupOwner() throws InternalErrorException, NamingException, CreateException {
+		for (Role role: EJBLocator.getApplicationService().findRolesByApplicationName("SOFFID")) {
+			if (DomainType.GROUPS.equals(role.getDomain()))
+				return role.getName()+"/#{primaryGroup}";
+		}
+		
+		Application app = EJBLocator.getApplicationService().findApplicationByApplicationName("SOFFID");
+		if (app != null) {
+			Role role = new Role();
+			role.setInformationSystemName(app.getName());
+			role.setDescription("Business unit supervisor");
+			role.setBpmEnabled(false);
+			role.setName("SOFFID_GROUP_MGR");
+			role.setSystem(EJBLocator.getDispatcherService().findSoffidDispatcher().getName());
+			role.setDomain(DomainType.GROUPS);
+			role = EJBLocator.getApplicationService().create(role);
+			return role.getName()+"/#{primaryGroup}";
+		} else {
+			return Security.getCurrentUser();
+		}
 	}
 
 	private void createAccountTemplate(Process p) throws InternalErrorException, NamingException, CreateException {
@@ -340,14 +400,18 @@ public class NewProcessWindow extends Window {
 		
 		for (DataType ad: EJBLocator.getAdditionalDataService().findDataTypes2(MetadataScope.USER))
 		{
-			Field f = new Field();
-			WebDataType wdt = new WebDataType(ad);
-			f.setLabel( wdt.getLabel() );
-			f.setName( wdt.getName());
-			f.setOrder( new Long (order ++));
-			f.setValidationScript(wdt.getVisibilityExpression());
-			f.setVisibilityScript(wdt.getVisibilityExpression());
-			node.getFields().add(f);
+			if (! ad.isReadOnly()) {
+				Field f = new Field();
+				WebDataType wdt = new WebDataType(ad);
+				f.setLabel( wdt.getLabel() );
+				f.setName( wdt.getName());
+				f.setOrder( new Long (order ++));
+				f.setValidationScript(wdt.getVisibilityExpression());
+				f.setVisibilityScript(wdt.getVisibilityExpression());
+				f.setReadOnly(ad.isReadOnly());
+				f.setRequired(ad.isRequired());
+				node.getFields().add(f);
+			}
 		}
 	}
 
@@ -412,6 +476,46 @@ public class NewProcessWindow extends Window {
 	
 	public void hide(Event event) {
 		setVisible(false);
+	}
+
+	public void createSampleProcesses() throws InternalErrorException, NamingException, CreateException {
+		WorkflowType type;
+		Iterator names = WorkflowType.names().iterator();
+		Iterator literals = WorkflowType.literals().iterator();
+		while (names.hasNext())
+		{
+			String name = (String) names.next();
+			String literal = (String) literals.next();
+			type = WorkflowType.fromString(literal.toString());
+			createProcess (name, type); 
+		}
+	}
+
+	private void createProcess(String name, WorkflowType t) throws InternalErrorException, NamingException, CreateException {
+		if (t == WorkflowType.WT_REQUEST)
+			return;
+		Process p = new Process();
+		p.setName(Labels.getLabel("com.soffid.iam.addons.bpm.common.WorkflowType."+name));
+		p.setDescription(Labels.getLabel("com.soffid.iam.addons.bpm.common.WorkflowType."+name));
+		p.setInitiators("*");
+		p.setManagers("SOFFID_ADMIN");
+		p.setObservers("admin");
+		p.setType(t);
+		BpmEditorService svc = (BpmEditorService) new InitialContext().lookup(BpmEditorServiceHome.JNDI_NAME);
+		
+		if (! svc.findByName(p.getName()).isEmpty())
+			return;
+		
+		if (t == WorkflowType.WT_USER)
+			createUserTemplate(p);
+		else if (t == WorkflowType.WT_ACCOUNT_RESERVATION)
+			createAccountTemplate(p);
+		else if (t == WorkflowType.WT_DELEGATION)
+			createDelegationTemplate(p);
+		else
+			createPermissionsTemplate(p);
+		p = svc.create(p);
+		svc.publish(p);
 	}
 
 }

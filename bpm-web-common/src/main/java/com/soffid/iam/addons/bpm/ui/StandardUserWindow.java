@@ -28,8 +28,6 @@ import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zul.Button;
 import org.zkoss.zul.Checkbox;
-import org.zkoss.zul.Column;
-import org.zkoss.zul.Columns;
 import org.zkoss.zul.Div;
 import org.zkoss.zul.Grid;
 import org.zkoss.zul.Image;
@@ -86,7 +84,6 @@ import es.caib.seycon.ng.utils.Security;
 import es.caib.zkib.binder.BindContext;
 import es.caib.zkib.component.DataListbox;
 import es.caib.zkib.component.DataTextbox;
-import es.caib.zkib.component.Databox.Type;
 import es.caib.zkib.datasource.XPathUtils;
 import es.caib.zkib.zkiblaf.ImageClic;
 import es.caib.zkib.zkiblaf.Missatgebox;
@@ -420,7 +417,8 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 			f.setValidationScript(field.getValidationScript());
 		if (field.getVisibilityScript() != null && !field.getVisibilityScript().trim().isEmpty())
 			f.setVisibilityScript(field.getVisibilityScript());
-		
+		if (field.getFilterExpression() != null && !field.getVisibilityScript().trim().isEmpty())
+			f.setFilterExpression(field.getFilterExpression());
 		f.afterCompose();
 		f.addEventListener("onChange", onChangeField);
 		f.setAttribute("fieldDef", field);

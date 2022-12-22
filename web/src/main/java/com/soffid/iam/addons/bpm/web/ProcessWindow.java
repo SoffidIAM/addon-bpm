@@ -6,11 +6,15 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import javax.ejb.CreateException;
 import javax.naming.InitialContext;
+import javax.naming.NamingException;
 
 import org.zkoss.util.resource.Labels;
+import org.zkoss.zk.ui.AbstractComponent;
 import org.zkoss.zk.ui.Component;
 import org.zkoss.zk.ui.ComponentNotFoundException;
+import org.zkoss.zk.ui.HtmlBasedComponent;
 import org.zkoss.zk.ui.event.DropEvent;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
@@ -23,6 +27,8 @@ import org.zkoss.zul.Textbox;
 import org.zkoss.zul.Window;
 import org.zkoss.zul.impl.InputElement;
 
+import com.soffid.iam.EJBLocator;
+import com.soffid.iam.addons.bpm.common.Attribute;
 import com.soffid.iam.addons.bpm.common.Field;
 import com.soffid.iam.addons.bpm.common.Filter;
 import com.soffid.iam.addons.bpm.common.Node;
@@ -33,10 +39,14 @@ import com.soffid.iam.addons.bpm.common.Trigger;
 import com.soffid.iam.addons.bpm.common.WorkflowType;
 import com.soffid.iam.addons.bpm.core.ejb.BpmEditorService;
 import com.soffid.iam.addons.bpm.core.ejb.BpmEditorServiceHome;
+import com.soffid.iam.api.DataType;
+import com.soffid.iam.api.User;
 import com.soffid.iam.web.component.CustomField3;
 import com.sun.mail.imap.protocol.ListInfo;
 
 import es.caib.bpm.vo.PredefinedProcessType;
+import es.caib.seycon.ng.comu.TypeEnumeration;
+import es.caib.seycon.ng.exception.InternalErrorException;
 import es.caib.zkib.binder.BindContext;
 import es.caib.zkib.component.DataGrid;
 import es.caib.zkib.component.DataListbox;
@@ -226,6 +236,8 @@ public class ProcessWindow extends Window {
 		}
 	};
 
+	private Textbox currentFilterBox;
+
 	
 	public void editValidationScript (Event event) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException {
 		edit (event.getTarget().getPreviousSibling(),
@@ -269,6 +281,67 @@ public class ProcessWindow extends Window {
 
 	}
 
+	public void editFilterExpression (Event event) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException {
+		Window tw = (Window) getFellow("textWindow");
+		Textbox tb = (Textbox) tw.getFellow("editor");
+		currentFilterBox = (Textbox) event.getTarget().getPreviousSibling();
+		tb.setValue(currentFilterBox.getValue());
+		tw.doHighlighted();
+	}
+	
+	public void applyFilter(Event event) {
+		Window tw = (Window) getFellow("textWindow");
+		Textbox tb = (Textbox) tw.getFellow("editor");
+		currentFilterBox.setValue(tb.getValue());
+		tw.setVisible(false);
+	}
+
+	public void cleanFilter(Event event) {
+		Window tw = (Window) getFellow("textWindow");
+		tw.setVisible(false);
+	}
+
+	public void addField(Event event) throws InternalErrorException, NamingException, CreateException {
+		Row r = (Row) event.getData();
+		addField(r);
+	}
+	
+	public void addField(Row r) throws InternalErrorException, NamingException, CreateException {
+		String field = (String) XPathUtils.eval(r, "@name");
+		final HtmlBasedComponent cell = (HtmlBasedComponent) r.getChildren().get(7);
+		TypeEnumeration dataType = null;
+		if (field != null) {
+			final Collection<DataType> list = EJBLocator.getAdditionalDataService().findDataTypesByObjectTypeAndName2(User.class.getName(), field);
+			if (! list.isEmpty())
+				dataType = list.iterator().next().getType();
+			
+			if (dataType == null) {
+				for (Attribute att: (List<Attribute>) XPathUtils.eval(this, "/attributes")) {
+					if (field.equals(att.getName()))
+					{
+						dataType = att.getType();
+						break;
+					}
+				}
+			}
+		}
+		if (dataType != TypeEnumeration.ACCOUNT_TYPE &&
+				dataType != TypeEnumeration.APPLICATION_TYPE &&
+				dataType != TypeEnumeration.CUSTOM_OBJECT_TYPE &&
+				dataType != TypeEnumeration.GROUP_TYPE &&
+				dataType != TypeEnumeration.GROUP_TYPE_TYPE &&
+				dataType != TypeEnumeration.HOST_TYPE &&
+				dataType != TypeEnumeration.MAIL_DOMAIN_TYPE &&
+				dataType != TypeEnumeration.MAIL_LIST_TYPE &&
+				dataType != TypeEnumeration.NETWORK_TYPE &&
+				dataType != TypeEnumeration.ROLE_TYPE &&
+				dataType != TypeEnumeration.USER_TYPE) {
+			cell.setVisible(false);
+		} else {
+			cell.setVisible(true);
+		}
+	}
+	
 	private CustomField3 typeListbox;
 	private Listbox nodesListbox;
 	private CustomField3 grantTypeListbox;

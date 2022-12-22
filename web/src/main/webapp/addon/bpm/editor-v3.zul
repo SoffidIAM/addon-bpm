@@ -4,7 +4,7 @@
 
 <frame id="frame" saveContent="true"
 		title="${c:l('bpm.title')}" width="100%" 
-		use="com.soffid.iam.web.component.FrameHandler">
+		use="com.soffid.iam.addons.bpm.web.EditorHandler">
 	
 	<style>
 		div.processListbox tr:hover td, tr.odd.processRow:hover td.gc {

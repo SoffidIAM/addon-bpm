@@ -73,10 +73,10 @@ public class ProcessListbox extends DataListbox {
 		FileUpload2.get(
 			event -> {
 				Media media = ( (UploadEvent) event).getMedia();
-				JsonReader reader = media.getByteData() != null ? Json.createReader( new ByteArrayInputStream( media.getByteData()) ):
-					media.getStreamData() != null ? Json.createReader( media.getStreamData() ):
-						media.getReaderData() != null ? Json.createReader( media.getReaderData() ):
-							Json.createReader( new StringReader( media.getStringData()) );
+				JsonReader reader = media.isBinary() && media.inMemory() ? Json.createReader( new ByteArrayInputStream( media.getByteData()) ):
+					media.isBinary() ? Json.createReader( media.getStreamData() ):
+					media.inMemory() ? Json.createReader( new StringReader( media.getStringData()) ):
+							Json.createReader( media.getReaderData() );
 				
 				JsonObject object = reader.readObject();
 				reader.close();

@@ -38,6 +38,18 @@
 			display: inline-block;
 			width: 150px;
 		}
+		span.combobox span.rbtnbk img {
+			width: 24px;
+			height: 24px;
+			vertical-align: middle;
+		}
+		span.combobox span.rbtnbk img:hover {
+			background-image: url(/soffid/img/circle.svg);
+			background-size: cover;
+		}
+		div.gc span input[type='checkbox'] + label {
+			display: none;
+		}
 	</style>
 	<window id="w" visible="false" title="${c:l('bpm.processEditor') }" width="90%" use="com.soffid.iam.addons.bpm.web.ProcessWindow" version="3">
 		<div style="text-align:right; width:100%; margin:12px;margin-right:8px">
@@ -60,7 +72,7 @@
 			</tabs>
 			<tabpanels>
 				<tabpanel>
-					<div style="width:30%; min-width: 100px; display: inline-block; padding-right:15px; vertical-align: top">
+					<div style="width:200px; min-width: 100px; display: inline-block; padding-right:15px; vertical-align: top">
 						<listbox dataPath="nodes" id="nodes" fixedLayout="true">
 							<listhead>
 								<listheader label="${c:l('bpm.step') }"/>
@@ -77,7 +89,7 @@
 							style="margin-top: 16px"
 							id="newNodeButton"/>
 					</div>
-					<div id="container" use="com.soffid.iam.addons.bpm.web.ContainerDiv" dataPath="nodes:/" style="display:inline-block; width:70%; vertical-align: top">
+					<div id="container" use="com.soffid.iam.addons.bpm.web.ContainerDiv" dataPath="nodes:/" style="display:inline-block; width:calc(100% - 200px); vertical-align: top">
 						<grid>
 							<columns>
 								<column label="${c:l('bpm.details') }"/>
@@ -226,23 +238,25 @@
 									</div>
 								</tabpanel>
 								<tabpanel>
-									<grid dataPath="/fields" fixedLayout="true" id="fields" sclass="fieldsGrid">
+									<grid dataPath="/fields" fixedLayout="true" id="fields" sclass="fieldsGrid" onNewRow="ref:w.addField">
 										<columns>
-											<column label="${c:l('bpm.field.order') }" width="80px"/>
-											<column label="${c:l('bpm.field.label') }" width="150px"/>
-											<column label="${c:l('bpm.field.name') }" width="300px"/>
-											<column label="${c:l('bpm.field.readOnly') }" width="40px"/>
-											<column label="${c:l('bpm.field.required') }" width="40px"/>
-											<column label="${c:l('bpm.field.validationScript') }" width="80px"/>
-											<column label="${c:l('bpm.field.visibilityScript') }" width="80px"/>
-											<column label="." width="32px"/>
+											<column label="${c:l('bpm.field.order') }" width="40px" align="center"/>
+											<column label="${c:l('bpm.field.label') }" width="*"/>
+											<column label="${c:l('bpm.field.name') }" width="*"/>
+											<column label="${c:l('bpm.field.readOnly') }" width="80px"  align="center"/>
+											<column label="${c:l('bpm.field.required') }" width="80px" align="center"/>
+											<column label="${c:l('bpm.field.validationScript') }" width="90px" align="center"/>
+											<column label="${c:l('bpm.field.visibilityScript') }" width="90px" align="center"/>
+											<column label="${c:l('bpm.field.filterExpr') }" width="90px"  align="center"/>
+											<column label="." width="32px" align="center"/>
 										</columns>
 										<datarow droppable="true"  onDrop="ref:w.renumAttributes(event)">
 											<div>
 												<image src="/img/move.svg" draggable="true" style="margin-left: 8px; cursor: move; height: 24px"/>
 											</div>
-											<textbox bind="@label" width="150px"></textbox>
-											<combobox use="com.soffid.iam.addons.bpm.web.AttributesCombo" bind="@name" width="300px"/>
+											<textbox bind="@label" width="100%"></textbox>
+											<combobox use="com.soffid.iam.addons.bpm.web.AttributesCombo" bind="@name" width="calc(100% - 24px)"
+												image="/img/move-down.svg"/>
 											<checkbox bind="@readOnly"/>
 											<checkbox bind="@required"/>
 											<div>
@@ -252,6 +266,10 @@
 											<div>
 												<textbox bind="@visibilityScript" visible="false" multiline="true" />
 												<imageclic src="/img/pencil.svg" onClick="ref:w.editVisibilityScript(event)"/>
+											</div>
+											<div>
+												<textbox bind="@filterExpression" visible="false" multiline="true" />
+												<imageclic src="/img/pencil.svg" onClick="ref:w.editFilterExpression(event)"/>
 											</div>
 											<imageclic class="removeIcon" src="/img/remove.svg" width="16px" onClick="ref:w.onRemoveField(event)"/>
 										</datarow>
@@ -474,6 +492,19 @@
 				</tabpanel>
 			</tabpanels>
 		</tabbox>
+		<window xmlns:h="http://www.w3.org/1999/xhtml" closable="false" 
+			id="textWindow" 
+			position="top, center" onCancel="" title="${c:l('editorJS.Titol')}" width="90%"
+			visible="false">
+		
+			<textbox id="editor" multiline="true" height="40em" width="100%"/>
+		
+			<separator spacing="5px"/>
+			<div align="right">
+				<button id="finishButton" label="${c:l('editorJS.zul.Accepta')}" onClick="ref:w.applyFilter"/>
+				<button label="${c:l('editorJS.zul.Cancel·la')}" onClick="ref:w.cleanFilter"/>
+			</div>								
+		</window>
 	</window>
 	<script src='~./js/codemirror/java-classes-bpm.js' />
 </form>

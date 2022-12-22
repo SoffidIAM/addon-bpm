@@ -10,6 +10,7 @@ import javax.naming.NamingException;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zul.Comboitem;
+import org.zkoss.zul.Row;
 
 import com.soffid.iam.EJBLocator;
 import com.soffid.iam.addons.bpm.common.Attribute;
@@ -38,7 +39,9 @@ public class AttributesCombo extends DataCombobox {
 	public static EventListener onChange = new EventListener() {
 		@Override
 		public void onEvent(Event event) throws Exception {
-			// Nothing to do
+			AttributesCombo c = (AttributesCombo) event.getTarget();
+			ProcessWindow w = (ProcessWindow) c.getFellow("w");
+			w.addField((Row) c.getParent());
 		}
 	};
 	

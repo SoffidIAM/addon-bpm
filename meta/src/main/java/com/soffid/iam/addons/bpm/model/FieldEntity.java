@@ -48,4 +48,8 @@ public class FieldEntity {
 	@Nullable
 	String visibilityScript;
 	
+	@Column(name="FIE_FILEXP", length=128000)
+	@Nullable
+	String filterExpression;
+	
 }
