@@ -425,7 +425,6 @@
 										<input_etiqueta value="${c:l('dadesAddicionals.zul.Type')}" />
 										<listbox width="99%" visible="true" bind="." mold="select"
 											use="com.soffid.iam.addons.bpm.web.CustomDataTypeListbox"
-											style="font-size: 10px"
 											>
 											<dataitem bind="@value">
 												<listcell bind="@literal" />
