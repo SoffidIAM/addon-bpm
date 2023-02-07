@@ -40,11 +40,13 @@ import org.jbpm.taskmgmt.def.Task;
 import org.jbpm.taskmgmt.def.TaskMgmtDefinition;
 import org.jbpm.taskmgmt.exe.TaskInstance;
 
+import com.soffid.iam.ServiceLocator;
 import com.soffid.iam.addons.bpm.common.Attribute;
 import com.soffid.iam.addons.bpm.common.Field;
 import com.soffid.iam.addons.bpm.common.Filter;
 import com.soffid.iam.addons.bpm.common.NodeType;
 import com.soffid.iam.addons.bpm.common.PageInfo;
+import com.soffid.iam.addons.bpm.common.Process;
 import com.soffid.iam.addons.bpm.common.Trigger;
 import com.soffid.iam.addons.bpm.common.WorkflowType;
 import com.soffid.iam.addons.bpm.handler.ApplyAccountHandler;
@@ -61,6 +63,9 @@ import com.soffid.iam.addons.bpm.model.NodeEntityDao;
 import com.soffid.iam.addons.bpm.model.ProcessEntity;
 import com.soffid.iam.addons.bpm.model.TransitionEntity;
 import com.soffid.iam.api.Audit;
+import com.soffid.iam.api.CustomObjectType;
+import com.soffid.iam.api.DataType;
+import com.soffid.iam.api.User;
 import com.soffid.iam.bpm.business.Messages;
 import com.soffid.iam.bpm.mail.Mail;
 import com.soffid.iam.bpm.model.ProcessDefinitionProperty;
@@ -72,9 +77,11 @@ import com.soffid.iam.bpm.service.BpmEngine;
 import com.soffid.iam.common.security.SoffidPrincipal;
 import com.soffid.iam.model.AuditEntity;
 import com.soffid.iam.model.AuditEntityDao;
+import com.soffid.iam.service.AdditionalDataService;
 import com.soffid.iam.utils.Security;
 
 import es.caib.bpm.vo.PredefinedProcessType;
+import es.caib.seycon.ng.comu.TypeEnumeration;
 import es.caib.seycon.ng.exception.InternalErrorException;
 
 public class Deployer {
@@ -125,6 +132,39 @@ public class Deployer {
 			upgradeProcess(def);			
 		} finally {
 			ctx.close();
+		}
+		updateMetadata(proc);
+	}
+
+	private void updateMetadata(Process proc) throws InternalErrorException {
+		AdditionalDataService svc = ServiceLocator.instance().getAdditionalDataService();
+		CustomObjectType cot = svc.findCustomObjectTypeByName(com.soffid.iam.bpm.api.ProcessInstance.class.getName());
+		if (cot != null) {
+			for (Attribute field: proc.getAttributes() ) {
+				String fieldName = field.getName();
+				if (fieldName.equals("grants")) {
+					fieldName = "grants_txt";
+					field = new Attribute(field);
+					field.setType(TypeEnumeration.STRING_TYPE);
+				}
+				if (svc.findDataTypesByObjectTypeAndName(cot.getName(), fieldName) == null ) {
+					DataType dt = new DataType();
+					dt.setName(fieldName);
+					dt.setBuiltin(false);
+					dt.setType(field.getType());
+					dt.setLabel(field.getLabel());
+					dt.setObjectType(cot.getName());
+					svc.create(dt);
+				}
+			}
+			for (DataType dt: svc.findDataTypesByObjectTypeAndName2(User.class.getName(), "userName")) {
+				if (svc.findDataTypesByObjectTypeAndName(cot.getName(), dt.getName()) == null ) {
+					dt = new DataType(dt);
+					dt.setId(null);
+					dt.setObjectType(cot.getName());
+					svc.create(dt);
+				}				
+			}
 		}
 	}
 
