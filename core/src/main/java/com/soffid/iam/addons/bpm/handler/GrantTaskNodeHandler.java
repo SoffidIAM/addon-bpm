@@ -140,19 +140,21 @@ public class GrantTaskNodeHandler implements ActionHandler {
 						}
 					}
 					ti.setPooledActors(owners);
-					ActionHandler handler;
-					if ("true".equals(shortcut)) {
-						MailShortcut ms = new MailShortcut();
-						ms.setTemplate("delegate");
-						handler = ms;
-					} else {
-						Mail ms = new Mail();
-						ms.setTemplate("delegate");
-						handler = ms;
+					if (owners != null && owners.length > 0) {
+						ActionHandler handler;
+						if ("true".equals(shortcut)) {
+							MailShortcut ms = new MailShortcut();
+							ms.setTemplate("delegate");
+							handler = ms;
+						} else {
+							Mail ms = new Mail();
+							ms.setTemplate("delegate");
+							handler = ms;
+						}
+						ExecutionContext ctx2 = new ExecutionContext(token);
+						ctx2.setTaskInstance(ti);
+						handler.execute(ctx2);
 					}
-					ExecutionContext ctx2 = new ExecutionContext(token);
-					ctx2.setTaskInstance(ti);
-					handler.execute(ctx2);
 				}
 				roles = new LinkedList<RoleRequestInfo> ( roles);
 				executionContext.setVariable(Constants.ROLES_VAR, roles);
@@ -249,7 +251,7 @@ public class GrantTaskNodeHandler implements ActionHandler {
 
 			Object o = interpreter.eval(getScript());
 
-			if (o == null)
+			if (o == null || o.toString().trim().isEmpty())
 				return null;
 			else if (o.getClass().isArray()) {
 				String[] r = new String[Array.getLength(o)];
@@ -284,7 +286,7 @@ public class GrantTaskNodeHandler implements ActionHandler {
 		RoleVariableResolver variableResolver2 = new RoleVariableResolver(role, application, variableResolver);
 		Object o = JbpmExpressionEvaluator.evaluate(actor, executionContext, variableResolver2,
 				JbpmExpressionEvaluator.getUsedFunctionMapper());
-		if (o == null)
+		if (o == null || o.toString().trim().isEmpty())
 			return null;
 		else if (o instanceof String[])
 			return (String[]) o;

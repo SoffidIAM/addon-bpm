@@ -658,7 +658,7 @@ public class MailShortcut implements ActionHandler {
 			link = link + "."+hash; //$NON-NLS-1$
 
 			sb.append("<td class='buttonstd'>");
-			sb.append("<a class='buttonsa' href='"+quote(getExternalUrl()+"/soffid/anonymous/bpm/action.zul?shortcut="+ URLEncoder.encode(link, "UTF-8"))+"'>");
+			sb.append("<a class='buttonsa' href='"+quote(getExternalUrl()+"soffid/anonymous/bpm/action.zul?shortcut="+ URLEncoder.encode(link, "UTF-8"))+"'>");
 			sb.append("<div class='buttonsdiv'>");
 			sb.append(key);
 			sb.append("</div>");
