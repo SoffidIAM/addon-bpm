@@ -691,6 +691,32 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 				Security.nestedLogoff();
 			}
 		}
+		
+		StringBuffer sb = new StringBuffer();
+		for (RoleRequestInfo request: grants) {
+			if (request.getRoleId() == null ? request.getPreviousRoleId() != null : 
+					! request.getRoleId().equals(request.getPreviousRoleId())) {
+				sb.append(request.getApplicationName())
+					.append(": ")
+					.append(request.getRoleId() != null ? request.getRoleDescription() :
+							request.getPreviousRoleDescription());
+				if (request.isApproved()) 
+					sb.append(" [")
+						.append(Labels.getLabel("bpm.approve"))
+						.append("]");
+				else if (request.isDenied()) 
+					sb.append(" [")
+					.append(Labels.getLabel("bpm.deny"))
+					.append("]");
+				sb.append("\n");
+			}
+		}
+		if (sb.length() > 0) {
+			if (sb.length() >= 2048)
+				getVariables().put("grants_txt", sb.substring(0,  2048)+" (+)");
+			else
+				getVariables().put("grants_txt", sb.toString());
+		}
 	}
 	
 	private void generateApplicationRow(final Div g, final int i, final RoleRequestInfo perm) throws Exception {
