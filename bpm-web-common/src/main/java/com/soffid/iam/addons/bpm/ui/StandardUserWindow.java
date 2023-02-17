@@ -417,7 +417,7 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 			f.setValidationScript(field.getValidationScript());
 		if (field.getVisibilityScript() != null && !field.getVisibilityScript().trim().isEmpty())
 			f.setVisibilityScript(field.getVisibilityScript());
-		if (field.getFilterExpression() != null && !field.getVisibilityScript().trim().isEmpty())
+		if (field.getFilterExpression() != null && !field.getFilterExpression().trim().isEmpty())
 			f.setFilterExpression(field.getFilterExpression());
 		f.afterCompose();
 		f.addEventListener("onChange", onChangeField);
