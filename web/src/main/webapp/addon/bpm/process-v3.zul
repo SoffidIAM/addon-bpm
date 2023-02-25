@@ -354,7 +354,7 @@
 												<textbox bind="@script" multiline="true" visible="false"/>
 												<imageclic src="/img/pencil.svg"/>
 											</div>
-											<imageclic class="removeIcon" src="/img/remove.svg" width="16px" onClick="ref:w.onRemoveField(event)"/>
+											<imageclic class="removeIcon" src="/img/remove.svg" width="16px" onClick="ref:w.onRemoveTransition(event)"/>
 										</datarow>
 									</grid>
 									<button image="/img/add-r.svg" label="${c:l('bpm.transition.new') }"
@@ -387,7 +387,7 @@
 												<textbox bind="@script" multiline="true" visible="false"/>
 												<imageclic src="/img/pencil.svg"/>
 											</div>
-											<imageclic class="removeIcon" src="/img/remove.svg" width="16px" onClick="ref:w.onRemoveField(event)"/>
+											<imageclic class="removeIcon" src="/img/remove.svg" width="16px" onClick="ref:w.onRemoveTransition(event)"/>
 										</datarow>
 									</grid>
 									<button image="/img/add-r.svg" label="${c:l('bpm.transition.new') }"

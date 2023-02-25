@@ -4,6 +4,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.ejb.CreateException;
@@ -50,11 +51,13 @@ import es.caib.seycon.ng.exception.InternalErrorException;
 import es.caib.zkib.binder.BindContext;
 import es.caib.zkib.component.DataGrid;
 import es.caib.zkib.component.DataListbox;
+import es.caib.zkib.component.DataListcell;
 import es.caib.zkib.component.DataModel;
 import es.caib.zkib.datamodel.DataNode;
 import es.caib.zkib.datamodel.DataNodeCollection;
 import es.caib.zkib.datasource.XPathUtils;
 import es.caib.zkib.events.XPathRerunEvent;
+import es.caib.zkib.jxpath.Pointer;
 import es.caib.zkib.zkiblaf.Missatgebox;
 
 public class ProcessWindow extends Window {
@@ -209,6 +212,17 @@ public class ProcessWindow extends Window {
 			XPathUtils.createPath(ctx.getDataSource(), "/outTransitions", t);
 		}
 	};
+
+	public void onRemoveTransition(Event event) {
+		BindContext ctx = XPathUtils.getComponentContext(event.getTarget());
+
+		Transition t = (Transition) XPathUtils.getValue( ctx, ".");
+		
+		XPathUtils.removePath(ctx.getDataSource(), ctx.getXPath());
+
+		t.getSource().getOutTransitions().remove(t);
+		t.getTarget().getInTransitions().remove(t);
+	}
 
 	public void onRemoveField(Event event) {
 		BindContext ctx = XPathUtils.getComponentContext(event.getTarget());
