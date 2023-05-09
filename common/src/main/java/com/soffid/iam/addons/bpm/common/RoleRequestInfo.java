@@ -41,6 +41,7 @@ public class RoleRequestInfo implements Serializable {
 	String previousDelegateTo;
 	Date previousDelegateUntil;
 	Long roleAccountId;
+	boolean mandatory;
 
 	public String getApplicationName() {
 		return applicationName;
@@ -203,6 +204,12 @@ public class RoleRequestInfo implements Serializable {
 	}
 	public void setRoleAccountId(Long roleAccountId) {
 		this.roleAccountId = roleAccountId;
+	}
+	public boolean isMandatory() {
+		return mandatory;
+	}
+	public void setMandatory(boolean mandatory) {
+		this.mandatory = mandatory;
 	}
 
 

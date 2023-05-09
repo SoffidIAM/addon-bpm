@@ -168,25 +168,35 @@ public class TaskUtils {
 				});
 				for ( RoleGrant grant: ownedRoles)
 				{
-					if (! Boolean.TRUE.equals(grant.getMandatory()))
-					{
-						Role r2 = ServiceLocator.instance().getApplicationService().findRoleById(grant.getRoleId());
-						Application appDesc = ServiceLocator.instance().getApplicationService().findApplicationByApplicationName(r2.getInformationSystemName());
-						RoleRequestInfo ri = new RoleRequestInfo();
-						ri.setApplicationName(r2.getInformationSystemName());
-						ri.setApplicationDescription(appDesc.getDescription());
-						ri.setUserName(null);
-						ri.setRoleId(r2.getId());
-						ri.setSuggestedRoleId(r2.getId());
-						ri.setParentRole(roleId);
-						ri.setRoleDescription(r2.getDescription());
-						grants.add(++i, ri);
+					if (!alreadyIncluded(grants, grant)) {
+						if (grant.getMandatory() || ! roleId.equals(app.getPreviousRoleId())) {
+							Role r2 = ServiceLocator.instance().getApplicationService().findRoleById(grant.getRoleId());
+							Application appDesc = ServiceLocator.instance().getApplicationService().findApplicationByApplicationName(r2.getInformationSystemName());
+							RoleRequestInfo ri = new RoleRequestInfo();
+							ri.setApplicationName(r2.getInformationSystemName());
+							ri.setApplicationDescription(appDesc.getDescription());
+							ri.setUserName(null);
+							ri.setRoleId(r2.getId());
+							ri.setSuggestedRoleId(r2.getId());
+							ri.setParentRole(roleId);
+							ri.setRoleDescription(r2.getDescription());
+							ri.setMandatory (Boolean.TRUE.equals(grant.getMandatory()));
+							grants.add(++i, ri);
+						}
 					}
 				}
 			} finally {
 				Security.nestedLogoff();
 			}
 		}
+	}
+
+	private static boolean alreadyIncluded(List<RoleRequestInfo> grants, RoleGrant grant) {
+		for (RoleRequestInfo gg: grants) {
+			if (gg.getRoleId() != null && gg.getRoleId().equals(grant.getRoleId()))
+				return true;
+		}
+		return false;
 	}
 	
 

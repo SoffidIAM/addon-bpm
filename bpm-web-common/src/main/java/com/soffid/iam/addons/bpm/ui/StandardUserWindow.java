@@ -334,8 +334,10 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 		log.info("Generating screen for "+grants.size()+" grants");
 		for ( RoleRequestInfo grant: grants)
 		{
-			log.info("Generating row for "+grant);
-			generateApplicationRow(grantsGrid, i, grant);
+			if (grant.getParentRole() == null) {
+				log.info("Generating row for "+grant);
+				generateApplicationRow(grantsGrid, i, grant);
+			}
 			i++;
 		}
 		
@@ -728,7 +730,11 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 		//new Label("Aplicación "+perm.getApplicationName()).setParent(r);
 			
 		Div r1 = new Div();
-		r1.setStyle("display: table-cell; width: 150px");
+		if (perm.getParentRole() == null)
+			r1.setStyle("display: table-cell; width: 150px; padding-right: 10px;");
+		else
+			r1.setStyle("display: block;");
+			
 		Label label = new Label();
 		if (i == 1 || 
 				! grants.get(i-2).getApplicationName().equals(perm.getApplicationName()))
@@ -736,15 +742,31 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 		label.setParent(r1);
 		r1.setParent(r);
 		
+		Div r0 = new Div();
+		if (perm.getParentRole() == null)
+			r0.setStyle("display: table-cell; width: 18px; "
+				+ "vertical-align: top; "
+				+ "text-align: center; "
+				+ "background-repeat: no-repeat; "
+				+ "background-size: contain; "
+				+ "padding-top: 4px;\n"
+				+ "background-position-y: 4px;");
+		else
+			r0.setStyle("display: none");
+		r.appendChild(r0);
+
+		final Div d = new Div();
+		if (perm.getParentRole() == null)
+			d.setStyle("display: table-cell; width: auto; padding-left: 10px;");
+		else
+			d.setStyle("width: 100%; padding-left: 32px;");
+		d.setParent(r);
+		
 		Div rr = new Div();
 		rr.setStyle("display: table-cell; width: 48px; vertical-align: top; text-align: center");
 		r.appendChild(rr);
 		
-		final Div d = new Div();
-		d.setStyle("display: table-cell; width: auto; ");
-		d.setParent(r);
-		
-		if ( grantsReadOnly )
+		if ( grantsReadOnly || perm.isMandatory())
 		{
 			if (perm.getPreviousRoleId() != null && ! perm.getPreviousRoleId().equals(perm.getRoleId()))
 			{
@@ -774,6 +796,8 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 			});
 			try {
 				
+				final Div childrenDiv = new Div();
+				childrenDiv.setStyle("display: table; width: 100%");
 				if ( perm.getSuggestedRoleId() == null )
 				{
 					CustomField3 field = new CustomField3();
@@ -796,63 +820,64 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 							grant.setRoleId(role.getId());
 							grant.setRoleDescription(role.getDescription());
 						}
-						updateStatus (event.getTarget(), i-1);
 						createChildRoles (g, i-1);
+						updateStatus (event.getTarget(), i-1);
 					});
 					d.appendChild(field);
 					field.afterCompose();
 					d.appendChild(new Label()); // Status label
+					d.appendChild(childrenDiv); // Children
 					updateStatus (field, i-1);
 				}
 				else
 				{
-					DataListbox lb = new DataListbox();
-					lb.setBind("grants["+i+"]/roleId");
-					lb.addEventListener("onSelect", onChangeRole);
-					lb.setStyle("vertical-align: middle");
-					lb.setMold("select");
+					Label lb = new Label();
+					lb.setValue(perm.getRoleDescription());
+					lb.setStyle("display: block");
 					lb.setParent(d);
-					lb.setDisabled(grantsReadOnly);
-					lb.setMold("label");
-					Role rol = service.findRoleById( perm.getSuggestedRoleId());
-					new Listitem("- No access -", null).setParent(lb);
-					Listitem listitem = new Listitem(rol.getDescription(), rol.getId());
-					lb.appendChild(listitem);
-					lb.setSelectedItem(listitem);
-					lb.setDisabled(true);
 					d.appendChild(new Label()); // Status label
+					d.appendChild(childrenDiv); // Children
 					updateStatus (lb, i-1);
 				}
+				r0.addEventListener("onClick", (ev) -> {
+					Div b = (Div) ev.getTarget();
+					if (b.getSclass() == null) {
+						// Ignore
+					}
+					else if (b.getSclass().equals("collapser")) {
+						b.setSclass("collapser open");
+						childrenDiv.setStyle("display: table; width: 100%");
+					}
+					else if (b.getSclass().equals("collapser open")) {
+						b.setSclass("collapser");
+						childrenDiv.setStyle("display: none");
+					}
+				});
 	
 	
-				if (perm.getParentRole() == null )
-				{
-					if (perm.getRoleId() != null) {
-						ImageClic ci = new ImageClic("~./img/list-remove.gif");
-						rr.appendChild(ci);
-						ci.setTitle(Labels.getLabel("usuaris.zul.Esborrarolsseleccion"));
-						ci.addEventListener("onClick", new EventListener() {
-							
-							public void onEvent(Event event) throws Exception {
-								if (perm.getPreviousRoleId() == null)
-									grants.remove(i-1);
-								else
-									perm.setRoleId(null);
-								regenerateAppRows(g);
-							}
-				
-						});
+				ImageClic ci = new ImageClic("/img/close-on.svg");
+				rr.appendChild(ci);
+				ci.setTitle(Labels.getLabel("usuaris.zul.Esborrarolsseleccion"));
+				ci.addEventListener("onClick", new EventListener() {
+					
+					public void onEvent(Event event) throws Exception {
+						if (perm.getPreviousRoleId() == null)
+							grants.remove(i-1);
+						else
+							perm.setRoleId(null);
+						regenerateAppRows(grantsGrid);
 					}
-					if (perm.getPreviousRoleId() == null) {
-						DataTextbox dtb = new DataTextbox();
-						dtb.setBind("grants["+i+"]/comments");
-						dtb.setStyle("display: block; width: 100%; width: calc(100% - 64px); margin-left: 64px;");
-						dtb.setMultiline(true);
-						dtb.setRows(1);
-						dtb.setPlaceholder( Labels.getLabel("task.comentari"));
-						dtb.setReadonly(grantsReadOnly);
-						d.appendChild(dtb);
-					}
+		
+				});
+				if (perm.getPreviousRoleId() == null && perm.getParentRole() == null) {
+					DataTextbox dtb = new DataTextbox();
+					dtb.setBind("grants["+i+"]/comments");
+					dtb.setStyle("display: block; width: 100%; width: calc(100% - 64px); margin-left: 64px;");
+					dtb.setMultiline(true);
+					dtb.setRows(1);
+					dtb.setPlaceholder( Labels.getLabel("task.comentari"));
+					dtb.setReadonly(grantsReadOnly);
+					d.appendChild(dtb);
 				}
 	
 	
@@ -863,12 +888,17 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 		}
 	}
 
-	private void updateStatus(Component lb, int i) {
+	private void updateStatus(Component lb, int i) throws Exception {
 		Label l = (Label) lb.getNextSibling();
+		Div expandDiv = (Div) lb.getParent().getPreviousSibling();
+		Div childrenDiv = (Div) lb.getNextSibling().getNextSibling();
+		childrenDiv.getChildren().clear();
 		l.setStyle("vertical-align: middle");
 		RoleRequestInfo perm = grants.get(i);
 		if (perm.getRoleId() == null)
 		{
+			expandDiv.setSclass("");
+			expandDiv.getChildren().clear();
 			if (perm.getPreviousRoleId() == null)
 				l.setValue("");
 			else
@@ -876,7 +906,31 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 				l.setValue("The permission "+perm.getPreviousRoleDescription()+" will be removed");
 				l.setStyle("color: red");
 			}
+			childrenDiv.setStyle("display: none");
 		} else {
+			Role r = null;
+			List<RoleRequestInfo> children = getChildRoles(perm.getRoleId());
+			
+			childrenDiv.setStyle("display: none");
+			if (! children.isEmpty()) {
+				expandDiv.getChildren().clear();
+				Image ci = new Image("/img/foldBar.svg");
+				expandDiv.appendChild(ci);
+				for (int j = 0; j < grants.size(); j++) {
+					RoleRequestInfo grant = grants.get(j);
+					if (grant.getParentRole() != null && grant.getParentRole().equals(perm.getRoleId()))
+						generateApplicationRow(childrenDiv, j+1, grant);
+				}
+				if (anyIsOptional(children)) {
+					expandDiv.setSclass("collapser open");
+					childrenDiv.setStyle("display: table; width: 100%");
+				} else {
+					expandDiv.setSclass("collapser");
+				}
+			} else {
+				expandDiv.setSclass("");
+				expandDiv.getChildren().clear();
+			}
 			if (perm.getPreviousRoleId() == null)
 			{
 				l.setValue("New permission");
@@ -894,6 +948,23 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 		
 	}
 
+	private boolean anyIsOptional(List<RoleRequestInfo> child) {
+		for (RoleRequestInfo g: child) {
+			if (!g.isMandatory())
+				return true;
+		}
+		return false;
+	}
+
+	private List<RoleRequestInfo> getChildRoles(Long roleId) {
+		List<RoleRequestInfo> l = new LinkedList<>();
+		for (RoleRequestInfo grant: grants) {
+			if (grant.getParentRole() != null && grant.getParentRole().equals(roleId))
+				l.add(grant);
+		}
+		return l;
+	}
+
 	protected String encodeScim(String s) {
 		return s.replace("\\", "\\\\")
 				.replace("\"", "\\\"")
@@ -901,11 +972,15 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 	}
 	
 	private void createChildRoles(Div g, int i) throws Exception {
+		RoleRequestInfo grant = grants.get(i);
+		
 		removeOrphanApps();
 
+		i = grants.indexOf(grant);
+		
 		com.soffid.iam.addons.bpm.tools.TaskUtils.createChildRolesNoRefresh(grants, i);
 		
-		regenerateAppRows(g);
+//		regenerateAppRows(g);
 		
 	}
 
@@ -1107,7 +1182,8 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 			Long ti = (Long) grant.getTaskInstance();
 			if ( pageInfo.getNodeType() != NodeType.NT_GRANT_SCREEN ||
 					(ti != null && ti.equals( getTask().getId() )))
-				generateApproveApplicationRow(lb, i, grant);
+				if (grant.getParentRole() == null)
+					generateApproveApplicationRow(lb, i, grant);
 			i++;
 		}
 		
@@ -1117,6 +1193,7 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 		Security.nestedLogin(Security.ALL_PERMISSIONS);
 		try
 		{
+			boolean showBoxes = true;
 			String user = (String) grant.getUserName();
 			if (user == null)
 				user = (String) getVariables().get("userName");
@@ -1134,10 +1211,19 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 			}
 			
 			Listitem item = new Listitem();
-			item.appendChild( new Listcell(user));
-			Listcell listCell = new Listcell(fullName);
-			item.appendChild( listCell);
-			addIconPermissions(listCell, u);
+			lb.getItems().add(item);
+
+			if (grant.getParentRole() == null)
+				item.appendChild( new Listcell(user));
+			else
+				item.appendChild(new Listcell());
+			if (grant.getParentRole() == null) {
+				Listcell listCell = new Listcell(fullName);
+				item.appendChild( listCell);
+				addIconPermissions(listCell, u);
+			} else {
+				item.appendChild(new Listcell());
+			}
 			
 			Listcell permsCell = new Listcell();
 			item.appendChild(permsCell);
@@ -1147,7 +1233,14 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 			{
 				addRisk (permsCell, grant);
 				Role role = ServiceLocator.instance().getApplicationService().findRoleById(roleId);
-				permsCell.appendChild(new Label(role.getName()+": "+role.getDescription()));
+				final Label l = new Label(role.getName()+": "+role.getDescription());
+				l.setStyle("white-space: normal");
+				permsCell.appendChild(l);
+				if (grant.getParentRole() == null) {
+					generateApproveChildRoles(grant, lb, i, roleId, l);
+				}
+				else if (grant.isMandatory())
+					showBoxes = false;
 			}
 			else if (roleId != null)
 			{
@@ -1155,16 +1248,27 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 				// New role
 				Role role = ServiceLocator.instance().getApplicationService().findRoleById(roleId);
 				Div d = new Div();
-				d.appendChild(new Label(role.getName()+": "+role.getDescription()));
+				d.setStyle("display: inline-block; max-width: calc( 100% - 48px)");
+				final Label l = new Label(role.getName()+": "+role.getDescription());
+				l.setStyle("white-space: normal");
+				d.appendChild(l);
 				permsCell.appendChild(d);
 				
-				// Provious role
-				role = ServiceLocator.instance().getApplicationService().findRoleById(previousRoleId);
-				Label label = new Label(String.format ( Labels.getLabel("bpm.previouslyAssigned"), role.getName()+": "+role.getDescription()));
-				label.setStyle("color: blue");
-				d = new Div();
-				d.appendChild(label);
-				permsCell.appendChild(d);
+				if (! roleId.equals(grant.getPreviousRoleId())) {
+					// Provious role
+					role = ServiceLocator.instance().getApplicationService().findRoleById(previousRoleId);
+					Label label = new Label(String.format ( Labels.getLabel("bpm.previouslyAssigned"), role.getName()+": "+role.getDescription()));
+					label.setStyle("color: blue");
+					d = new Div();
+					d.appendChild(label);
+					permsCell.appendChild(d);
+					if (grant.getParentRole() == null)
+						generateApproveChildRoles(grant, lb, i, roleId, l);
+				} else {
+					showBoxes = false;
+					grant.setApproved(true);
+					grant.setDenied(false);
+				}
 			}
 			else
 			{
@@ -1178,37 +1282,54 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 				permsCell.appendChild(l);
 				l.setStyle("display: block; padding-left: 24px");
 			}
-			Listcell c = new Listcell();
-			item.appendChild(c);
-			Checkbox cb = new Checkbox();
-			cb.setDisabled( grantsReadOnly );
-			cb.addEventListener("onCheck", onApprove);
-			c.appendChild(cb);
-			cb.setChecked( grant.isApproved());
-			cb.setSclass("custom-checkbox-green custom-checkbox");
-	
-			c = new Listcell();
-			item.appendChild(c);
-			cb = new Checkbox();
-			cb.setDisabled( grantsReadOnly );
-			cb.addEventListener("onCheck", onDeny);
-			c.appendChild(cb);
-			cb.setChecked(grant.isDenied());
-			cb.setSclass("custom-checkbox-red custom-checkbox");
 			
+			if (showBoxes) {
+				Listcell c = new Listcell();
+				item.appendChild(c);
+				Checkbox cb = new Checkbox();
+				cb.setDisabled( grantsReadOnly || ! showBoxes);
+				cb.addEventListener("onCheck", onApprove);
+				c.appendChild(cb);
+				cb.setChecked( grant.isApproved());
+				cb.setSclass("custom-checkbox-green custom-checkbox");
+		
+				c = new Listcell();
+				item.appendChild(c);
+				cb = new Checkbox();
+				cb.setDisabled( grantsReadOnly || ! showBoxes);
+				cb.addEventListener("onCheck", onDeny);
+				c.appendChild(cb);
+				cb.setChecked(grant.isDenied());
+				cb.setSclass("custom-checkbox-red custom-checkbox");
+			}			
 			item.setValue(grant);
 	
-			lb.getItems().add(item);
 		} finally {
 			Security.nestedLogoff();
 		}
+	}
+
+	private void generateApproveChildRoles(RoleRequestInfo grant, Listbox lb, int i, Long roleId, Label l) throws InternalErrorException {
+		List<RoleRequestInfo> children = getChildRoles(roleId);
+		String title = "";
+		for (int j = 0; j < grants.size(); j++) {
+			RoleRequestInfo grant2 = grants.get(j);
+			Long ti = (Long) grant2.getTaskInstance();
+			if (grant2.getParentRole() != null && grant2.getParentRole().equals(roleId)) {
+				if (grant2.isMandatory())
+					title = title + String.format(Labels.getLabel("bpm.grantRole"), grant2.getRoleDescription())+"\n";
+				else if (grantsReadOnly || grant.isApproved())
+					generateApproveApplicationRow(lb, j, grant2);
+			}
+		}
+		l.setTooltiptext(title);
 	}
 	
 	private void addRisk(Listcell permsCell, RoleRequestInfo grant) {
 		if (grant.getSodRisk() != null) {
 			ImageClic ic = new ImageClic();
 			ic.setSrc("/img/risk." + grant.getSodRisk().getValue()+".svg");
-			ic.setStyle("vertical-align: middle");
+			ic.setStyle("vertical-align: middle; float: left");
 			ic.setTitle(Labels.getLabel("com.soffid.iam.api.RoleAccount.sodRules"));
 			ic.addEventListener("onClick", onClickSoD);
 			ic.setAttribute("grant", grant);
@@ -1309,6 +1430,17 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 			grant.setApproved(true);
 			grant.setDenied(false);
 			((Checkbox)event.getTarget().getParent().getNextSibling().getFirstChild()).setChecked(false);
+			Listbox lb = item.getListbox();
+			for (Listitem item2:  (List<Listitem>) lb.getItems() ) {
+				RoleRequestInfo grant2 = (RoleRequestInfo) item2.getValue();
+				if (grant2.getParentRole() != null && grant2.getParentRole().equals(grant.getRoleId())) {
+					grant2.setApproved(false);
+					grant2.setDenied(false);
+					item2.setVisible(true);
+					((Checkbox) (item2.getLastChild().getFirstChild())).setChecked(false);
+					((Checkbox) (item2.getLastChild().getPreviousSibling().getFirstChild())).setChecked(false);
+				}
+			}
 		}
 	};
 
@@ -1319,6 +1451,15 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 			grant.setDenied(true);
 			grant.setApproved(false);
 			((Checkbox)event.getTarget().getParent().getPreviousSibling().getFirstChild()).setChecked(false);
+			Listbox lb = item.getListbox();
+			for (Listitem item2:  (List<Listitem>) lb.getItems() ) {
+				RoleRequestInfo grant2 = (RoleRequestInfo) item2.getValue();
+				if (grant2.getParentRole() != null && grant2.getParentRole().equals(grant.getRoleId())) {
+					grant2.setApproved(false);
+					grant2.setDenied(true);
+					item2.setVisible(false);
+				}
+			}
 		}
 	};
 	protected Collection<RoleGrant> myGrants;

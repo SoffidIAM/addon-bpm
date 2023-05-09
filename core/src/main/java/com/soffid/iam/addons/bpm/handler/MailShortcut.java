@@ -1049,6 +1049,7 @@ public class MailShortcut implements ActionHandler {
     			if (usuari.getActive().booleanValue())
     			{
     				result.add(usuari.getUserName());
+    	    		return result;
     			}
     		}
     		else

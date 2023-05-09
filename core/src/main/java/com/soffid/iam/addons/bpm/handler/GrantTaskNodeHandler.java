@@ -67,7 +67,7 @@ public class GrantTaskNodeHandler implements ActionHandler {
 			HashSet<String> ownersSet = new HashSet<String>();
 			for (RoleRequestInfo role : roles) {
 				log.info("Checking "+role);
-				if ( applies (role))
+				if ( applies (role) &&  !  role.isMandatory())
 				{
 					log.info("Applies");
 					Long roleId = (Long) role.getRoleId();
@@ -76,7 +76,7 @@ public class GrantTaskNodeHandler implements ActionHandler {
 					{
 						for (RoleRequestInfo role2 : roles)
 						{
-							Long roleId2 = (Long) role.getRoleId();
+							Long roleId2 = (Long) role2.getRoleId();
 							if (role.getParentRole().equals(roleId2))
 							{
 								role.setOwners(role2.getOwners());
