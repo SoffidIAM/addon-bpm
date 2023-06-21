@@ -709,7 +709,6 @@ public class MailShortcut implements ActionHandler {
 	public void send(String fromAddress,
 			Set<InternetAddress> targetAddresses, String subject, String text) {
 		if ((targetAddresses == null) || (targetAddresses.isEmpty())) {
-			debug(""); //$NON-NLS-1$
 			return;
 		}
 
@@ -866,7 +865,7 @@ public class MailShortcut implements ActionHandler {
 				for (String t: actors2.split("[, ]+")) //$NON-NLS-1$
 				{
 					if ( ! t.isEmpty())
-						users.addAll( getNameUsers(t));
+						users.addAll( getNameUsers(t.trim()));
 				}
 				for (String user: users)
 				{
@@ -1012,7 +1011,7 @@ public class MailShortcut implements ActionHandler {
 		HashSet<String> result = new HashSet<String>();
 		if (actorId == null)
 			return result;
-		debug ("Resolving address for "+actorId); //$NON-NLS-1$
+		actorId = actorId.trim();
 		if (actorId.startsWith("auth:")) //$NON-NLS-1$
 		{
 			String autorization = actorId.substring(5);
@@ -1093,14 +1092,14 @@ public class MailShortcut implements ActionHandler {
 	    					scope = roleName.substring(i+1);
 	    					roleName = roleName.substring(0, i);
 	    				}
-	        			debug ("Resolving role "+roleName+"@"+dispatcher); //$NON-NLS-1$ //$NON-NLS-2$
+	        			debug ("Resolving role "+roleName+"@"+dispatcher+" scope ["+scope+"]"); //$NON-NLS-1$ //$NON-NLS-2$
 	    				ApplicationService aplicacioService = ServiceLocator.instance().getApplicationService();
 						for (Role role : aplicacioService.findRolesByFilter(roleName, "%", "%", dispatcher, "%", "%")) { //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-	                        debug("Resolving role grantees: " + role.getName() + "@" + role.getSystem()); //$NON-NLS-1$ //$NON-NLS-2$
 	                        for (RoleGrant grant : aplicacioService.findEffectiveRoleGrantsByRoleId(role.getId())) {
 	                            if (scope == null || scope.equals(grant.getDomainValue())) {
-	                            	if (grant.getUser() != null)
+	                            	if (grant.getUser() != null) {
 	                            		result.add(grant.getUser());
+	                            	}
 	                            }
 	                        }
 	                    }

@@ -93,11 +93,10 @@ public class GrantTaskNodeHandler implements ActionHandler {
 						if (r != null) {
 							Application app = appService.findApplicationByApplicationName(r.getInformationSystemName());
 							String[] owners = findOwner(role, r, app, executionContext);
-							log.info("owners = "+owners);
 							HashSet<String> s = new HashSet<String>();
 							if (owners != null)
 							{
-								for (String owner: owners) s.add(owner);
+								for (String owner: owners) s.add(owner.trim());
 								role.setOwners( s );
 								StringBuffer sb = new StringBuffer();
 								for (String owner : owners)
