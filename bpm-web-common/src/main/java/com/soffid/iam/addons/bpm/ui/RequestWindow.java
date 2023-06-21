@@ -239,11 +239,11 @@ public class RequestWindow extends StandardUserWindow
 					{
 						d.setParent(getFellow("selected"));
 						d.setSclass("selected");
+						d.setTooltiptext(Labels.getLabel("aplica_rolsllista.zul.Aplicacia")+role.getInformationSystemName()+
+								"\n"+Labels.getLabel("com.soffid.iam.api.Role.description")+":"+ role.getDescription());
 						return;
 					}
 				}
-				
-				
 			}
 		}
 	};
