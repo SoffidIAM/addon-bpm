@@ -1523,7 +1523,7 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 				if (customField.getDataType() != null && customField.getDataType().getType() == TypeEnumeration.SEPARATOR) {
 					if (container != null) {
 						container.setVisible(visible);
-						container.getParent().setVisible(visible);
+//						container.getParent().setVisible(visible);
 					}
 					container = customField;
 					visible = false;
@@ -1543,7 +1543,7 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 		}
 		if (container != null) {
 			container.setVisible(visible);
-			container.getParent().setVisible(visible);
+//			container.getParent().setVisible(visible);
 		}
 	}
 
