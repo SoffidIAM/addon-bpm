@@ -71,6 +71,7 @@ import com.soffid.iam.web.WebDataType;
 import com.soffid.iam.web.component.CustomField3;
 import com.soffid.iam.web.component.InputField3;
 import com.soffid.iam.web.component.InputFieldContainer;
+import com.soffid.iam.web.popup.FinderHandler;
 
 import bsh.EvalError;
 import bsh.TargetError;
@@ -116,7 +117,7 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 		}
 
 		grid = new Div();
-		grid.setStyle("display: table; width: 100%; table-layout: fixed");
+		grid.setStyle("display: table; border-collapse: collapse; width: 100%; table-layout: fixed");
 		Component a = getFellowIfAny("attributes");
 		if (a != null)
 			a.appendChild(grid);
@@ -291,10 +292,7 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 			b.setParent(data);
 			b.addEventListener("onClick", new EventListener() {
 				public void onEvent(Event event) throws Exception {
-					Window w = (Window) getFellow("searchApp");
-					w.doHighlighted();
-					Textbox e = (Textbox) w.getFellow("txtCodigoAplicacion");
-					e.focus();
+					buscarAplicaciones();
 				}
 			});
 		}
@@ -725,13 +723,13 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 		ApplicationService service = ServiceLocator.instance().getApplicationService();
 		
 		Div r = new Div();
-		r.setStyle("width: 100%; display: table-row");
+		r.setStyle("width: 100%; display: table-row; border: 3px solid #e0e0e0;") ;
 		r.setParent(g);
 		//new Label("Aplicación "+perm.getApplicationName()).setParent(r);
 			
 		Div r1 = new Div();
 		if (perm.getParentRole() == null)
-			r1.setStyle("display: table-cell; width: 150px; padding-right: 10px;");
+			r1.setStyle("display: table-cell; width: 150px; padding-right: 10px; padding-top: 7px;");
 		else
 			r1.setStyle("display: block;");
 			
@@ -757,7 +755,7 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 
 		final Div d = new Div();
 		if (perm.getParentRole() == null)
-			d.setStyle("display: table-cell; width: auto; padding-left: 10px;");
+			d.setStyle("display: table-cell; width: auto; padding-left: 10px; vertical-align:top;");
 		else
 			d.setStyle("width: 100%; padding-left: 32px;");
 		d.setParent(r);
@@ -797,7 +795,7 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 			try {
 				
 				final Div childrenDiv = new Div();
-				childrenDiv.setStyle("display: table; width: 100%");
+				childrenDiv.setStyle("display: table; border-collapse: collapse; width: 100%");
 				if ( perm.getSuggestedRoleId() == null )
 				{
 					CustomField3 field = new CustomField3();
@@ -1009,49 +1007,19 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 	}
 	
 
-	public void buscarAplicaciones() throws NamingException, InterruptedException, RemoteException, CreateException, LoginException, SystemWorkflowException, SystemException, NotSupportedException, InternalErrorException
+	public void buscarAplicaciones() throws Exception
 	{
-	
-		Listbox lstAplicaciones= null;
-		Collection colAplicaciones= null, colAplicaciones1 = null, colAplicaciones2 = null;
-		Textbox txtNombreAplicacion= null;
-		Textbox txtCodigoAplicacion= null;
-		Application aplicacion= null;
-		Listitem item= null;
-		
-		String tipoSolicitud= null;
-		
-		com.soffid.iam.service.ejb.ApplicationService aplicacioService= com.soffid.iam.EJBLocator.getApplicationService();
-
-		lstAplicaciones= (Listbox) getFellow("searchApp").getFellow("lstAplicaciones"); //$NON-NLS-1$
-		txtCodigoAplicacion = (Textbox) getFellow("searchApp").getFellow("txtCodigoAplicacion"); //$NON-NLS-1$ //$NON-NLS-2$
-		
-		colAplicaciones = aplicacioService.findApplicationByText(txtCodigoAplicacion.getValue());
-		lstAplicaciones.getItems().clear();
-		lstAplicaciones.setSelectedItem(null);
-       	
-        for (Iterator it= colAplicaciones.iterator(); it.hasNext();)
-        {
-        	aplicacion= (Application)it.next();
-        	
-        	if ( Boolean.TRUE.equals( aplicacion.getBpmEnforced() ) )
-        	{
-        		item= new Listitem();
-        		item.setValue(aplicacion.getName());
-        		item.getChildren().add(new Listcell(aplicacion.getName()));
-        		item.getChildren().add(new Listcell(aplicacion.getDescription()));	        	
-        		lstAplicaciones.getItems().add(item);
-        	}
-        }
-        lstAplicaciones.setVisible(true);
+		FinderHandler.startWizard("Select application", Application.class.getName(),
+				this, true, 
+				"wfManagement eq 'S'",
+				(event) -> {
+					List values = (List) event.getData();
+					for (Object value: values) {
+						addApplication(null, value.toString(), true, null);
+					}
+				});
 	}
 	
-	public void cancelPermission () throws InternalErrorException, NamingException, CreateException
-	{
-		Window w = (Window) getFellow("searchApp");
-		w.setVisible(false);
-	}
-
 	public void addPermission () throws Exception
 	{
 		Window w = (Window) getFellow("searchApp");
@@ -1105,6 +1073,7 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 			}
 
 			grants.add(ri);
+			com.soffid.iam.addons.bpm.tools.TaskUtils.createChildRolesNoRefresh(grants, grants.size()-1);
 
 			regenerateAppRows(grantsGrid);
 		} finally {
@@ -1112,7 +1081,7 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 		}
 		
 		
-		if (manual)
+		if (manual && w != null)
 			w.setVisible(false);
 	}
 

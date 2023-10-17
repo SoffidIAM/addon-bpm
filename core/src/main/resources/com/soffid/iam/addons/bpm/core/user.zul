@@ -6,38 +6,6 @@
 	xsi:schemaLocation="http://www.zkoss.org/2005/zul http://www.zkoss.org/2005/zul/zul.xsd">
 	<task id="window"
 		use="com.soffid.iam.addons.bpm.ui.StandardUserWindow">
-		<window visible="false" id="searchApp"
-			title="${c:l('bpm.addApplication') }" width="80%" closable="false">
-			<div>
-				<label value="${c:l('aplicacions.zul.Codi-2') } :"
-					style="width: 10em; display: inline-block" />
-				<textbox id="txtCodigoAplicacion" value="" width="350px"
-					onOK="window.buscarAplicaciones()" />
-			</div>
-			<button id="btnBuscarAplicaciones"
-				label="${c:l('seleccionUsuario.zul.Cercar') }"
-				onClick="window.buscarAplicaciones()"
-				style="margin-top: 5px; loat: right" />
-			<listbox id="lstAplicaciones" style="margin-top: 10px;"
-				mold="paging" pageSize="20" bind="aplicacion" width="100%"
-				visible="false">
-				<listhead>
-					<listheader
-						label="${c:l('aplicacions.zul.Codi-2') }" width="200px" />
-					<listheader
-						label="${c:l('aplicacions.zul.Descripcia') }" width="500px" />
-				</listhead>
-			</listbox>
-			<div height="60px" style="margin-top: 20px">
-				<div style="float:right">
-					<button label="${c:l('bpm.select') }"
-						onClick="window.addPermission()" />
-					<button
-						label="${c:l('usuaris.zul.selectAccount.cancel') }"
-						onClick="window.cancelPermission()" />
-				</div>
-			</div>
-		</window>
 		<window id="currentPermissions" title="${c:l('bpm.currentPermissions') }" width="80%" closable="false" visible="false">
 			<grid>
 				<columns>
