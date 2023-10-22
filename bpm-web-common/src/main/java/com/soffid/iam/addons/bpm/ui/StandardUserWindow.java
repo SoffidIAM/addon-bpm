@@ -494,7 +494,7 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 	private void onChangeField(Event event) throws Exception {
 		CustomField3 customField = (CustomField3) event.getTarget();
 		Field fieldDef = (Field) customField.getAttribute("fieldDef");
-		if ( fieldDef.getName().equals("userSelector"))
+		if ( fieldDef.getName().equals("userSelector") && customField.isValid())
 		{
 			fetchUserAttributes();
 			refresh();
