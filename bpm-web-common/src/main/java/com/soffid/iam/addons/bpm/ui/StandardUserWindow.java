@@ -1189,7 +1189,8 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 			if (grant.getParentRole() == null) {
 				Listcell listCell = new Listcell(fullName);
 				item.appendChild( listCell);
-				addIconPermissions(listCell, u);
+				if (u != null)
+					addIconPermissions(listCell, u);
 			} else {
 				item.appendChild(new Listcell());
 			}
