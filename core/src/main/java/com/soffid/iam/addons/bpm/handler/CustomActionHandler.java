@@ -4,11 +4,14 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.jbpm.graph.def.ActionHandler;
 import org.jbpm.graph.exe.ExecutionContext;
 
 import com.soffid.iam.addons.bpm.common.Constants;
+import com.soffid.iam.interp.Evaluator;
 import com.soffid.iam.service.impl.bshjail.SecureInterpreter;
 
 import bsh.EvalError;
@@ -22,21 +25,21 @@ public class CustomActionHandler implements ActionHandler {
 	@Override
 	public void execute(ExecutionContext executionContext) throws Exception {
 		loadFile(executionContext);
-		SecureInterpreter interpreter = new SecureInterpreter();
+		Map<String, Object> map = new HashMap<>();
 
-		interpreter.set("executionContext", executionContext); //$NON-NLS-1$
-		interpreter.set("serviceLocator", com.soffid.iam.ServiceLocator.instance()); //$NON-NLS-1$
-		interpreter.set(Constants.ATTRIBUTES_VAR, executionContext.getVariable(Constants.ATTRIBUTES_VAR)); //$NON-NLS-1$
-		interpreter.set(Constants.REQUESTER_NAME_VAR, executionContext.getVariable(Constants.REQUESTER_NAME_VAR)); //$NON-NLS-1$
-		interpreter.set(Constants.REQUESTER_VAR, executionContext.getVariable(Constants.REQUESTER_VAR)); //$NON-NLS-1$
-		interpreter.set(Constants.USER_VAR, executionContext.getVariable(Constants.USER_VAR)); //$NON-NLS-1$
-		interpreter.set(Constants.ROLES_VAR, executionContext.getVariable(Constants.ROLES_VAR)); //$NON-NLS-1$
+		map.put("executionContext", executionContext); //$NON-NLS-1$
+		map.put("serviceLocator", com.soffid.iam.ServiceLocator.instance()); //$NON-NLS-1$
+		map.put(Constants.ATTRIBUTES_VAR, executionContext.getVariable(Constants.ATTRIBUTES_VAR)); //$NON-NLS-1$
+		map.put(Constants.REQUESTER_NAME_VAR, executionContext.getVariable(Constants.REQUESTER_NAME_VAR)); //$NON-NLS-1$
+		map.put(Constants.REQUESTER_VAR, executionContext.getVariable(Constants.REQUESTER_VAR)); //$NON-NLS-1$
+		map.put(Constants.USER_VAR, executionContext.getVariable(Constants.USER_VAR)); //$NON-NLS-1$
+		map.put(Constants.ROLES_VAR, executionContext.getVariable(Constants.ROLES_VAR)); //$NON-NLS-1$
 				
 		String label = executionContext.getNode() != null ? executionContext.getNode().getName():
 					executionContext.getTransition() != null ? executionContext.getTransition().getName():
 				"";
 		try {
-			Object o = interpreter.eval(script);
+			Object o = Evaluator.instance().evaluate(script, map, executionContext.getNode().getName());
 			if (executionContext.getNode() != null)
 			{
 				if (o != null && o instanceof String &&

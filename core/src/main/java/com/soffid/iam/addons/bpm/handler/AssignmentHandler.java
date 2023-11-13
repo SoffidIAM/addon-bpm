@@ -4,13 +4,16 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Array;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.jbpm.JbpmException;
 import org.jbpm.graph.exe.ExecutionContext;
 import org.jbpm.taskmgmt.exe.Assignable;
 
 import com.soffid.iam.addons.bpm.common.Constants;
+import com.soffid.iam.interp.Evaluator;
 import com.soffid.iam.service.impl.bshjail.SecureInterpreter;
 
 import bsh.EvalError;
@@ -25,18 +28,18 @@ public class AssignmentHandler implements org.jbpm.taskmgmt.def.AssignmentHandle
 	@Override
 	public void assign(Assignable assignable, ExecutionContext executionContext) throws Exception {
 		loadFile(executionContext);
-		SecureInterpreter interpreter = new SecureInterpreter();
+		Map<String, Object> map = new HashMap<>();
 
-		interpreter.set("executionContext", executionContext); //$NON-NLS-1$
-		interpreter.set("serviceLocator", com.soffid.iam.ServiceLocator.instance()); //$NON-NLS-1$
-		interpreter.set(Constants.ATTRIBUTES_VAR, executionContext.getVariable(Constants.ATTRIBUTES_VAR)); //$NON-NLS-1$
-		interpreter.set(Constants.REQUESTER_NAME_VAR, executionContext.getVariable(Constants.REQUESTER_NAME_VAR)); //$NON-NLS-1$
-		interpreter.set(Constants.REQUESTER_VAR, executionContext.getVariable(Constants.REQUESTER_VAR)); //$NON-NLS-1$
-		interpreter.set(Constants.USER_VAR, executionContext.getVariable(Constants.USER_VAR)); //$NON-NLS-1$
-		interpreter.set(Constants.ROLES_VAR, executionContext.getVariable(Constants.ROLES_VAR)); //$NON-NLS-1$
+		map.put("executionContext", executionContext); //$NON-NLS-1$
+		map.put("serviceLocator", com.soffid.iam.ServiceLocator.instance()); //$NON-NLS-1$
+		map.put(Constants.ATTRIBUTES_VAR, executionContext.getVariable(Constants.ATTRIBUTES_VAR)); //$NON-NLS-1$
+		map.put(Constants.REQUESTER_NAME_VAR, executionContext.getVariable(Constants.REQUESTER_NAME_VAR)); //$NON-NLS-1$
+		map.put(Constants.REQUESTER_VAR, executionContext.getVariable(Constants.REQUESTER_VAR)); //$NON-NLS-1$
+		map.put(Constants.USER_VAR, executionContext.getVariable(Constants.USER_VAR)); //$NON-NLS-1$
+		map.put(Constants.ROLES_VAR, executionContext.getVariable(Constants.ROLES_VAR)); //$NON-NLS-1$
 				
 		try {
-			Object o = interpreter.eval(script);
+			Object o = Evaluator.instance().evaluate(script, map, executionContext.getNode().getName());
 			if ( o == null)
 				throw new JbpmException("Script for task assignment returned null: "+script);
 			if (o instanceof String)

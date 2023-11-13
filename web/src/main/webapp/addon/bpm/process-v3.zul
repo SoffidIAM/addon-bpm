@@ -138,7 +138,7 @@
 											</div>
 											<customfield3 label="${c:l('bpm.actor') }" bind="mailActor" dataType="STRING" onChange=""/>
 											<div  style="width:100%; padding-bottom: 16px; padding-top:16px">
-											Alternatively, write a Beanshell script to return the actor depending on the process variables.<h:br/>
+											Alternatively, write a script to return the actor depending on the process variables.<h:br/>
 											For instance: return primaryGroup.attributes{"owner"};
 											</div>
 											<customfield3 label="${c:l('bpm.actorScript') }" bind="customScript" dataType="STRING" 
@@ -180,7 +180,7 @@
 										</div>
 										<customfield3 label="${c:l('bpm.actor') }" bind="mailActor" dataType="STRING" onChange=""/>
 										<div  style="width:100%; padding-bottom: 16px; padding-top:16px">
-										Alternatively, write a Beanshell script to return the actor depending on the process variables.<h:br/>
+										Alternatively, write a script to return the actor depending on the process variables.<h:br/>
 										For instance: return primaryGroup.attributes{"owner"};
 										</div>
 										<customfield3 label="${c:l('bpm.actorScript') }" bind="customScript" dataType="STRING" 
@@ -206,7 +206,7 @@
 											</div>
 											<customfield3 label="${c:l('bpm.actor') }" dataType="STRING" bind="mailActor"/>
 											<div  style="width:100%; padding-bottom: 16px; padding-top:16px">
-											Alternatively, write a Beanshell script to return the actor depending on the requested role.<h:br/>
+											Alternatively, write a script to return the actor depending on the requested role.<h:br/>
 											Additionally to task variables, role and application objects are available.<h:br/>
 											For instance: return role.attributes{"owner"}; or return "APPLICATION_OWNER/"+application.name;
 											</div>
