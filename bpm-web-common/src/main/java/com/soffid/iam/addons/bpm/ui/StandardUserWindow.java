@@ -1325,6 +1325,8 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 		
 		public void onEvent(Event event) throws Exception {
 			User u = (User) event.getTarget().getAttribute("user");
+			if (u == null || u.getId() == null)
+				return;
 			Window w = (Window) getFellow("currentPermissions");
 			Grid g = (Grid) w.getFirstChild();
 			Rows rows = g.getRows();
