@@ -39,7 +39,7 @@ public class CustomActionHandler implements ActionHandler {
 					executionContext.getTransition() != null ? executionContext.getTransition().getName():
 				"";
 		try {
-			Object o = Evaluator.instance().evaluate(script, map, executionContext.getNode().getName());
+			Object o = Evaluator.instance().evaluate(script, map, label);
 			if (executionContext.getNode() != null)
 			{
 				if (o != null && o instanceof String &&
