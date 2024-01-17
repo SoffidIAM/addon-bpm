@@ -1124,6 +1124,8 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 		h.appendChild(lh1);
 		lh1 = new Listheader ( Labels.getLabel("com.soffid.iam.api.User.fullName")); lh1.setWidth("250px");
 		h.appendChild(lh1);
+		lh1 = new Listheader ( Labels.getLabel("aplica_rolsllista.zul.Aplicacia-2")); lh1.setWidth("250px");
+		h.appendChild(lh1);
 		Listheader lh2 = new Listheader( Labels.getLabel("bpm.permission") ); // lh2.setWidth("400px");
 		h.appendChild(lh2);
 		Listheader lh3 = new Listheader( Labels.getLabel("bpm.approve") ); lh3.setWidth("80px");
@@ -1195,6 +1197,8 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 				item.appendChild(new Listcell());
 			}
 			
+			Listcell appCell = new Listcell();
+			item.appendChild(appCell);
 			Listcell permsCell = new Listcell();
 			item.appendChild(permsCell);
 			Long roleId = (Long) grant.getRoleId();
@@ -1203,6 +1207,8 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 			{
 				addRisk (permsCell, grant);
 				Role role = ServiceLocator.instance().getApplicationService().findRoleById(roleId);
+				if (grant.getParentRole() == null)
+					appCell.setLabel(role.getInformationSystemName());
 				final Label l = new Label(role.getName()+": "+role.getDescription());
 				l.setStyle("white-space: normal");
 				permsCell.appendChild(l);
@@ -1217,6 +1223,8 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 				addRisk (permsCell, grant);
 				// New role
 				Role role = ServiceLocator.instance().getApplicationService().findRoleById(roleId);
+				if (grant.getParentRole() == null)
+					appCell.setLabel(role.getInformationSystemName());
 				Div d = new Div();
 				d.setStyle("display: inline-block; max-width: calc( 100% - 48px)");
 				final Label l = new Label(role.getName()+": "+role.getDescription());
@@ -1243,6 +1251,7 @@ public class StandardUserWindow extends WorkflowWindow implements InputFieldCont
 			else
 			{
 				Role role = ServiceLocator.instance().getApplicationService().findRoleById(previousRoleId);
+				appCell.setLabel(role.getInformationSystemName());
 				Label label = new Label(String.format ( Labels.getLabel("bpm.remove"), role.getName()+": "+role.getDescription()));
 				label.setStyle("color: red");
 				permsCell.appendChild(label);
