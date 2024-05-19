@@ -76,6 +76,10 @@ public class Node {
 	List<Transition> outTransitions;
 
 	@Nullable
+	@Attribute(defaultValue="new java.util.LinkedList()")
+	List<InvocationField> invocationFields;
+
+	@Nullable
 	Boolean applyUserChanges;
 	
 	@Nullable
@@ -100,5 +104,29 @@ public class Node {
 	@Nullable
 	@Description("Script to filter out applications to request")
 	String applicationFilter;
+	
+	@Nullable
+	@Description("System to invoke")
+	String system;
+
+	@Nullable
+	@Description("Method to execute")
+	String method;
+
+	@Nullable
+	@Description("Path to execute")
+	String path;
+
+	@Nullable
+	@Description("Variable to fetch results")
+	String returnVariable;
+
+	@Nullable
+	@Description("Diagram id")
+	String diagramId;
+	
+	@Description("Step to remove")
+	@Attribute(defaultValue = "false")
+	boolean toRemove;
 	
 }

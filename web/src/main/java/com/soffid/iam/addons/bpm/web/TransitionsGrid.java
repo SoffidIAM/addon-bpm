@@ -107,7 +107,7 @@ public class TransitionsGrid extends DataGrid {
 				Object node = p.getValue();
 				item.setValue(node);
 				DataListcell cell = new DataListcell();
-				cell.setBind( "/processListbox:"+ p.asPath()+"/@name");
+				cell.setBind( "/listbox:"+ p.asPath()+"/@name");
 				item.appendChild(cell);
 				listbox.getItems().add(item);
 				if (node == value)

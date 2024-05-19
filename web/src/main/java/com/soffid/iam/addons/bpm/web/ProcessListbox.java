@@ -11,6 +11,7 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 
+import org.json.JSONObject;
 import org.zkoss.util.media.Media;
 import org.zkoss.zk.ui.Component;
 import org.zkoss.zk.ui.event.Event;
@@ -29,11 +30,12 @@ import com.soffid.iam.web.popup.FileUpload2;
 
 import es.caib.zkib.binder.BindContext;
 import es.caib.zkib.component.DataListbox;
+import es.caib.zkib.component.DataTable;
 import es.caib.zkib.datamodel.DataNode;
 import es.caib.zkib.datasource.XPathUtils;
 import es.caib.zkib.zkiblaf.Missatgebox;
 
-public class ProcessListbox extends DataListbox {
+public class ProcessListbox extends DataTable {
 	private BindContext ctxToRemove;
 
 	public ProcessListbox () {
@@ -45,7 +47,7 @@ public class ProcessListbox extends DataListbox {
 		{
 			if ( c instanceof Listitem)
 			{
-				setSelectedItem((Listitem) c);
+//				setSelectedItem((Listitem) c);
 				Window processEditor = (Window) getParent().getFellow("editor").getFellow("w");
 				processEditor.doHighlighted();
 			}
@@ -69,53 +71,6 @@ public class ProcessListbox extends DataListbox {
 		Filedownload.save(out.toByteArray(), "application/octet-stream", p.getName()+".pardef");
 	}
 	
-	public void importProcess() throws Exception {
-		FileUpload2.get(
-			event -> {
-				Media media = ( (UploadEvent) event).getMedia();
-				JsonReader reader = media.isBinary() && media.inMemory() ? Json.createReader( new ByteArrayInputStream( media.getByteData()) ):
-					media.isBinary() ? Json.createReader( media.getStreamData() ):
-					media.inMemory() ? Json.createReader( new StringReader( media.getStringData()) ):
-							Json.createReader( media.getReaderData() );
-				
-				JsonObject object = reader.readObject();
-				reader.close();
-				final Process p = ProcessSerializer.processFromJson(object);
-				final String name = p.getName();
-				final List<Process> old = com.soffid.iam.addons.bpm.common.EJBLocator.getBpmEditorService().findByName(name);
-				if ( old == null || old.isEmpty() ) {
-					openProcessWindow(p);			
-				} else {
-					Missatgebox.confirmaYES_NO(String.format("The process %s already exists. Do you want to overwrite it?", name), 
-							new EventListener() {
-						public void onEvent(Event ev) throws Exception {
-							if (ev.getData().equals( Missatgebox.YES ))
-							{
-								for ( Object item: getItems())
-								{
-									Listitem listitem = ((Listitem) item);
-									Label cell = (Label) listitem.getFirstChild().getFirstChild();
-									String cellName = cell.getValue();
-									if (cellName != null && cellName.equals(name))
-										listitem.setVisible(false);
-								}
-								p.setId(old.iterator().next().getId());
-								openProcessWindow(p);
-							}
-						}
-					});
-				}
-			}
-		);
-	}
-
-	public void openProcessWindow(Process p) throws Exception {
-		String path = XPathUtils.createPath(getDataSource(), "/process", p);
-		setSelectedItem( getItemAtIndex(getItemCount()-1) );
-		Window processEditor = (Window) getParent().getFellow("editor").getFellow("w");
-		processEditor.doHighlighted();
-	}
-
 	private EventListener onConfirmRemove = new EventListener() {
 		@Override
 		public void onEvent(Event event) throws Exception {
@@ -126,5 +81,13 @@ public class ProcessListbox extends DataListbox {
 			}
 		}
 	};
+
+	@Override
+	public JSONObject wrap(Object element) {
+		DataNode dn = (DataNode) element;
+		JSONObject o = new JSONObject();
+		o.put("name", dn.get("name"));
+		return o;
+	}
 
 }

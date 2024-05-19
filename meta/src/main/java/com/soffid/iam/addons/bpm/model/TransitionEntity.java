@@ -30,4 +30,7 @@ public class TransitionEntity {
 	@Nullable
 	String script;
 	
+	@Column(name="TRA_DIAID")
+	@Nullable
+	String diagramId;
 }

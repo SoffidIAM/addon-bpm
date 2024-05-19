@@ -80,7 +80,7 @@ public class NewProcessWindow extends Window {
 		String path = XPathUtils.createPath(model, "/process", p);
 		setVisible(false);
 		
-		DataListbox lb = (DataListbox) getParent().getFellow("processListbox");
+		DataListbox lb = (DataListbox) getParent().getFellow("listbox");
 		lb.setSelectedIndex( lb.getItemCount() - 1);
 		
 		Window processEditor = (Window) getParent().getFellow("editor").getFellow("w");

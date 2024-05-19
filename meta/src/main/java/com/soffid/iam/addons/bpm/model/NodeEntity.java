@@ -97,4 +97,28 @@ public class NodeEntity {
 	@Nullable
 	String applicationFilter;
 	
+	@Nullable
+	@Column(name="NOD_SYSTEM")
+	@Description("System to invoke")
+	String system;
+
+	@Nullable
+	@Column(name="NOD_METHOD")
+	@Description("Method to execute")
+	String method;
+
+	@Nullable
+	@Column(name="NOD_PATH")
+	@Description("Path to execute")
+	String path;
+
+	@Nullable
+	@Column(name="NOD_TARVAR")
+	@Description("Variable to fetch results")
+	String returnVariable;
+	
+	@Nullable
+	@Column(name="NOD_DIAID")
+	@Description("Diagram id")
+	String diagramId;
 }

@@ -14,4 +14,7 @@ public class NodeType {
 	public static String NT_FORK = "fork";
 	public static String NT_JOIN = "join";
 	public static String NT_END = "end";
+	public static String NT_ACTION = "action";
+	public static String NT_TIMER = "timer";
+	public static String NT_SYSTEM_INVOCATION = "system";
 }

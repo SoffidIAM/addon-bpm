@@ -10,6 +10,7 @@ public class NodeEntityDaoImpl extends NodeEntityDaoBase {
 		target.setFields(getFieldEntityDao().toFieldList(source.getFields()));
 		target.setFilters(getFilterEntityDao().toFilterList(source.getFilters()));
 		target.setTriggers(getTriggerEntityDao().toTriggerList(source.getTriggers()));
+		target.setInvocationFields(getInvocationFieldEntityDao().toInvocationFieldList(source.getInvocationFields()));
 	}
 
 }

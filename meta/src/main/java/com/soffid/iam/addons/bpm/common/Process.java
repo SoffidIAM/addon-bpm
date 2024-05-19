@@ -33,6 +33,13 @@ public class Process {
 	String managers;
 
 	@Nullable
+	String diagram;
+
+	@Attribute(type = "PHOTO")
+	@Nullable
+	byte[] image;
+
+	@Nullable
 	@Attribute(defaultValue="new java.util.LinkedList<com.soffid.iam.addons.bpm.common.Node>()")
 	List<Node> nodes;
 	

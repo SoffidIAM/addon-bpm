@@ -53,6 +53,14 @@ public class ProcessEntity {
 	@Nullable
 	Long version;
 
+	@Column(name="PRO_DIAGRA", length=64000)
+	@Nullable
+	String diagram;
+
+	@Column(name="PRO_IMAGE", length=256000)
+	@Nullable
+	byte[] image;
+
 	public List<ProcessEntity> findByName(String name){ return null;}
 	
 }

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!--
+Purpose:
+	Defines methods and actions for DSP
+Description:
+	
+Histroy:
+	Mon Jun 20 20:57:56     2005, Created by tomyeh
+
+Copyright (C) 2005 Potix Corporation. All Rights Reserved.
+-->
+
+<taglib>
+	<uri>https://www.soffid.com/dsp/web/zkdb</uri>
+	<description>
+	Utility methods
+	</description>
+
+	<!--         -->
+	<!-- Imports -->
+	<!--         -->
+	<import>
+		<import-name>ZkdbFns</import-name>
+		<import-class>com.soffid.addons.bpm.web.mxgraph.ZkdbFns</import-class>
+	</import>
+	<!--                 -->
+	<!-- Class Utilities -->
+	<!--                 -->
+	<function>
+		<name>includeImage</name>
+		<function-class>com.soffid.addons.bpm.web.mxgraph.ZkdbFns</function-class>
+		<function-signature>java.lang.String includeImage(java.lang.String)</function-signature>
+		<description>
+		Includes an SVG image as URL
+		</description>
+	</function>
+</taglib>

@@ -18,6 +18,7 @@ import org.jbpm.file.def.FileDefinition;
 import com.soffid.iam.addons.bpm.common.Attribute;
 import com.soffid.iam.addons.bpm.common.Field;
 import com.soffid.iam.addons.bpm.common.Filter;
+import com.soffid.iam.addons.bpm.common.InvocationField;
 import com.soffid.iam.addons.bpm.common.Node;
 import com.soffid.iam.addons.bpm.common.NodeType;
 import com.soffid.iam.addons.bpm.common.Process;
@@ -27,6 +28,7 @@ import com.soffid.iam.addons.bpm.common.WorkflowType;
 import com.soffid.iam.addons.bpm.model.AttributeEntity;
 import com.soffid.iam.addons.bpm.model.FieldEntity;
 import com.soffid.iam.addons.bpm.model.FilterEntity;
+import com.soffid.iam.addons.bpm.model.InvocationFieldEntity;
 import com.soffid.iam.addons.bpm.model.NodeEntity;
 import com.soffid.iam.addons.bpm.model.ProcessEntity;
 import com.soffid.iam.addons.bpm.model.TransitionEntity;
@@ -59,6 +61,7 @@ public class BpmEditorServiceImpl extends BpmEditorServiceBase {
 			getFieldEntityDao().remove(nodeEntity.getFields());
 			getFilterEntityDao().remove(nodeEntity.getFilters());
 			getTriggerEntityDao().remove(nodeEntity.getTriggers());
+			getInvocationFieldEntityDao().remove(nodeEntity.getInvocationFields());
 		}
 
 		getNodeEntityDao().remove(pe.getNodes());
@@ -106,6 +109,14 @@ public class BpmEditorServiceImpl extends BpmEditorServiceBase {
 				nodeEntity.getTriggers().add(triggerEntity);
 			}
 			
+			for (InvocationField f: node.getInvocationFields())
+			{
+				InvocationFieldEntity fEntity = getInvocationFieldEntityDao().invocationFieldToEntity(f);
+				fEntity.setNode(nodeEntity);
+				getInvocationFieldEntityDao().create(fEntity);
+				f.setId(fEntity.getId());
+				nodeEntity.getInvocationFields().add(fEntity);
+			}
 		}
 		
 		for ( Node node: process.getNodes())

@@ -1,61 +1,81 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?taglib uri="/WEB-INF/tld/web/core.dsp.tld" prefix="c" ?>
 <?page id="bpm-editor" title="${c:l('bpm.title')}"?>
+<?component name="process" macro-uri="process-v3.zul"?>
 
 <frame id="frame" saveContent="true"
 		title="${c:l('bpm.title')}" width="100%" 
 		use="com.soffid.iam.addons.bpm.web.EditorHandler">
 	
 	<style>
-		div.processListbox tr:hover td, tr.odd.processRow:hover td.gc {
+		
+		tr.grid td.gc span{
+			vertical-align: top;
+			display: inline-block;
+			min-width: 100px;
+		}
+		
+		div.fieldsGrid tr:hover td {
 			background-color: #F0F0F0;
 		}
 		
-		div.processListbox tr td div.actions {
-			margin-left: 24px;
-			visibility: hidden;
-			display: inline-block;
-		}
-		div.processListbox tr:hover td div.actions {
+		div.fieldsGrid tr:hover td  img.removeIcon {
 			visibility: visible;
 		}
 
-		div.processListbox tr td div.actions img {
+		img.removeIcon {
+			visibility: hidden;
+		}
+		
+		span.bpmLabel {
+			display: inline-block;
+			width: 150px;
+		}
+		span.combobox span.rbtnbk img {
 			width: 24px;
 			height: 24px;
-			vertical-align: baseline;
-		}		
+			vertical-align: middle;
+		}
+		span.combobox span.rbtnbk img:hover {
+			background-image: url(/soffid/img/circle.svg);
+			background-size: cover;
+		}
+		div.gc span input[type='checkbox'] + label {
+			display: none;
+		}
 	</style>
+	<div sclass="card" id="card">
+		<div sclass="card__face card__face--front">
 	
-	<div use="com.soffid.iam.web.component.NavigationBar" frame="frame">
-		<menu2>
-			<menu2item image="/img/add.svg" label="${c:l('agents.zul.Afegeixnou') }"  onClick="ref:newProcessWindow.raise"/>
-			<menu2item image="/img/import.svg" label="${c:l('tenant.zul.import') }"  onClick="ref:processListbox.importProcess()"/>
-		</menu2>
-	</div>
- 	<datamodel id="model" rootNode="root" src="addon/bpm/descriptorBpm.xml" />
-
-	<listbox dataPath="/model:/process" fixedLayout="true" id="processListbox" sclass="processListbox" use="com.soffid.iam.addons.bpm.web.ProcessListbox">
-		<listhead>
-			<listheader label="Process"/>
-		</listhead>
-		<dataitem >
-			<listcell>
-				<label bind="@name"/>
-				<div sclass="actions">
-					<imageclic src="/img/pencil.svg" onClick="ref:processListbox.onEdit(event)" style="margin-left: 8px" title="${c:l('bpm.editProcess') }"/>
-					<imageclic src="/img/remove.svg"  onClick="ref:processListbox.onRemove(event)"  style="margin-left: 8px" title="${c:l('bpm.removeProcess') }"/>
-					<imageclic src="/img/export.svg" onClick="ref:processListbox.export(event)"  style="margin-left: 8px" title="${c:l('bpm.export') }"/>
-				</div>
-			</listcell>
-		</dataitem>
-	</listbox>
-	<div width="100%" style="text-align: right"  >
-		<div class="addButton" onClick="ref:newProcessWindow.raise">+</div>
-	</div>
-
-	<embed src="/addon/bpm/process-v3.zul" id="editor"/>		
+	
+			<div use="com.soffid.iam.web.component.NavigationBar" frame="frame">
+				<menu2>
+					<menu2item image="/img/add.svg" label="${c:l('agents.zul.Afegeixnou') }"  onClick="ref:newProcessWindow.raise"/>
+					<menu2item image="/img/import.svg" label="${c:l('tenant.zul.import') }"  onClick="ref:frame.importProcess()"/>
+				</menu2>
+			</div>
+		 	<datamodel id="model" rootNode="root" src="addon/bpm/descriptorBpm.xml" />
 		
+			<datatable dataPath="/model:/process" multiselect="true" id="listbox"  
+				onSelect="ref:frame.showDetails"
+				onMultiSelect="ref:frame.multiSelect"
+				use="com.soffid.iam.addons.bpm.web.ProcessListbox">
+			<attribute name="columns"><![CDATA[
+			- name: Process 
+			  value: name
+			]]></attribute>
+			</datatable>
+			<div width="100%" style="text-align: right">
+				<div class="deleteButton" onClick="ref:frame.deleteSelected" visible="false">-</div>
+				<div class="addButton" onClick="ref:newProcessWindow.raise">+</div>
+			</div>
+		</div>
+		
+		<div sclass="card__face card__face--back">
+			<process id="editor"/>		
+		</div>
+	</div>
+	
 	<window visible="false" id="newProcessWindow" title="${c:l('bpm.newProcess') }" width="600px"
 		position="top,center"
 		use="com.soffid.iam.addons.bpm.web.NewProcessWindow">

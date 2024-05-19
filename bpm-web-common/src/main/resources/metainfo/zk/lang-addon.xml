@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<language-addon>
+  <addon-name>BPM</addon-name>
+  <version>
+  	<version-class>com.soffid.iam.addons.bpm.web.component.Version</version-class>
+  	<version-uid>1.0</version-uid>
+  </version>
+
+  <language-name>xul/html</language-name>
+
+  <javascript src="~./js/ext/mxgraph/mxClientCfg.js" />
+  <javascript src="~./js/ext/mxgraph/mxClient.min.js" />
+
+	<component>
+		<component-name>mxgraph</component-name>
+		<component-class>com.soffid.addons.bpm.web.mxgraph.MxGraph</component-class>
+		<mold>
+			<mold-name>default</mold-name>
+			<mold-uri>~./mxgraph/mxgraph.dsp</mold-uri>
+		</mold>
+	</component>
+
+</language-addon>

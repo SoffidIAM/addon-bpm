@@ -1,102 +1,73 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?taglib uri="/WEB-INF/tld/web/core.dsp.tld" prefix="c" ?>
-<?page id="bpm-editor" title="${c:l('bpm.title')}"?>
 <?component name="input_dada" macro-uri="/comu/input_dada.zul"?>
 <?component name="input_etiqueta" macro-uri="/comu/input_etiqueta.zul"?>
 
-<form xmlns:h="http://www.w3.org/1999/xhtml"
+<form2 xmlns:h="http://www.w3.org/1999/xhtml"
 	xmlns="http://www.zkoss.org/2005/zul" 
-	id="form" dataPath="/processListbox:/" width="100%">
-	<style>
-		tr.item:hover > td.action > div > img{
-			visibility: visible;
-		}
-
-		tr.item >  td.action > div > img {
-			visibility: hidden;
-		}
-		
-		tr.grid td.gc span{
-			vertical-align: top;
-			display: inline-block;
-			min-width: 100px;
-		}
-		
-		div.fieldsGrid tr:hover td {
-			background-color: #F0F0F0;
-		}
-		
-		div.fieldsGrid tr:hover td  img.removeIcon {
-			visibility: visible;
-		}
-
-		img.removeIcon {
-			visibility: hidden;
-		}
-		
-		span.bpmLabel {
-			display: inline-block;
-			width: 150px;
-		}
-		span.combobox span.rbtnbk img {
-			width: 24px;
-			height: 24px;
-			vertical-align: middle;
-		}
-		span.combobox span.rbtnbk img:hover {
-			background-image: url(/soffid/img/circle.svg);
-			background-size: cover;
-		}
-		div.gc span input[type='checkbox'] + label {
-			display: none;
-		}
-	</style>
-	<window id="w" visible="false" title="${c:l('bpm.processEditor') }" width="90%" use="com.soffid.iam.addons.bpm.web.ProcessWindow" version="3">
-		<div style="text-align:right; width:100%; margin:12px;margin-right:8px">
+	id="w" dataPath="../listbox:/" width="100%"
+	use="com.soffid.iam.addons.bpm.web.ProcessWindow"
+	onChangeXPath="ref:w.onChangeForm">
+	<listbox dataPath="nodes" id="nodes" fixedLayout="true" visible="false">
+		<dataitem bind="/" >
+			<listcell bind="@name"/>
+		</dataitem>
+	</listbox>
+	<div use="com.soffid.iam.web.component.NavigationBar" frame="frame" lastAction="ref:frame.confirmApply">
+		<pager datatable="../listbox"/>
+						
+		<div style="float:right">
 			<button label="${c:l('bpm.save') }" id="save"/>
 			<button label="${c:l('bpm.saveAndPublish') }" id="saveAndPublish"/>
 			<button label="${c:l('bpm.cancel') }" id="cancel"/>
 		</div>
-		<div style="width:100%; margin:12px">
-			<customfield3 label="${c:l('bpm.processName') }" dataType="string" bind="@name" onChange="" maxLength="250" />
-			<customfield3 label="${c:l('bpm.processType') }" dataType="string" bind="type" onChange="" enumeration="com.soffid.iam.addons.bpm.common.WorkflowType" />
-			<customfield3 label="${c:l('bpm.processDescription') }" dataType="string" bind="@description" multiline="true" onChange="" maxLength="4000" />
-			<customfield3 label="${c:l('bpm.initiators') }" dataType="string" bind="@initiators" onChange="" maxLength="100" />
-			<customfield3 label="${c:l('bpm.managers') }" dataType="string" bind="@managers" onChange="" maxLength="100" />
-			<customfield3 label="${c:l('bpm.observers') }" dataType="string" bind="@observers" onChange="" maxLength="100" />
-		</div>
-		<tabbox>
-			<tabs>
-				<tab label="${c:l('bpm.steps') }"> </tab>
-				<tab label="${c:l('bpm.attributes') }"/>
-			</tabs>
-			<tabpanels>
-				<tabpanel>
-					<div style="width:200px; min-width: 100px; display: inline-block; padding-right:15px; vertical-align: top">
-						<listbox dataPath="nodes" id="nodes" fixedLayout="true">
-							<listhead>
-								<listheader label="${c:l('bpm.step') }"/>
-								<listheader width="24px"/>
-							</listhead>
-							<dataitem bind="/" >
-								<listcell bind="@name"/>
-								<listcell sclass="action" >
-									<imageclic width="24px" src="/img/remove.svg" onClick="ref:w.onRemoveNode(event)"/>
-								</listcell>
-							</dataitem>
-						</listbox>
-						<button image="/img/add-r.svg" label="${c:l('bpm.newStep') }"
-							style="margin-top: 16px"
-							id="newNodeButton"/>
+	</div>
+
+	<style>
+	div.mxgraph {
+		position: relative;
+		height: calc(100vh - 250px); 
+		width:100%; 
+	}
+	div.mxgraph div.mxgraph_graph {
+		background-image: url('/soffid/addon/bpm/mxgraph/img/grid.svg'); 
+		background-size:24px; 
+		border:solid 1px #cecece; 
+		height: 100%; 
+		width:100%; 
+		overflow: auto;
+	}
+	</style>
+	<tabbox>
+		<tabs>
+			<tab label="${c:l('bpm.steps') }"> </tab>
+			<tab label="${c:l('bpm.attributes') }"/>
+		</tabs>
+		<tabpanels>
+			<tabpanel>
+				<div style="width: 50%; height: 100%; padding:16px; min-height: calc(100vh - 200px); display: inline-block; vertical-align: top;">
+					<mxgraph id="graph" 
+						config="/addon/bpm/mxgraph/config/workfloweditor.xml.dsp"
+						onChange="ref:w.updateGraph" 
+						onSelect="ref:w.showPane"/>
+				</div>
+				<div style="width: 50%; display: inline-block; padding: 16px;">
+					<div style="width:100%;" id="processDiv">
+						<customfield3 label="${c:l('bpm.processName') }" dataType="string" bind="@name" onChange="" maxLength="250" />
+						<customfield3 label="${c:l('bpm.processType') }" dataType="string" bind="type" onChange="" enumeration="com.soffid.iam.addons.bpm.common.WorkflowType" />
+						<customfield3 label="${c:l('bpm.processDescription') }" dataType="string" bind="@description" multiline="true" onChange="" maxLength="4000" />
+						<customfield3 label="${c:l('bpm.initiators') }" dataType="string" bind="@initiators" onChange="" maxLength="100" />
+						<customfield3 label="${c:l('bpm.managers') }" dataType="string" bind="@managers" onChange="" maxLength="100" />
+						<customfield3 label="${c:l('bpm.observers') }" dataType="string" bind="@observers" onChange="" maxLength="100" />
 					</div>
-					<div id="container" use="com.soffid.iam.addons.bpm.web.ContainerDiv" dataPath="nodes:/" style="display:inline-block; width:calc(100% - 200px); vertical-align: top">
+					<div id="container" use="com.soffid.iam.addons.bpm.web.ContainerDiv" dataPath="nodes:/" style="display:inline-block; width: 100%; vertical-align: top">
 						<grid>
 							<columns>
 								<column label="${c:l('bpm.details') }"/>
 							</columns>
 							<rows>
 								<row>
-									<customfield3 label="${c:l('bpm.stepName') }:" dataType="string" bind="@name" onChange="" maxLength="100" />
+									<customfield3 label="${c:l('bpm.stepName') }:" dataType="string" bind="@name" onChange="ref:w.changeStepName" maxLength="100" />
 								</row>
 								<row>
 									<customfield3 label="${c:l('bpm.stepType') }"
@@ -113,7 +84,7 @@
 								</row>
 							</rows>
 						</grid>
-						<tabbox>
+						<tabbox id="nodeTabbox">
 							<tabs>
 								<tab label="${c:l('bpm.taskDetails') }" selected="true"></tab>
 								<tab label="${c:l('bpm.fields') }" id="fieldsTab"></tab>
@@ -235,6 +206,34 @@
 										<customfield3 dataType="STRING" bind="customScript" 
 														multiline="true" maxlength="10000" 
 														label="${c:l('bpm.customScript') }" selectIcon="/img/pencil.svg" />
+									</div>
+									<div id="systemType">
+										<customfield3 dataType="SYSTEM" bind="system" 
+											label="${c:l('bpm.system') }"/>
+										<customfield3 dataType="STRING" bind="method" 
+											label="${c:l('bpm.verb') }"/>
+										<customfield3 dataType="STRING" bind="path" 
+											label="${c:l('bpm.path') }"/>
+										<grid dataPath="/invocationFields" fixedLayout="true" id="invocationFields" sclass="fieldsGrid">
+											<columns>
+												<column label="${c:l('bpm.parameter') }" />
+												<column label="${c:l('bpm.value') }" />
+												<column label="." width="32px" align="center"/>
+											</columns>
+											<datarow>
+												<customfield3 dataType="STRING" noLabel="true" bind="field"/> 
+												<customfield3 dataType="STRING" noLabel="true" bind="expression"
+													multiline="true" maxlength="10000" 
+													selectIcon="/img/pencil.svg" 
+												/> 
+												<imageclic class="removeIcon" src="/img/remove.svg" width="16px" onClick="ref:w.onRemoveField(event)"/>
+											</datarow>
+										</grid>
+										<button image="/img/add-r.svg" label="${c:l('bpm.field.new') }"
+											style="margin-top: 16px"
+											id="newInvocationFieldButton"/>
+										<customfield3 dataType="STRING" bind="returnVariable" 
+											label="${c:l('bpm.responsetVariable') }"/>
 									</div>
 								</tabpanel>
 								<tabpanel>
@@ -397,113 +396,113 @@
 							</tabpanels>
 						</tabbox>
 					</div>
-				</tabpanel>
-				<tabpanel>
-					<grid dataPath="/attributes" id="metadataGrid" fixedLayout="true">
-						<columns>
-							<column label="${c:l('dadesAddicionals.zul.Codi-2')}" width="10em"></column>
-							<column width="*"></column>
-							<column width="40px"></column>
-						</columns>
-						<datarow valign="top">
-							<div>
-								<input_dada bind="@name" id="detall_codi" width_custom="7em"
-									maxim="25" mascara="no empty" />
-							</div>
-							<grid width="100%" sclass="noBorderGrid">
-								<columns>
-									<column width="15%"></column>
-									<column width="85%" />
-								</columns>
-								<rows>
-									<row>
-										<input_etiqueta value="${c:l('dadesAddicionals.zul.Label')}" />
-										<textbox bind="@label" maxlength="50" sclass="textbox"
-											width="80%" onChange="" />
-									</row>
-									<row>
-										<input_etiqueta value="${c:l('dadesAddicionals.zul.Type')}" />
-										<listbox width="99%" visible="true" bind="." mold="select"
-											use="com.soffid.iam.addons.bpm.web.CustomDataTypeListbox"
-											>
-											<dataitem bind="@value">
-												<listcell bind="@literal" />
-											</dataitem>
-										</listbox>
-									</row>
-									<row >
-										<input_etiqueta value="${c:l('dadesAddicionals.zul.Multivalued')}" />
-										<checkbox bind="@multiValued" onClick="" onCheck="" />
-									</row>
-									<row >
-										<input_etiqueta value="${c:l('dadesAddicionals.zul.Size')}" />
-										<textbox bind="@size" id="detail_size" maxlength="50" sclass="textbox"
-											width="8em" onChange="" />
-									</row>
-									<row id="valuesRow">
-										<input_etiqueta value="" />
-										<grid dataPath="/values" id="gridValues">
-											<columns>
-												<column label="${c:l('dadesAddicionals.zul.Values')}"></column>
-												<column  width="2em">
-													<imageclic align="center" src="/img/add.svg">
-														<attribute name="onClick"><![CDATA[
-																es.caib.zkib.binder.BindContext ctx = es.caib.zkib.datasource.XPathUtils.getComponentContext(self);
-																es.caib.zkib.datasource.XPathUtils.createPath(ctx.getDataSource(), ctx.getXPath(), "");
-															]]>
-														</attribute>
-													</imageclic>
-												</column>
-											</columns>
-											<datarow>
-												<textbox bind="." maxlength="50" sclass="textbox" readonly="false"
-													width="80%" onChange="" />
-												<imageclic align="center" src="/img/remove.svg">
+				</div>
+			</tabpanel>
+			<tabpanel>
+				<grid dataPath="/attributes" id="metadataGrid" fixedLayout="true">
+					<columns>
+						<column label="${c:l('dadesAddicionals.zul.Codi-2')}" width="10em"></column>
+						<column width="*"></column>
+						<column width="40px"></column>
+					</columns>
+					<datarow valign="top">
+						<div>
+							<input_dada bind="@name" id="detall_codi" width_custom="7em"
+								maxim="25" mascara="no empty" />
+						</div>
+						<grid width="100%" sclass="noBorderGrid">
+							<columns>
+								<column width="15%"></column>
+								<column width="85%" />
+							</columns>
+							<rows>
+								<row>
+									<input_etiqueta value="${c:l('dadesAddicionals.zul.Label')}" />
+									<textbox bind="@label" maxlength="50" sclass="textbox"
+										width="80%" onChange="" />
+								</row>
+								<row>
+									<input_etiqueta value="${c:l('dadesAddicionals.zul.Type')}" />
+									<listbox width="99%" visible="true" bind="." mold="select"
+										use="com.soffid.iam.addons.bpm.web.CustomDataTypeListbox"
+										>
+										<dataitem bind="@value">
+											<listcell bind="@literal" />
+										</dataitem>
+									</listbox>
+								</row>
+								<row >
+									<input_etiqueta value="${c:l('dadesAddicionals.zul.Multivalued')}" />
+									<checkbox bind="@multiValued" onClick="" onCheck="" />
+								</row>
+								<row >
+									<input_etiqueta value="${c:l('dadesAddicionals.zul.Size')}" />
+									<textbox bind="@size" id="detail_size" maxlength="50" sclass="textbox"
+										width="8em" onChange="" />
+								</row>
+								<row id="valuesRow">
+									<input_etiqueta value="" />
+									<grid dataPath="/values" id="gridValues">
+										<columns>
+											<column label="${c:l('dadesAddicionals.zul.Values')}"></column>
+											<column  width="2em">
+												<imageclic align="center" src="/img/add.svg">
 													<attribute name="onClick"><![CDATA[
 															es.caib.zkib.binder.BindContext ctx = es.caib.zkib.datasource.XPathUtils.getComponentContext(self);
-															es.caib.zkib.datasource.XPathUtils.removePath(ctx.getDataSource(), ctx.getXPath());
-													]]></attribute>
+															es.caib.zkib.datasource.XPathUtils.createPath(ctx.getDataSource(), ctx.getXPath(), "");
+														]]>
+													</attribute>
 												</imageclic>
-											</datarow>
-										</grid>
-									</row>
-								</rows>
-							</grid>
-							<imageclic align="right" src="/img/remove.svg">
-								<attribute name="onClick"><![CDATA[
-									es.caib.zkib.binder.BindContext ctx = es.caib.zkib.datasource.XPathUtils.getComponentContext(event.target);
-									es.caib.zkib.datasource.XPathUtils.removePath(ctx.getDataSource(), ctx.getXPath());
-								]]>
-								</attribute>
-							</imageclic>
-						</datarow>
-					</grid>
-					<button image="/img/add-r.svg" label="${c:l('bpm.addAttribute') }"
-						style="margin-top: 16px"
-						>
-						<attribute name="onClick"><![CDATA[
-							es.caib.zkib.binder.BindContext ctx = es.caib.zkib.datasource.XPathUtils.getComponentContext(metadataGrid);
-							es.caib.zkib.datasource.DataSource ds = ctx.getDataSource();
-							String path = ctx.getXPath();
-							es.caib.zkib.datasource.XPathUtils.createPath(ds, path, new com.soffid.iam.addons.bpm.common.Attribute());
-						]]></attribute>
-					</button>
-				</tabpanel>
-			</tabpanels>
-		</tabbox>
-		<window xmlns:h="http://www.w3.org/1999/xhtml" closable="false" 
-			id="textWindow" 
-			position="top, center" onCancel="" title="${c:l('editorJS.Titol')}" width="90%"
-			visible="false">
-		
-			<textbox id="editor" multiline="true" height="40em" width="100%"/>
-		
-			<separator spacing="5px"/>
-			<div align="right">
-				<button id="finishButton" label="${c:l('editorJS.zul.Accepta')}" onClick="ref:w.applyFilter"/>
-				<button label="${c:l('editorJS.zul.Cancel·la')}" onClick="ref:w.cleanFilter"/>
-			</div>								
-		</window>
+											</column>
+										</columns>
+										<datarow>
+											<textbox bind="." maxlength="50" sclass="textbox" readonly="false"
+												width="80%" onChange="" />
+											<imageclic align="center" src="/img/remove.svg">
+												<attribute name="onClick"><![CDATA[
+														es.caib.zkib.binder.BindContext ctx = es.caib.zkib.datasource.XPathUtils.getComponentContext(self);
+														es.caib.zkib.datasource.XPathUtils.removePath(ctx.getDataSource(), ctx.getXPath());
+												]]></attribute>
+											</imageclic>
+										</datarow>
+									</grid>
+								</row>
+							</rows>
+						</grid>
+						<imageclic align="right" src="/img/remove.svg">
+							<attribute name="onClick"><![CDATA[
+								es.caib.zkib.binder.BindContext ctx = es.caib.zkib.datasource.XPathUtils.getComponentContext(event.target);
+								es.caib.zkib.datasource.XPathUtils.removePath(ctx.getDataSource(), ctx.getXPath());
+							]]>
+							</attribute>
+						</imageclic>
+					</datarow>
+				</grid>
+				<button image="/img/add-r.svg" label="${c:l('bpm.addAttribute') }"
+					style="margin-top: 16px"
+					>
+					<attribute name="onClick"><![CDATA[
+						es.caib.zkib.binder.BindContext ctx = es.caib.zkib.datasource.XPathUtils.getComponentContext(metadataGrid);
+						es.caib.zkib.datasource.DataSource ds = ctx.getDataSource();
+						String path = ctx.getXPath();
+						es.caib.zkib.datasource.XPathUtils.createPath(ds, path, new com.soffid.iam.addons.bpm.common.Attribute());
+					]]></attribute>
+				</button>
+			</tabpanel>
+		</tabpanels>
+	</tabbox>
+	<window xmlns:h="http://www.w3.org/1999/xhtml" closable="false" 
+		id="textWindow" 
+		position="top, center" onCancel="" title="${c:l('editorJS.Titol')}" width="90%"
+		visible="false">
+	
+		<textbox id="editor" multiline="true" height="40em" width="100%"/>
+	
+		<separator spacing="5px"/>
+		<div align="right">
+			<button id="finishButton" label="${c:l('editorJS.zul.Accepta')}" onClick="ref:w.applyFilter"/>
+			<button label="${c:l('editorJS.zul.Cancel·la')}" onClick="ref:w.cleanFilter"/>
+		</div>								
 	</window>
 	<script src='~./js/codemirror/java-classes-bpm.js' />
-</form>
+</form2>

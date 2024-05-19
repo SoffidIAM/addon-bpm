@@ -22,6 +22,9 @@ public abstract class Transition {
 	@Nullable
 	String script;
 	
+	@Nullable
+	String diagramId;
+	
 	/**
 	 * Custom method to prevent loops
 	 */

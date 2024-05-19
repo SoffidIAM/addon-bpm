@@ -69,23 +69,6 @@
 
 
 	<datanode name="process">
-		<custom-attribute name="statusLiteral">
-			if (instance.status ==
-				com.soffid.iam.addons.recertification.common.ProcessStatus.ACTIVE)
-				return "Active";
-
-			if (instance.status ==
-				com.soffid.iam.addons.recertification.common.ProcessStatus.FINISHED)
-				return "Finished";
-
-			if (instance.status ==
-				com.soffid.iam.addons.recertification.common.ProcessStatus.CANCELLED)
-				return "Cancelled";
-
-			if (instance.status ==
-				com.soffid.iam.addons.recertification.common.ProcessStatus.PREPARATION)
-				return "Preparation";
-		</custom-attribute>
 		<ejb-handler 				
 			jndi="openejb:/local/soffid.ejb.com.soffid.iam.addons.bpm.core.BpmEditorService">
 			<insert-method method="create"  returnBean="true" > <!-- user:metadata:update -->

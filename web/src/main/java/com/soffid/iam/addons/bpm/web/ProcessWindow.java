@@ -1,16 +1,35 @@
 package com.soffid.iam.addons.bpm.web;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import javax.ejb.CreateException;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.FactoryConfigurationError;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 import org.zkoss.util.resource.Labels;
 import org.zkoss.zk.ui.AbstractComponent;
 import org.zkoss.zk.ui.Component;
@@ -24,14 +43,17 @@ import org.zkoss.zul.Grid;
 import org.zkoss.zul.Listbox;
 import org.zkoss.zul.Listitem;
 import org.zkoss.zul.Row;
+import org.zkoss.zul.Tabbox;
 import org.zkoss.zul.Textbox;
 import org.zkoss.zul.Window;
 import org.zkoss.zul.impl.InputElement;
 
+import com.soffid.addons.bpm.web.mxgraph.MxGraph;
 import com.soffid.iam.EJBLocator;
 import com.soffid.iam.addons.bpm.common.Attribute;
 import com.soffid.iam.addons.bpm.common.Field;
 import com.soffid.iam.addons.bpm.common.Filter;
+import com.soffid.iam.addons.bpm.common.InvocationField;
 import com.soffid.iam.addons.bpm.common.Node;
 import com.soffid.iam.addons.bpm.common.NodeType;
 import com.soffid.iam.addons.bpm.common.Process;
@@ -53,36 +75,38 @@ import es.caib.zkib.component.DataGrid;
 import es.caib.zkib.component.DataListbox;
 import es.caib.zkib.component.DataListcell;
 import es.caib.zkib.component.DataModel;
+import es.caib.zkib.component.Form2;
 import es.caib.zkib.datamodel.DataNode;
 import es.caib.zkib.datamodel.DataNodeCollection;
 import es.caib.zkib.datasource.XPathUtils;
 import es.caib.zkib.events.XPathRerunEvent;
+import es.caib.zkib.jxpath.JXPathException;
 import es.caib.zkib.jxpath.Pointer;
 import es.caib.zkib.zkiblaf.Missatgebox;
 
-public class ProcessWindow extends Window {
+public class ProcessWindow extends Form2 {
 	String version = "2";
 	
 	private EventListener onSave = new EventListener() {
 		@Override
 		public void onEvent(Event event) throws Exception {
-			DataNode node =  (DataNode) XPathUtils.getValue( ProcessWindow.this, "/");
+			DataNode node =  (DataNode) XPathUtils.eval( ProcessWindow.this, "/");
 			node.update();
 			getDataModel().commit();
-			setVisible(false);
+			((EditorHandler)getPage().getFellow("frame")).hideDetails();
 		}
 	};
 
 	private EventListener onPublish = new EventListener() {
 		@Override
 		public void onEvent(Event event) throws Exception {
-			DataNode dataNode =  (DataNode) XPathUtils.getValue( ProcessWindow.this, "/");
+			DataNode dataNode =  (DataNode) XPathUtils.eval( ProcessWindow.this, "/");
 			dataNode.update();
 			getDataModel().commit();
 			com.soffid.iam.addons.bpm.common.Process process = (Process) dataNode.getInstance();
 			BpmEditorService svc = (BpmEditorService) new InitialContext().lookup(BpmEditorServiceHome.JNDI_NAME);
 			svc.publish(process);
-			setVisible(false);
+			((EditorHandler)getPage().getFellow("frame")).hideDetails();
 		}
 	};
 
@@ -99,20 +123,8 @@ public class ProcessWindow extends Window {
 			if (event.getData().equals( new Integer ( Missatgebox.OK)))
 			{
 				getDataModel().refresh();
-				setVisible(false);
+				((EditorHandler)getPage().getFellow("frame")).hideDetails();
 			}
-		}
-	};
-
-	private EventListener onNewNode = new EventListener() {
-		@Override
-		public void onEvent(Event event) throws Exception {
-			DataListbox lb = (DataListbox) getFellow("nodes");
-			BindContext ctx = XPathUtils.getComponentContext(event.getTarget());
-			Node node = new Node();
-			node.setType(NodeType.NT_SCREEN);
-			XPathUtils.createPath(ctx.getDataSource(), "/nodes", node);
-			lb.setSelectedIndex( lb.getItemCount() - 1);
 		}
 	};
 
@@ -120,8 +132,76 @@ public class ProcessWindow extends Window {
 		@Override
 		public void onEvent(Event event) throws Exception {
 			enableStepDetails();
+			updateCurrentNodeModel();
 		}
+
 	};
+
+	Object[] typeDrawing = new Object[] {
+		NodeType.NT_ACTION, "Node", "node",
+		NodeType.NT_APPLY, "Node", "apply",
+		NodeType.NT_CUSTOM, "Symbol", "decision",
+		NodeType.NT_END, "Symbol", "end", 
+		NodeType.NT_FORK, "Symbol", "fork",
+		NodeType.NT_GRANT_SCREEN, "Task", "taskgrant",
+		NodeType.NT_JOIN, "Symbol", "join",
+		NodeType.NT_MAIL, "Symbol", "mail",
+		NodeType.NT_MATCH_SCREEN, "Task", "taskmatch",
+		NodeType.NT_SCREEN, "Task", "task",
+		NodeType.NT_START, "Symbol", "start",
+		NodeType.NT_SYSTEM_INVOCATION, "Symbol", "system",
+		NodeType.NT_TIMER, "Symbol", "timer"
+	};
+	
+	private void updateCurrentNodeModel() throws SAXException, IOException, ParserConfigurationException, FactoryConfigurationError, Exception {
+		if (currentNode != null && currentNode.getDiagramId() != null) {
+			String xml = (String) XPathUtils.eval(this, "diagram");
+			Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(
+					new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
+			NodeList roots = doc.getElementsByTagName("root");
+			for (int i = 0; i < roots.getLength(); i++) {
+				for (org.w3c.dom.Node n = roots.item(i).getFirstChild(); n != null; n = n.getNextSibling()) {
+					if (n instanceof Element) {
+						Element e = (Element) n;
+						if (currentNode.getDiagramId().equals(e.getAttribute("id")) ) {
+							String type = e.getTagName().equals("Symbol") ?
+									e.getAttribute("type") :
+									e.getTagName();
+							if (! isCompatible(currentNode.getType(), type)) {
+								for (int j = 0; j < typeDrawing.length; j += 3) {
+									if (typeDrawing[j] == currentNode.getType()) {
+										Element e2 = doc.createElement((String) typeDrawing[j+1]);
+										e2.setAttribute("id", e.getAttribute("id"));
+										e2.setAttribute("label", e.getAttribute("label"));
+										e2.setAttribute("type", (String) typeDrawing[j+2]);
+										roots.item(i).insertBefore(e2, e);
+										org.w3c.dom.Node nn;
+										while ((nn = e.getFirstChild()) != null) {
+											if (nn instanceof Element) {
+												((Element) nn).setAttribute("style", (String) typeDrawing[j+2]);
+											}
+											e.removeChild(nn);
+											e2.appendChild(nn);
+										}
+										roots.item(i).removeChild(e);
+										break;
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			TransformerFactory transformerFactory = TransformerFactory.newInstance();
+			Transformer transformer = transformerFactory.newTransformer();
+			StringWriter stringWriter = new StringWriter();
+			transformer.transform(new DOMSource(doc), new StreamResult(stringWriter));
+			String result = stringWriter.toString();
+			
+			MxGraph graph = (MxGraph) getFellow("graph");
+			graph.setModel(result);
+		}
+	}
 
 	private EventListener onChangeXPath = new EventListener() {
 		@Override
@@ -147,6 +227,19 @@ public class ProcessWindow extends Window {
 			field.setOrder(new Long(order));
 			XPathUtils.createPath(ctx.getDataSource(), "/fields", field);
 			Textbox tb = (Textbox) fields.getRows().getLastChild().getFirstChild().getNextSibling();
+			tb.focus();
+		}
+
+	};
+
+	private EventListener onNewInvocationField = new EventListener() {
+		@Override
+		public void onEvent(Event event) throws Exception {
+			Grid fields = (Grid) getFellow("invocationFields");
+			BindContext ctx = XPathUtils.getComponentContext(event.getTarget());
+			
+			XPathUtils.createPath(ctx.getDataSource(), "/invocationFields", new InvocationField());
+			CustomField3 tb = (CustomField3) fields.getRows().getLastChild().getFirstChild();
 			tb.focus();
 		}
 
@@ -357,16 +450,16 @@ public class ProcessWindow extends Window {
 	}
 	
 	private CustomField3 typeListbox;
-	private Listbox nodesListbox;
 	private CustomField3 grantTypeListbox;
 
 	private CustomField3 grantStartTypeListbox;
+
+	private Node currentNode;
 	
 	public void onCreate() {
 		getFellow("save").addEventListener("onClick", onSave);
 		getFellow("saveAndPublish").addEventListener("onClick", onPublish);
 		getFellow("cancel").addEventListener("onClick", onCancel);
-		getFellow("newNodeButton").addEventListener("onClick", onNewNode);
 		typeListbox = (CustomField3) getFellow("type");
 		typeListbox.addEventListener("onChange", onSelectType);
 		grantTypeListbox = (CustomField3) getFellow("grantScreenListbox");
@@ -375,10 +468,9 @@ public class ProcessWindow extends Window {
 		grantStartTypeListbox = (CustomField3) getFellow("startGrantType");
 		grantStartTypeListbox.addEventListener("onSelect", onSelectType);
 
-		getParent().getFellow("form").addEventListener("onChangeXPath", onChangeXPath);
 		getFellow("container").addEventListener("onChangeXPath", onChangeXPath);
-		nodesListbox = ((Listbox) getFellow("nodes"));
 		getFellow("newFieldButton").addEventListener("onClick", onNewField);
+		getFellow("newInvocationFieldButton").addEventListener("onClick", onNewInvocationField);
 		try {
 			getFellow("newFilterButton").addEventListener("onClick", onNewFilter);
 		} catch (ComponentNotFoundException e) {
@@ -395,12 +487,6 @@ public class ProcessWindow extends Window {
 		return (DataModel) getPage().getFellow("model");
 	}
 
-	@Override
-	public void doHighlighted() {
-		super.doHighlighted();
-		nodesListbox.setSelectedIndex(0);
-	}
-	
 	public void onRemoveNode ( Event event )
 	{
 		BindContext ctx = XPathUtils.getComponentContext(event.getTarget());
@@ -409,10 +495,12 @@ public class ProcessWindow extends Window {
 	
 	private void enableStepDetails()
 	{
-		if ( typeListbox.getValue() != null && nodesListbox.getSelectedItem() != null)
+		if ( typeListbox.getValue() != null &&
+				!"".equals(typeListbox.getValue()) &&
+				currentNode != null)
 		{
-			Node node = (Node) nodesListbox.getSelectedItem().getValue();
-			WorkflowType processType = (WorkflowType) XPathUtils.getValue(this, "type");
+			Node node = currentNode;
+			WorkflowType processType = (WorkflowType) XPathUtils.eval(this, "type");
 			NodeType type = (NodeType) typeListbox.getValue();
 			getFellow("startType").setVisible(type == NodeType.NT_START );
 			getFellow("startGrantType").setVisible(type == NodeType.NT_START && processType.equals(WorkflowType.WT_PERMISSION));
@@ -433,7 +521,8 @@ public class ProcessWindow extends Window {
 					type == NodeType.NT_START && processType.equals(WorkflowType.WT_USER) ||
 					type == NodeType.NT_START && processType.equals(WorkflowType.WT_PERMISSION));
 			getFellow("actorRow2").setVisible(type == NodeType.NT_GRANT_SCREEN);
-			getFellow("customType").setVisible(type == NodeType.NT_CUSTOM);
+			getFellow("customType").setVisible(type == NodeType.NT_CUSTOM || type == NodeType.NT_ACTION);
+			getFellow("systemType").setVisible(type == NodeType.NT_SYSTEM_INVOCATION);
 			if (type == NodeType.NT_START)
 				grantStartTypeListbox.setListOfValues(new String[] {
 						"enter: " + Labels.getLabel("bpm.grantTypeList"),
@@ -538,5 +627,234 @@ public class ProcessWindow extends Window {
 		} catch (Exception e) {}
 		getFellow("approveTransition").setVisible(Boolean.TRUE.equals(b));
 		getFellow("denyTransition").setVisible(Boolean.TRUE.equals(b));
+	}
+	
+
+	public void onChangeForm(Event ev) throws Exception {
+		try {
+			Process process = (Process) XPathUtils.eval(this, "instance");
+			String diagram = process.getDiagram();
+			
+			
+			if (diagram == null || diagram.isEmpty()) {
+				diagram = new DiagramDrawer().draw(process);
+			}
+			MxGraph graph = (MxGraph) getFellow("graph");
+			graph.setModel(diagram);
+			showPane();
+		} catch (JXPathException e) {}
+	}
+
+	public void showPane() {
+		MxGraph graph = (MxGraph) getFellow("graph");
+		String selected = graph.getSelected();
+		boolean found = false;
+		Process process = (Process) XPathUtils.eval(this, "instance");
+		ContainerDiv d = (ContainerDiv) getFellow("container");
+		currentNode = null;
+		Tabbox tb = (Tabbox) getFellow("nodeTabbox");
+		if (selected != null) {
+			int i = 0;
+			Listbox lb = (Listbox) getFellow("nodes");
+			node: for (Node node: process.getNodes()) {
+				if (selected.equals(node.getDiagramId())) {
+					currentNode = node;
+					lb.setSelectedIndex(i);
+					found = true;
+					enableStepDetails();
+					if (tb.getSelectedIndex() == 5)
+						tb.setSelectedIndex(0);
+					break;
+				}
+				for (Transition tran: node.getOutTransitions()) {
+					if (selected.equals(tran.getDiagramId())) {
+						currentNode = node;
+						lb.setSelectedIndex(i);
+						found = true;
+						enableStepDetails();
+						tb.setSelectedIndex(5);
+						break node;						
+					}
+				}
+				i ++;
+			}
+		}
+		getFellow("processDiv").setVisible(!found);
+		getFellow("container").setVisible(found);
+	}
+
+	
+	public void updateGraph(Event e) throws Exception {
+		Process process = (Process) XPathUtils.eval(this, "instance");
+		
+		for (Node node: process.getNodes())
+			node.setToRemove(true);
+		
+		String xml = (String) e.getData();
+		XPathUtils.setValue(this, "diagram", xml);
+
+		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(
+				new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
+		NodeList roots = doc.getElementsByTagName("root");
+		Set<String> ids = new HashSet<>();
+		for (int i = 0; i < roots.getLength(); i++) {
+			Element root = (Element) roots.item(i);
+			for (org.w3c.dom.Node element = root.getFirstChild(); 
+					element != null;
+					element = element.getNextSibling()) {
+				if (element instanceof Element) {
+					String tag = ((Element) element).getTagName();
+					String id = ((Element) element).getAttribute("id");
+					String type = ((Element) element).getAttribute("type");
+					String label = ((Element) element).getAttribute("label");
+					if (id != null && !id.trim().isEmpty()) {
+						if (tag.equals("Edge"))
+							updateEdge(process, id, label, (Element) element.getFirstChild());
+						if (type != null && !type.isEmpty())
+							updateNode(process, id, type, label);
+						ids.add(id);
+					}
+				}
+			}
+		}
+		
+		for (Node node: process.getNodes()) {
+			for (Iterator<Transition> it = node.getOutTransitions().iterator(); it.hasNext();) {
+				Transition tran = it.next();
+				if (!ids.contains(tran.getDiagramId())) {
+					it.remove();
+				}
+			}
+		}
+		
+		getDataSource().sendEvent(new XPathRerunEvent(getDataSource(), getDataPath()));
+		DataListbox lb = (DataListbox) getFellow("nodes");
+		lb.sendEvent(new XPathRerunEvent(lb, "/"));
+		showPane();
+	}
+
+	private void updateEdge(Process process, String id, String label, Element firstChild) {
+		String source = firstChild.getAttribute("source");
+		String target = firstChild.getAttribute("target");
+		Node sourceNode = null;
+		Node targetNode = null;
+		for (Node node: process.getNodes()) {
+			if (node.getDiagramId().equals(source))
+				sourceNode = node;
+			if (node.getDiagramId().equals(target))
+				targetNode = node;
+		}
+		boolean anyChange = false;
+		boolean found = false;
+		nodes: for (Node node: process.getNodes()) {
+			for (Transition tran: node.getOutTransitions()) {
+				if (tran.getDiagramId().equals(id)) {
+					found = true;
+					if (tran.getName() == null ? label != null : 
+						! tran.getName().equals(label))
+					{
+						tran.setName(label);
+						anyChange = true;
+					}
+					if (tran.getSource() != sourceNode) {
+						if (tran.getSource() != null)
+							tran.getSource().getOutTransitions().remove(tran);
+						tran.setSource(sourceNode);
+						sourceNode.getOutTransitions().add(tran);
+						anyChange = true;
+					}
+					if (tran.getTarget() != targetNode) {
+						if (tran.getTarget() != null)
+							tran.getTarget().getInTransitions().remove(tran);
+						tran.setTarget(targetNode);
+						targetNode.getInTransitions().add(tran);
+						anyChange  =true;
+					}
+					break nodes;
+				}
+			}
+		}
+		if (!found) {
+			Transition t = new Transition();
+			t.setDiagramId(id);
+			t.setName(label);
+			t.setSource(sourceNode);
+			t.setTarget(targetNode);
+			sourceNode.getOutTransitions().add(t);
+			targetNode.getInTransitions().add(t);
+			anyChange = true;
+		}
+		if (anyChange) {
+			int i = 1;
+			for (Node node: process.getNodes()) {
+				XPathUtils.setValue(this, "/nodes["+i+"]/@outTransitions",
+						new LinkedList<>(node.getOutTransitions()));
+				XPathUtils.setValue(this, "/nodes["+i+"]/@inTransitions",
+						new LinkedList<>(node.getInTransitions()));
+				i++;
+			}
+		}
+	}
+
+	private void updateNode(Process process, String id, String type, String label) throws Exception {
+		int i = 1;
+		for (Node node: process.getNodes()) {
+			if (node.isToRemove() && node.getDiagramId() != null &&
+					node.getDiagramId().equals(id)) {
+				node.setToRemove(false);
+				XPathUtils.setValue(this, "/nodes["+i+"]/@name", label);
+				if (! isCompatible (node.getType(), type)) {
+					XPathUtils.setValue(this, "/nodes["+i+"]/@type", findCompatible(type));
+//					node.setType(findCompatible(type));
+				}
+				return;
+			}
+			i++;
+		}
+		
+		Node node = new Node();
+		node.setType(findCompatible(type));
+		node.setName(label);
+		node.setToRemove(false);
+		node.setDiagramId(id);
+		
+		XPathUtils.createPath(getDataSource(), "/nodes", node);
+	}
+
+	private NodeType findCompatible(String type) {
+		for (int i = 0; i < allowedSettings.length; i+=2)
+			if (type.equals(allowedSettings[i+1]))
+				return (NodeType) allowedSettings[i];
+		return NodeType.NT_END;
+	}
+
+	private boolean isCompatible(NodeType type, String type2) {
+		for (int i = 0; i < allowedSettings.length; i+=2)
+			if (type == allowedSettings[i] && type2.equals(allowedSettings[i+1]))
+				return true;
+		return false;
+	}
+
+	static Object[] allowedSettings = new Object[] {
+			NodeType.NT_ACTION, "node",
+			NodeType.NT_APPLY, "apply",
+			NodeType.NT_CUSTOM, "decision",
+			NodeType.NT_END, "end",
+			NodeType.NT_FORK, "fork",
+			NodeType.NT_GRANT_SCREEN, "taskgrant",
+			NodeType.NT_JOIN, "join",
+			NodeType.NT_MAIL, "mail",
+			NodeType.NT_MATCH_SCREEN, "taskmatch",
+			NodeType.NT_SCREEN, "task",
+			NodeType.NT_START, "start",
+			NodeType.NT_TIMER, "timer",
+			NodeType.NT_SYSTEM_INVOCATION, "system"
+	};
+
+	public void changeStepName(Event e) {
+		String label = (String) XPathUtils.eval(getFellow("nodes"), "@name");
+		String diagramId = (String) XPathUtils.eval(getFellow("nodes"), "@diagramId");
+		MxGraph graph = (MxGraph) getFellow("graph");
+		graph.changeLabel(diagramId, label);
 	}
 }

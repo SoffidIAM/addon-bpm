@@ -46,6 +46,8 @@ public class Transition
 	 */
 	private java.lang.String script;
 
+	private String diagramId;
+	
 	public Transition()
 	{
 	}
@@ -154,6 +156,14 @@ public class Transition
 		b.append (this.script);
 		b.append ("]");
 		return b.toString();
+	}
+
+	public String getDiagramId() {
+		return diagramId;
+	}
+
+	public void setDiagramId(String diagramId) {
+		this.diagramId = diagramId;
 	}
 
 }
