@@ -121,4 +121,24 @@ public class NodeEntity {
 	@Column(name="NOD_DIAID")
 	@Description("Diagram id")
 	String diagramId;
+
+	@Nullable
+	@Column(name="NOD_TIME")
+	@Description("Time to wait")
+	String time;
+
+	@Nullable
+	@Column(name="NOD_TIMTRA")
+	@Description("Timer transition")
+	String transition;
+
+	@Nullable
+	@Column(name="NOD_REPEAT")
+	@Description("Repeat timer forever")
+	Boolean repeat;
+
+	@Nullable
+	@Column(name="NOD_ASYNC")
+	@Description("Asynchronous action")
+	Boolean async;
 }

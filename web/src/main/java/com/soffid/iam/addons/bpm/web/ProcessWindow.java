@@ -521,7 +521,9 @@ public class ProcessWindow extends Form2 {
 					type == NodeType.NT_START && processType.equals(WorkflowType.WT_USER) ||
 					type == NodeType.NT_START && processType.equals(WorkflowType.WT_PERMISSION));
 			getFellow("actorRow2").setVisible(type == NodeType.NT_GRANT_SCREEN);
-			getFellow("customType").setVisible(type == NodeType.NT_CUSTOM || type == NodeType.NT_ACTION);
+			getFellow("customType").setVisible(type == NodeType.NT_CUSTOM || type == NodeType.NT_ACTION || type == NodeType.NT_TIMER);
+			getFellow("timerType").setVisible(type == NodeType.NT_TIMER);
+			getFellow("asyncType").setVisible(type == NodeType.NT_ACTION || type == NodeType.NT_SYSTEM_INVOCATION);
 			getFellow("systemType").setVisible(type == NodeType.NT_SYSTEM_INVOCATION);
 			if (type == NodeType.NT_START)
 				grantStartTypeListbox.setListOfValues(new String[] {

@@ -37,6 +37,7 @@ import com.soffid.iam.api.Application;
 import com.soffid.iam.api.Role;
 import com.soffid.iam.api.RoleAccount;
 import com.soffid.iam.bpm.mail.Mail;
+import com.soffid.iam.interp.Evaluator;
 import com.soffid.iam.service.ApplicationService;
 import com.soffid.iam.utils.Security;
 
@@ -227,7 +228,7 @@ public class GrantTaskNodeHandler implements ActionHandler {
 				request.setSodRisk(grant.getSodRisk());
 			}
 			log.info("Evaluating script " + script);
-			Interpreter interpreter = new Interpreter();
+			Map<String,Object> vars = new HashMap<>();
 			ContextInstance contextInstance = executionContext.getContextInstance();
 			// we copy all the variableInstances of the context into the interpreter
 			Map<String, Object> variables = contextInstance.getVariables(executionContext.getToken());
@@ -235,20 +236,20 @@ public class GrantTaskNodeHandler implements ActionHandler {
 				for (Map.Entry<String, Object> entry : variables.entrySet()) {
 					String variableName = entry.getKey();
 					Object variableValue = entry.getValue();
-					interpreter.set(variableName, variableValue);
+					vars.put(variableName, variableValue);
 				}
 			}
-			interpreter.set("executionContext", executionContext);
-			interpreter.set("serviceLocator", ServiceLocator.instance());
-			interpreter.set("token", executionContext.getToken());
-			interpreter.set("node", executionContext.getNode());
-			interpreter.set("task", executionContext.getTask());
-			interpreter.set("taskInstance", executionContext.getTaskInstance());
-			interpreter.set("role", role);
-			interpreter.set("request", request);
-			interpreter.set("application", application);
+			vars.put("executionContext", executionContext);
+			vars.put("serviceLocator", ServiceLocator.instance());
+			vars.put("token", executionContext.getToken());
+			vars.put("node", executionContext.getNode());
+			vars.put("task", executionContext.getTask());
+			vars.put("taskInstance", executionContext.getTaskInstance());
+			vars.put("role", role);
+			vars.put("request", request);
+			vars.put("application", application);
 
-			Object o = interpreter.eval(getScript());
+			Object o = Evaluator.instance().evaluate(getScript(), vars, executionContext.getNode().getName() );
 
 			if (o == null || o.toString().trim().isEmpty())
 				return null;

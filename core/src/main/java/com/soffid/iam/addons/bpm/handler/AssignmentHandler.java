@@ -30,6 +30,9 @@ public class AssignmentHandler implements org.jbpm.taskmgmt.def.AssignmentHandle
 		loadFile(executionContext);
 		Map<String, Object> map = new HashMap<>();
 
+		for (Object var: executionContext.getContextInstance().getVariables().keySet()) {
+			map.put((String) var, executionContext.getVariable((String) var));
+		}
 		map.put("executionContext", executionContext); //$NON-NLS-1$
 		map.put("serviceLocator", com.soffid.iam.ServiceLocator.instance()); //$NON-NLS-1$
 		map.put(Constants.ATTRIBUTES_VAR, executionContext.getVariable(Constants.ATTRIBUTES_VAR)); //$NON-NLS-1$

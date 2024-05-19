@@ -7,6 +7,7 @@
 	xmlns="http://www.zkoss.org/2005/zul" 
 	id="w" dataPath="../listbox:/" width="100%"
 	use="com.soffid.iam.addons.bpm.web.ProcessWindow"
+	style="height: calc(100vh - 60px);"
 	onChangeXPath="ref:w.onChangeForm">
 	<listbox dataPath="nodes" id="nodes" fixedLayout="true" visible="false">
 		<dataitem bind="/" >
@@ -26,16 +27,39 @@
 	<style>
 	div.mxgraph {
 		position: relative;
-		height: calc(100vh - 250px); 
+		height: calc(100vh - 280px); 
 		width:100%; 
 	}
 	div.mxgraph div.mxgraph_graph {
 		background-image: url('/soffid/addon/bpm/mxgraph/img/grid.svg'); 
 		background-size:24px; 
 		border:solid 1px #cecece; 
-		height: 100%; 
+		height: calc(100vh - 320px); 
 		width:100%; 
 		overflow: auto;
+	}
+	div.mxgraph div.mxgraph_status {
+		display: none;
+	}
+	div.split {
+		display: inline-block;
+		width: 50%;
+		min-height: calc(100vh - 200px);
+		padding: 16px;
+		vertical-align: top;
+	}
+	@media only screen and (max-width: 1080px) {
+		div.mxgraph {
+			height: 400px;
+		}
+		div.mxgraph div.mxgraph_graph {
+			height: 360px; 
+		}
+		div.split {
+			display: block;
+			width: 100%;
+			min-height: calc(400px);
+		}
 	}
 	</style>
 	<tabbox>
@@ -45,13 +69,13 @@
 		</tabs>
 		<tabpanels>
 			<tabpanel>
-				<div style="width: 50%; height: 100%; padding:16px; min-height: calc(100vh - 200px); display: inline-block; vertical-align: top;">
+				<div sclass="split">
 					<mxgraph id="graph" 
 						config="/addon/bpm/mxgraph/config/workfloweditor.xml.dsp"
 						onChange="ref:w.updateGraph" 
 						onSelect="ref:w.showPane"/>
 				</div>
-				<div style="width: 50%; display: inline-block; padding: 16px;">
+				<div sclass="split">
 					<div style="width:100%;" id="processDiv">
 						<customfield3 label="${c:l('bpm.processName') }" dataType="string" bind="@name" onChange="" maxLength="250" />
 						<customfield3 label="${c:l('bpm.processType') }" dataType="string" bind="type" onChange="" enumeration="com.soffid.iam.addons.bpm.common.WorkflowType" />
@@ -112,7 +136,9 @@
 											Alternatively, write a script to return the actor depending on the process variables.<h:br/>
 											For instance: return primaryGroup.attributes{"owner"};
 											</div>
-											<customfield3 label="${c:l('bpm.actorScript') }" bind="customScript" dataType="STRING" 
+											<customfield3 label="${c:l('bpm.actorScript') }" bind="customScript" dataType="STRING"
+												javascript="{'executionContext':'org.jbpm.jbpm3.JbpmContext'}" 
+												javascripthelp="&lt;b>executionContext&lt;/b>: JBPM execution context&lt;br/>&lt;b>var&lt;/b>: Workflow variable&lt;br/>Return the actor to execute this task"
 												multiline="true" selectIcon="/img/pencil.svg"/>
 											<customfield3 label="${c:l('bpm.mailShortcut') }" dataType="BOOLEAN" bind="mailShortcut" onChange="ref:w.updateMailShortcut"/>
 										</div>
@@ -182,6 +208,8 @@
 											For instance: return role.attributes{"owner"}; or return "APPLICATION_OWNER/"+application.name;
 											</div>
 											<customfield3 dataType="STRING" bind="customScript" 
+														javascript="{'executionContext':'org.jbpm.jbpm3.JbpmContext', 'role':'com.soffid.iam.api.Role, 'application':'com.soffid.iam.api.Application'}" 
+														javascripthelp="&lt;b>role&lt;/b>: Role to grand&lt;br/>&lt;b>application&lt;/b>: Information system to grant&lt;br/>&lt;b>executionContext&lt;/b>: JBPM execution context&lt;br/>&lt;b>var&lt;/b>: Workflow variable&lt;br/>Return the approver for each role"
 														multiline="true" maxlength="10000" 
 														label="${c:l('bpm.actorScript') }" selectIcon="/img/pencil.svg" />
 											<customfield3 label="${c:l('bpm.mailShortcut') }:" dataType="BOOLEAN" bind="mailShortcut" onChange="ref:w.updateMailShortcut"/>
@@ -202,10 +230,25 @@
 									<div id="applyAccountType">
 										<customfield3 label="${c:l('bpm.grantAccountAccess') }" bind="applyUserChanges" dataType="BOOLEAN"/>
 									</div>
+									<div id="timerType">
+										<customfield3 dataType="STRING" bind="time"
+											required="true" 
+											label="${c:l('bpm.time') }"/>
+										<customfield3 dataType="STRING" bind="timerTransition" 
+											label="${c:l('bpm.transition') }"/>
+										<customfield3 dataType="BOOLEAN" bind="repeat" 
+											label="${c:l('bpm.repeat') }"/>
+									</div>
 									<div id="customType">
 										<customfield3 dataType="STRING" bind="customScript" 
+												javascript="{'executionContext':'org.jbpm.jbpm3.JbpmContext'}" 
+												javascripthelp="&lt;b>executionContext&lt;/b>: JBPM execution context&lt;br/>Workflow variables are readable by its name&lt;br/>Return the transition to do"
 														multiline="true" maxlength="10000" 
 														label="${c:l('bpm.customScript') }" selectIcon="/img/pencil.svg" />
+									</div>
+									<div id="asyncType">
+										<customfield3 dataType="BOOLEAN" bind="async" 
+														label="${c:l('bpm.async') }"/>
 									</div>
 									<div id="systemType">
 										<customfield3 dataType="SYSTEM" bind="system" 
@@ -233,7 +276,7 @@
 											style="margin-top: 16px"
 											id="newInvocationFieldButton"/>
 										<customfield3 dataType="STRING" bind="returnVariable" 
-											label="${c:l('bpm.responsetVariable') }"/>
+											label="${c:l('bpm.responseVariable') }"/>
 									</div>
 								</tabpanel>
 								<tabpanel>

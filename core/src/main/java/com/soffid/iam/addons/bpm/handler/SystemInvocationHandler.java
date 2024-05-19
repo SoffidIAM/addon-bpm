@@ -4,12 +4,16 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.jbpm.graph.def.ActionHandler;
 import org.jbpm.graph.exe.ExecutionContext;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
+import com.soffid.iam.ServiceLocator;
 import com.soffid.iam.addons.bpm.common.Constants;
 import com.soffid.iam.interp.Evaluator;
 import com.soffid.iam.service.impl.bshjail.SecureInterpreter;
@@ -20,14 +24,17 @@ import bsh.TargetError;
 import es.caib.bpm.toolkit.exception.SystemWorkflowException;
 import es.caib.seycon.ng.exception.InternalErrorException;
 
-public class CustomActionHandler implements ActionHandler {
-	String script;
-	String noLeave;
+public class SystemInvocationHandler implements ActionHandler {
+	String system;
+	String verb;
+	String path;
+	String maps;
+	String returnVar;
 	@Override
 	public void execute(ExecutionContext executionContext) throws Exception {
 		loadFile(executionContext);
 		Map<String, Object> map = new HashMap<>();
-		
+
 		if (executionContext.getContextInstance().getVariables() != null) {
 			for (Object var: executionContext.getContextInstance().getVariables().keySet()) {
 				map.put((String) var, executionContext.getVariable((String) var));
@@ -44,45 +51,21 @@ public class CustomActionHandler implements ActionHandler {
 		String label = executionContext.getNode() != null ? executionContext.getNode().getName():
 					executionContext.getTransition() != null ? executionContext.getTransition().getName():
 				"";
-		try {
-			Object o = Evaluator.instance().evaluate(script, map, label);
-			if ("true".equals(noLeave)) {
-				// Nothing to do
+		HashMap m  = new HashMap<>();
+		JSONObject j = new JSONObject(maps);
+		for (String key: j.keySet()) {
+			String value = j.optString(key, null);
+			if (value != null) {
+				m.put(key, Evaluator.instance().evaluate(value, map, "Attribute "+key));
 			}
-			else if (executionContext.getNode() != null)
-			{
-				if (o != null && o instanceof String &&
-						executionContext.getNode().getLeavingTransitionsMap().get(o.toString()) != null )
-				{
-					executionContext.leaveNode(o.toString());
-				}
-				else
-					executionContext.leaveNode();
-			}
-		} catch (ParseException e) {
-			throw new SystemWorkflowException("Error parsing custom script "+label+": "+e.getMessage());
-		} catch (TargetError e) {
-			throw new InternalErrorException ("Error executing custom script "+label+" at "+e.getScriptStackTrace(),
-					e.getTarget());
-		} catch (EvalError e) {
-			String msg;
-			try {
-				msg = e.getMessage() + "[ "+ e.getErrorText()+"] ";
-			} catch (Exception e2) {
-				msg = e.getMessage();
-			}
-			throw new InternalErrorException ("Error parsing custom script "+label+": "+msg);
 		}
+		Collection r = ServiceLocator.instance().getDispatcherService()
+			.invoke(system, verb, path, m);
+		if (returnVar != null)
+			executionContext.setVariable(returnVar, r);
+		executionContext.leaveNode();
 	}
 
-	public String getScript() {
-		return script;
-	}
-	
-	public void setScript(String script) {
-		this.script = script;
-	}
-	
 	String file; 
 	private void loadFile(ExecutionContext executionContext) throws InternalErrorException, IOException {
 		if (file != null) {
@@ -94,7 +77,7 @@ public class CustomActionHandler implements ActionHandler {
 				out.write(read);
 			in.close();
 			out.close();
-			script = out.toString("UTF-8");
+			maps = out.toString("UTF-8");
 		}
 	}
 
@@ -104,6 +87,46 @@ public class CustomActionHandler implements ActionHandler {
 
 	public void setFile(String file) {
 		this.file = file;
+	}
+
+	public String getSystem() {
+		return system;
+	}
+
+	public void setSystem(String system) {
+		this.system = system;
+	}
+
+	public String getVerb() {
+		return verb;
+	}
+
+	public void setVerb(String verb) {
+		this.verb = verb;
+	}
+
+	public String getPath() {
+		return path;
+	}
+
+	public void setPath(String path) {
+		this.path = path;
+	}
+
+	public String getMaps() {
+		return maps;
+	}
+
+	public void setMaps(String maps) {
+		this.maps = maps;
+	}
+
+	public String getReturnVar() {
+		return returnVar;
+	}
+
+	public void setReturnVar(String returnVar) {
+		this.returnVar = returnVar;
 	}
 	
 

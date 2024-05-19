@@ -129,4 +129,19 @@ public class Node {
 	@Attribute(defaultValue = "false")
 	boolean toRemove;
 	
+	@Nullable
+	@Description("Time to wait")
+	String time;
+
+	@Nullable
+	@Description("Timer transition")
+	String transition;
+	
+	@Nullable
+	@Description("Repeat timer forever")
+	Boolean repeat;
+
+	@Nullable
+	@Description("Asynchronous action")
+	Boolean async;
 }

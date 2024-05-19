@@ -36,9 +36,12 @@ import org.jbpm.graph.node.MailNode;
 import org.jbpm.graph.node.StartState;
 import org.jbpm.graph.node.TaskNode;
 import org.jbpm.instantiation.Delegation;
+import org.jbpm.job.Timer;
+import org.jbpm.scheduler.def.CreateTimerAction;
 import org.jbpm.taskmgmt.def.Task;
 import org.jbpm.taskmgmt.def.TaskMgmtDefinition;
 import org.jbpm.taskmgmt.exe.TaskInstance;
+import org.json.JSONObject;
 
 import com.soffid.iam.ServiceLocator;
 import com.soffid.iam.addons.bpm.common.Attribute;
@@ -58,6 +61,7 @@ import com.soffid.iam.addons.bpm.handler.CustomActionHandler;
 import com.soffid.iam.addons.bpm.handler.GrantTaskNodeHandler;
 import com.soffid.iam.addons.bpm.handler.StartAccountHandler;
 import com.soffid.iam.addons.bpm.handler.StartHandler;
+import com.soffid.iam.addons.bpm.model.InvocationFieldEntity;
 import com.soffid.iam.addons.bpm.model.NodeEntity;
 import com.soffid.iam.addons.bpm.model.NodeEntityDao;
 import com.soffid.iam.addons.bpm.model.ProcessEntity;
@@ -433,7 +437,8 @@ public class Deployer {
 				else
 					throw new InternalErrorException("More than one starting node exist. Please remove "+node.getName()+" or "+def.getStartState().getName());
 			}
-			else if (node.getType().equals( NodeType.NT_CUSTOM))
+			else if (node.getType().equals( NodeType.NT_CUSTOM) ||
+					node.getType().equals(NodeType.NT_ACTION))
 			{
 				n = new Node();
 				Delegation d = new Delegation();
@@ -451,6 +456,75 @@ public class Deployer {
 				a.setName(node.getName());
 				a.setActionDelegation( d );
 				a.setPropagationAllowed(true);
+				if (node.getType() == NodeType.NT_ACTION &&
+						Boolean.TRUE.equals(node.getAsync())) {
+					a.setAsync(true);
+					n.setAsync(true);
+				}
+				n.setAction(a);
+			}
+			else if (node.getType().equals( NodeType.NT_TIMER))
+			{
+				n = new Node();
+
+				CreateTimerAction ta = new CreateTimerAction();
+				n.setAction(ta);
+				ta.setTimerName(node.getName());
+				ta.setTransitionName(node.getTransition());
+				ta.setDueDate(node.getTime());
+				ta.setProcessDefinition(def);
+				ta.setRepeat(node.getRepeat() == null? null: node.getRepeat().toString());
+				
+				Delegation d = new Delegation();
+				d.setClassName(CustomActionHandler.class.getName());
+				d.setConfigType("bean");
+				String s = escape (node.getCustomScript());
+				if (s.length() > 3500) {
+					String fileName = "script-"+(++scriptNumber);
+					def.getFileDefinition().addFile(fileName, new ByteArrayInputStream(node.getCustomScript().getBytes("UTF-8")));
+					d.setConfiguration("<noLeave>true</noLeave><file>" +fileName+"</file>");
+				} else {
+					d.setConfiguration("<noLeave>true</noLeave><script>" +s+ "</script>");
+				}
+
+				Action a = new Action();
+				a.setName(node.getName());
+				a.setActionDelegation( d );
+				a.setPropagationAllowed(true);
+				ta.setTimerAction(a);
+			}
+			else if (node.getType().equals( NodeType.NT_SYSTEM_INVOCATION))
+			{
+				n = new Node();
+				Delegation d = new Delegation();
+				d.setClassName(CustomActionHandler.class.getName());
+				d.setConfigType("bean");
+				JSONObject json = new JSONObject();
+				for (InvocationFieldEntity f: node.getInvocationFields()) {
+					if (f.getField() != null && !f.getField().isEmpty())
+						json.put(f.getField(), f.getExpression());
+				}
+				String maps = escape (json.toString());
+				String cfg = "<system>"+escape(node.getSystem())+"</system>"
+						+ "<verb>"+escape(node.getMethod())+"</verb>"
+						+ "<path>"+escape(node.getPath())+"</path>"
+						+ "<returnVar>"+escape(node.getReturnVariable())+"</returnVar>";
+				if (maps.length() > 3500) {
+					String fileName = "script-"+(++scriptNumber);
+					def.getFileDefinition().addFile(fileName, 
+							new ByteArrayInputStream(json.toString().getBytes("UTF-8")));
+					d.setConfiguration(cfg+"<file>" +fileName+"</file>");
+				} else {
+					d.setConfiguration("cfg+<maps>" +maps+ "</maps>");
+				}
+				Action a = new Action();
+				a.setName(node.getName());
+				a.setActionDelegation( d );
+				a.setPropagationAllowed(true);
+				if (Boolean.TRUE.equals(node.getAsync())) {
+					a.setAsync(true);
+					n.setAsync(true);
+				}
 				n.setAction(a);
 			}
 			else if (node.getType().equals( NodeType.NT_APPLY))
