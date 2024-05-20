@@ -123,6 +123,11 @@ public class NodeEntity {
 	String diagramId;
 
 	@Nullable
+	@Column(name="NOD_DIPAID")
+	@Description("Diagram parent id")
+	String diagramParentId;
+
+	@Nullable
 	@Column(name="NOD_TIME")
 	@Description("Time to wait")
 	String time;

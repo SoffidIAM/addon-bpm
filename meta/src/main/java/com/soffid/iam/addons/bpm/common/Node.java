@@ -125,6 +125,10 @@ public class Node {
 	@Description("Diagram id")
 	String diagramId;
 	
+	@Nullable
+	@Description("Diagram parent id")
+	String diagramParentId;
+
 	@Description("Step to remove")
 	@Attribute(defaultValue = "false")
 	boolean toRemove;

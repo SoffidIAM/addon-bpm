@@ -234,7 +234,7 @@
 										<customfield3 dataType="STRING" bind="time"
 											required="true" 
 											label="${c:l('bpm.time') }"/>
-										<customfield3 dataType="STRING" bind="timerTransition" 
+										<customfield3 dataType="STRING" bind="transition" 
 											label="${c:l('bpm.transition') }"/>
 										<customfield3 dataType="BOOLEAN" bind="repeat" 
 											label="${c:l('bpm.repeat') }"/>

@@ -687,7 +687,12 @@ public class ProcessWindow extends Form2 {
 
 	
 	public void updateGraph(Event e) throws Exception {
-		Process process = (Process) XPathUtils.eval(this, "instance");
+		Process process;
+		try {
+			process = (Process) XPathUtils.eval(this, "instance");
+		} catch (JXPathException ex) {
+			return; // No process selected
+		}
 		
 		for (Node node: process.getNodes())
 			node.setToRemove(true);
@@ -705,15 +710,18 @@ public class ProcessWindow extends Form2 {
 					element != null;
 					element = element.getNextSibling()) {
 				if (element instanceof Element) {
-					String tag = ((Element) element).getTagName();
-					String id = ((Element) element).getAttribute("id");
-					String type = ((Element) element).getAttribute("type");
-					String label = ((Element) element).getAttribute("label");
+					final Element data = (Element) element;
+					String tag = data.getTagName();
+					String id = data.getAttribute("id");
+					String parentId = data.getFirstChild() == null ? null :
+						((Element)data.getFirstChild()).getAttribute("parent");
+					String type = data.getAttribute("type");
+					String label = data.getAttribute("label");
 					if (id != null && !id.trim().isEmpty()) {
 						if (tag.equals("Edge"))
 							updateEdge(process, id, label, (Element) element.getFirstChild());
 						if (type != null && !type.isEmpty())
-							updateNode(process, id, type, label);
+							updateNode(process, id, type, label, parentId);
 						ids.add(id);
 					}
 				}
@@ -746,37 +754,46 @@ public class ProcessWindow extends Form2 {
 			if (node.getDiagramId().equals(target))
 				targetNode = node;
 		}
+		
 		boolean anyChange = false;
 		boolean found = false;
 		nodes: for (Node node: process.getNodes()) {
 			for (Transition tran: node.getOutTransitions()) {
 				if (tran.getDiagramId().equals(id)) {
 					found = true;
-					if (tran.getName() == null ? label != null : 
-						! tran.getName().equals(label))
+					if (sourceNode == null || targetNode == null) {
+						tran.getSource().getOutTransitions().remove(tran);
+						tran.getTarget().getInTransitions().remove(tran);
+						anyChange = true;
+					}
+					else 
 					{
-						tran.setName(label);
-						anyChange = true;
-					}
-					if (tran.getSource() != sourceNode) {
-						if (tran.getSource() != null)
-							tran.getSource().getOutTransitions().remove(tran);
-						tran.setSource(sourceNode);
-						sourceNode.getOutTransitions().add(tran);
-						anyChange = true;
-					}
-					if (tran.getTarget() != targetNode) {
-						if (tran.getTarget() != null)
-							tran.getTarget().getInTransitions().remove(tran);
-						tran.setTarget(targetNode);
-						targetNode.getInTransitions().add(tran);
-						anyChange  =true;
+						if (tran.getName() == null ? label != null : 
+							! tran.getName().equals(label))
+						{
+							tran.setName(label);
+							anyChange = true;
+						}
+						if (tran.getSource() != sourceNode) {
+							if (tran.getSource() != null)
+								tran.getSource().getOutTransitions().remove(tran);
+							tran.setSource(sourceNode);
+							sourceNode.getOutTransitions().add(tran);
+							anyChange = true;
+						}
+						if (tran.getTarget() != targetNode) {
+							if (tran.getTarget() != null)
+								tran.getTarget().getInTransitions().remove(tran);
+							tran.setTarget(targetNode);
+							targetNode.getInTransitions().add(tran);
+							anyChange  =true;
+						}
 					}
 					break nodes;
 				}
 			}
 		}
-		if (!found) {
+		if (!found && sourceNode != null && targetNode != null) {
 			Transition t = new Transition();
 			t.setDiagramId(id);
 			t.setName(label);
@@ -798,13 +815,14 @@ public class ProcessWindow extends Form2 {
 		}
 	}
 
-	private void updateNode(Process process, String id, String type, String label) throws Exception {
+	private void updateNode(Process process, String id, String type, String label, String parentId) throws Exception {
 		int i = 1;
 		for (Node node: process.getNodes()) {
 			if (node.isToRemove() && node.getDiagramId() != null &&
 					node.getDiagramId().equals(id)) {
 				node.setToRemove(false);
 				XPathUtils.setValue(this, "/nodes["+i+"]/@name", label);
+				XPathUtils.setValue(this, "/nodes["+i+"]/@diagramParentId", parentId);
 				if (! isCompatible (node.getType(), type)) {
 					XPathUtils.setValue(this, "/nodes["+i+"]/@type", findCompatible(type));
 //					node.setType(findCompatible(type));
@@ -858,5 +876,33 @@ public class ProcessWindow extends Form2 {
 		String diagramId = (String) XPathUtils.eval(getFellow("nodes"), "@diagramId");
 		MxGraph graph = (MxGraph) getFellow("graph");
 		graph.changeLabel(diagramId, label);
+	}
+
+	public void updateTransition(Transition t) throws Exception {
+		String xml = (String) XPathUtils.eval(this, "diagram");
+		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(
+				new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
+		NodeList roots = doc.getElementsByTagName("root");
+		for (int i = 0; i < roots.getLength(); i++) {
+			for (org.w3c.dom.Node n = roots.item(i).getFirstChild(); n != null; n = n.getNextSibling()) {
+				if (n instanceof Element) {
+					Element e = (Element) n;
+					if (t.getDiagramId().equals(e.getAttribute("id")) ) {
+						e.setAttribute("label", t.getName());
+						Element edge = (Element) e.getFirstChild();
+						edge.setAttribute("source", t.getSource().getDiagramId());
+						edge.setAttribute("target", t.getTarget().getDiagramId());
+					}
+				}
+			}
+		}
+		TransformerFactory transformerFactory = TransformerFactory.newInstance();
+		Transformer transformer = transformerFactory.newTransformer();
+		StringWriter stringWriter = new StringWriter();
+		transformer.transform(new DOMSource(doc), new StreamResult(stringWriter));
+		String result = stringWriter.toString();
+		
+		MxGraph graph = (MxGraph) getFellow("graph");
+		graph.setModel(result);
 	}
 }

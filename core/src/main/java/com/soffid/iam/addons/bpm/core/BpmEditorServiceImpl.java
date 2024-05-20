@@ -70,69 +70,73 @@ public class BpmEditorServiceImpl extends BpmEditorServiceBase {
 		HashMap<Long, NodeEntity> nodes = new HashMap<Long, NodeEntity>();
 		for ( Node node: process.getNodes())
 		{
-			NodeEntity nodeEntity = getNodeEntityDao().nodeToEntity(node);
-			nodeEntity.setProcess(pe);
-			getNodeEntityDao().create(nodeEntity);
-			
-			pe.getNodes().add(nodeEntity);
-			
-			nodes.put(nodeEntity.getId(), nodeEntity);
-			
-			node.setId(nodeEntity.getId());
-			
-			for (Field f: node.getFields())
-			{
-				FieldEntity fieldEntity = getFieldEntityDao().fieldToEntity(f);
-				fieldEntity.setNode(nodeEntity);
-				getFieldEntityDao().create(fieldEntity);
-				f.setId(fieldEntity.getId());
-				nodeEntity.getFields().add(fieldEntity);
-			}
-			
-			if (node.getFilters() != null) {
-				for (Filter filter: node.getFilters())
+			if (!node.isToRemove()) {
+				NodeEntity nodeEntity = getNodeEntityDao().nodeToEntity(node);
+				nodeEntity.setProcess(pe);
+				getNodeEntityDao().create(nodeEntity);
+				
+				pe.getNodes().add(nodeEntity);
+				
+				nodes.put(nodeEntity.getId(), nodeEntity);
+				
+				node.setId(nodeEntity.getId());
+				
+				for (Field f: node.getFields())
 				{
-					FilterEntity filterEntity = getFilterEntityDao().filterToEntity(filter);
-					filterEntity.setNode(nodeEntity);
-					getFilterEntityDao().create(filterEntity);
-					filter.setId(filterEntity.getId());
-					nodeEntity.getFilters().add(filterEntity);
+					FieldEntity fieldEntity = getFieldEntityDao().fieldToEntity(f);
+					fieldEntity.setNode(nodeEntity);
+					getFieldEntityDao().create(fieldEntity);
+					f.setId(fieldEntity.getId());
+					nodeEntity.getFields().add(fieldEntity);
 				}
-			}
-			
-			for (Trigger t: node.getTriggers())
-			{
-				TriggerEntity triggerEntity = getTriggerEntityDao().triggerToEntity(t);
-				triggerEntity.setNode(nodeEntity);
-				getTriggerEntityDao().create(triggerEntity);
-				t.setId(triggerEntity.getId());
-				nodeEntity.getTriggers().add(triggerEntity);
-			}
-			
-			for (InvocationField f: node.getInvocationFields())
-			{
-				InvocationFieldEntity fEntity = getInvocationFieldEntityDao().invocationFieldToEntity(f);
-				fEntity.setNode(nodeEntity);
-				getInvocationFieldEntityDao().create(fEntity);
-				f.setId(fEntity.getId());
-				nodeEntity.getInvocationFields().add(fEntity);
+				
+				if (node.getFilters() != null) {
+					for (Filter filter: node.getFilters())
+					{
+						FilterEntity filterEntity = getFilterEntityDao().filterToEntity(filter);
+						filterEntity.setNode(nodeEntity);
+						getFilterEntityDao().create(filterEntity);
+						filter.setId(filterEntity.getId());
+						nodeEntity.getFilters().add(filterEntity);
+					}
+				}
+				
+				for (Trigger t: node.getTriggers())
+				{
+					TriggerEntity triggerEntity = getTriggerEntityDao().triggerToEntity(t);
+					triggerEntity.setNode(nodeEntity);
+					getTriggerEntityDao().create(triggerEntity);
+					t.setId(triggerEntity.getId());
+					nodeEntity.getTriggers().add(triggerEntity);
+				}
+				
+				for (InvocationField f: node.getInvocationFields())
+				{
+					InvocationFieldEntity fEntity = getInvocationFieldEntityDao().invocationFieldToEntity(f);
+					fEntity.setNode(nodeEntity);
+					getInvocationFieldEntityDao().create(fEntity);
+					f.setId(fEntity.getId());
+					nodeEntity.getInvocationFields().add(fEntity);
+				}
 			}
 		}
 		
 		for ( Node node: process.getNodes())
 		{
-			for (Transition transition: node.getOutTransitions())
-			{
-				TransitionEntity transitionEntity = getTransitionEntityDao().transitionToEntity(transition);
-				transitionEntity.setSource( nodes.get(node.getId()) );
-				transitionEntity.setTarget( nodes.get( transition.getTarget().getId() ) );
-				
-				if (transitionEntity.getTarget() == null)
-					throw new InternalErrorException(String.format("Cannot store process definition. Transition %s from step %s is missing target step",
-							transition.getName(), node.getName()));
-				getTransitionEntityDao().create(transitionEntity);
-				transitionEntity.getSource().getOutTransitions().add(transitionEntity);
-				transitionEntity.getTarget().getInTransitions().add(transitionEntity);
+			if (!node.isToRemove()) {
+				for (Transition transition: node.getOutTransitions())
+				{
+					TransitionEntity transitionEntity = getTransitionEntityDao().transitionToEntity(transition);
+					transitionEntity.setSource( nodes.get(node.getId()) );
+					transitionEntity.setTarget( nodes.get( transition.getTarget().getId() ) );
+					
+					if (transitionEntity.getTarget() == null)
+						throw new InternalErrorException(String.format("Cannot store process definition. Transition %s from step %s is missing target step",
+								transition.getName(), node.getName()));
+					getTransitionEntityDao().create(transitionEntity);
+					transitionEntity.getSource().getOutTransitions().add(transitionEntity);
+					transitionEntity.getTarget().getInTransitions().add(transitionEntity);
+				}
 			}
 		}
 		

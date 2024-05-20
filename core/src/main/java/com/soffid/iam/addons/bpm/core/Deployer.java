@@ -372,6 +372,7 @@ public class Deployer {
 				}
 			}
 		}
+		
 		for ( com.soffid.iam.addons.bpm.common.Node node: proc.getNodes())
 		{
 			if (node.getType() == NodeType.NT_START)
@@ -428,6 +429,8 @@ public class Deployer {
 
 		for ( NodeEntity node: proc.getNodes())
 		{
+			if (node.getDiagramParentId() != null && !node.getDiagramParentId().equals("1"))
+				continue;
 			Node n = null; 
 			if (node.getType().equals( NodeType.NT_START))
 			{
@@ -474,24 +477,27 @@ public class Deployer {
 				ta.setDueDate(node.getTime());
 				ta.setProcessDefinition(def);
 				ta.setRepeat(node.getRepeat() == null? null: node.getRepeat().toString());
-				
-				Delegation d = new Delegation();
-				d.setClassName(CustomActionHandler.class.getName());
-				d.setConfigType("bean");
-				String s = escape (node.getCustomScript());
-				if (s.length() > 3500) {
-					String fileName = "script-"+(++scriptNumber);
-					def.getFileDefinition().addFile(fileName, new ByteArrayInputStream(node.getCustomScript().getBytes("UTF-8")));
-					d.setConfiguration("<noLeave>true</noLeave><file>" +fileName+"</file>");
-				} else {
-					d.setConfiguration("<noLeave>true</noLeave><script>" +s+ "</script>");
-				}
 
-				Action a = new Action();
-				a.setName(node.getName());
-				a.setActionDelegation( d );
-				a.setPropagationAllowed(true);
-				ta.setTimerAction(a);
+				if (node.getCustomScript() != null && 
+						!node.getCustomScript().trim().isEmpty()) {
+					Delegation d = new Delegation();
+					d.setClassName(CustomActionHandler.class.getName());
+					d.setConfigType("bean");
+					String s = escape (node.getCustomScript());
+					if (s.length() > 3500) {
+						String fileName = "script-"+(++scriptNumber);
+						def.getFileDefinition().addFile(fileName, new ByteArrayInputStream(node.getCustomScript().getBytes("UTF-8")));
+						d.setConfiguration("<noLeave>true</noLeave><file>" +fileName+"</file>");
+					} else {
+						d.setConfiguration("<noLeave>true</noLeave><script>" +s+ "</script>");
+					}
+	
+					Action a = new Action();
+					a.setName(node.getName());
+					a.setActionDelegation( d );
+					a.setPropagationAllowed(true);
+					ta.setTimerAction(a);
+				}
 			}
 			else if (node.getType().equals( NodeType.NT_SYSTEM_INVOCATION))
 			{
@@ -760,8 +766,50 @@ public class Deployer {
 				}
 				names.add(transition.getName());
 			}
+			addTimers(def, proc, n, node);
 		}
 		
+	}
+
+	private void addTimers(ProcessDefinition def, ProcessEntity proc, Node n, NodeEntity node) throws UnsupportedEncodingException {
+		for (NodeEntity timerNode: proc.getNodes()) {
+			if (timerNode.getDiagramParentId() != null &&
+					timerNode.getDiagramParentId().equals(node.getDiagramId())) {
+				
+				Event e  = new Event(Event.EVENTTYPE_NODE_ENTER);
+				n.addEvent(e);
+				
+				CreateTimerAction ta = new CreateTimerAction();
+				e.addAction(ta);
+				ta.setTimerName(timerNode.getName());
+				ta.setTransitionName(timerNode.getTransition());
+				ta.setDueDate(timerNode.getTime());
+				ta.setProcessDefinition(def);
+				ta.setRepeat(timerNode.getRepeat() == null? null: timerNode.getRepeat().toString());
+
+				if (node.getCustomScript() != null && 
+						!node.getCustomScript().trim().isEmpty()) {
+					
+					Delegation d = new Delegation();
+					d.setClassName(CustomActionHandler.class.getName());
+					d.setConfigType("bean");
+					String s = escape (timerNode.getCustomScript());
+					if (s.length() > 3500) {
+						String fileName = "script-"+(++scriptNumber);
+						def.getFileDefinition().addFile(fileName, new ByteArrayInputStream(timerNode.getCustomScript().getBytes("UTF-8")));
+						d.setConfiguration("<noLeave>true</noLeave><file>" +fileName+"</file>");
+					} else {
+						d.setConfiguration("<noLeave>true</noLeave><script>" +s+ "</script>");
+					}
+	
+					Action a = new Action();
+					a.setName(timerNode.getName());
+					a.setActionDelegation( d );
+					a.setPropagationAllowed(true);
+					ta.setTimerAction(a);
+				}
+			}
+		}
 	}
 
 	public void addMailNotification(NodeEntity node, Node n, Task t) {

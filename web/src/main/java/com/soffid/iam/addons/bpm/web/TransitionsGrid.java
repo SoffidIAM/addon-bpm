@@ -49,6 +49,9 @@ public class TransitionsGrid extends DataGrid {
 			Row r = (Row) event.getData();
 			Listbox sourceLB = (Listbox) r.getChildren().get(0);
 			initListbox (sourceLB, "source");
+			Component name = (Component) r.getChildren().get(1);
+			name.addEventListener("onChange", updateDiagram);
+
 			Listbox targetLB = (Listbox) r.getChildren().get(2);
 			initListbox (targetLB, "target");
 			ImageClic img = (ImageClic) ((Component)r.getChildren().get(3)).getChildren().get(1);
@@ -87,11 +90,22 @@ public class TransitionsGrid extends DataGrid {
 					}
 					BindContext ctx = XPathUtils.getComponentContext(getParent());
 					ctx.getDataSource().sendEvent( new XPathRerunEvent( ctx.getDataSource(), ctx.getXPath()));
+					ProcessWindow w = (ProcessWindow) getFellow("w");
+					w.updateTransition(t);
 				}
 			}
 		}
 	};
 
+	EventListener updateDiagram = new EventListener() {
+		@Override
+		public void onEvent(Event event) throws Exception {
+			Transition t = (Transition) XPathUtils.eval(event.getTarget().getParent(), ".");
+			ProcessWindow w = (ProcessWindow) getFellow("w");
+			w.updateTransition(t);
+		}
+	};
+	
 	private void initListbox(Listbox listbox, String path) {
 		BindContext ctx = XPathUtils.getComponentContext(getFellow("w"));
 		
@@ -104,14 +118,16 @@ public class TransitionsGrid extends DataGrid {
 			{
 				Pointer p = it.next();
 				Listitem item = new Listitem();
-				Object node = p.getValue();
-				item.setValue(node);
-				DataListcell cell = new DataListcell();
-				cell.setBind( "/listbox:"+ p.asPath()+"/@name");
-				item.appendChild(cell);
-				listbox.getItems().add(item);
-				if (node == value)
-					listbox.setSelectedItem(item);
+				Node node = (Node) p.getValue();
+				if (!node.isToRemove()) {
+					item.setValue(node);
+					DataListcell cell = new DataListcell();
+					cell.setBind( "/listbox:"+ p.asPath()+"/@name");
+					item.appendChild(cell);
+					listbox.getItems().add(item);
+					if (node == value)
+						listbox.setSelectedItem(item);
+				}
 			}
 		} catch (Exception e) {
 			// Ignore exception
