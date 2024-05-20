@@ -48,6 +48,19 @@
 		padding: 16px;
 		vertical-align: top;
 	}
+
+	div.mxgraph div.mxgraph_toolbar img:nth-child(4),
+	div.mxgraph div.mxgraph_toolbar img:nth-child(10),
+	div.mxgraph div.mxgraph_toolbar img:nth-child(20) {
+		margin-right: 20px;
+	}
+
+	div.mxgraph div.mxgraph_toolbar img:nth-child(4):hover,
+	div.mxgraph div.mxgraph_toolbar img:nth-child(10):hover,
+	div.mxgraph div.mxgraph_toolbar img:nth-child(20):hover {
+		margin-right: 18px;
+	}
+
 	@media only screen and (max-width: 1080px) {
 		div.mxgraph {
 			height: 400px;
