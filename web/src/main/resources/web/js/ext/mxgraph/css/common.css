@@ -164,6 +164,7 @@ td.mxPopupMenuItem {
 	font-size: 8pt;
 }
 td.mxPopupMenuIcon {
+	width: 20px;
 	padding: 2px 4px 2px 4px;
 }
 .mxDisabled {
