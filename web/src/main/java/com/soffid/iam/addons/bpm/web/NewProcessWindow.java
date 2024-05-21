@@ -37,6 +37,7 @@ import es.caib.seycon.ng.comu.TypeEnumeration;
 import es.caib.seycon.ng.exception.InternalErrorException;
 import es.caib.zkib.component.DataListbox;
 import es.caib.zkib.component.DataModel;
+import es.caib.zkib.datamodel.DataModelCollection;
 import es.caib.zkib.datasource.XPathUtils;
 import es.caib.zkib.zkiblaf.Missatgebox;
 
@@ -80,13 +81,16 @@ public class NewProcessWindow extends Window {
 		String path = XPathUtils.createPath(model, "/process", p);
 		setVisible(false);
 		
-		DataListbox lb = (DataListbox) getParent().getFellow("listbox");
-		lb.setSelectedIndex( lb.getItemCount() - 1);
+		DataModelCollection c = (DataModelCollection) XPathUtils.eval(model, "/process");
+		int size = c.getSize();
 		
-		Window processEditor = (Window) getParent().getFellow("editor").getFellow("w");
+		ProcessListbox lb = (ProcessListbox) getParent().getFellow("listbox");
+		lb.setSelectedIndex( size - 1);
+		
+		EditorHandler frame = (EditorHandler) getParent().getFellow("frame");
 //		Form f = (Form) getParent().getFellow("editor").getFellow("form");
 //		f.setDataPath("/model:"+path);
-		processEditor.doHighlighted();
+		frame.showDetails();
 	}
 
 	private void createUserTemplate(Process p) throws InternalErrorException, NamingException, CreateException {
@@ -515,7 +519,6 @@ public class NewProcessWindow extends Window {
 		else
 			createPermissionsTemplate(p);
 		p = svc.create(p);
-		svc.publish(p);
 	}
 
 }

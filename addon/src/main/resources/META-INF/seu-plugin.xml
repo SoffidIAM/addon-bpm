@@ -6,5 +6,4 @@
 	<core name="BPM common classes" resource="bpm-common-${pom.version}.jar"/>
 	<core name="BPM core classes" resource="bpm-core-${pom.version}.jar"/>
 	<web name="BPM web files" resource="bpm-web-${pom.version}.war"/>
-	<selfService name="BPM self service files" resource="bpm-selfservice-${pom.version}.war"/>
 </SoffidIAMPlugin>

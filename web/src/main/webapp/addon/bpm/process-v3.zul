@@ -16,11 +16,10 @@
 	</listbox>
 	<div use="com.soffid.iam.web.component.NavigationBar" frame="frame" lastAction="ref:frame.confirmApply">
 		<pager datatable="../listbox"/>
-						
 		<div style="float:right">
-			<button label="${c:l('bpm.save') }" id="save"/>
-			<button label="${c:l('bpm.saveAndPublish') }" id="saveAndPublish"/>
-			<button label="${c:l('bpm.cancel') }" id="cancel"/>
+			<button image="/img/save.svg" label="${c:l('bpm.save') }" id="save"/>
+			<button image="/img/ok.svg" label="${c:l('bpm.saveAndPublish') }" id="saveAndPublish"/>
+			<button image="/img/undo.svg" label="${c:l('bpm.cancel') }" id="cancel"/>
 		</div>
 	</div>
 
@@ -93,6 +92,11 @@
 						onSelect="ref:w.showPane"/>
 				</div>
 				<div sclass="split">
+					<div style="height: 32px">
+						<menu2>
+							<menu2item image="/img/download.svg" label="${c:l('bpm.export') }" onClick="ref:w.export"/>
+						</menu2>
+					</div>						
 					<div style="width:100%;" id="processDiv">
 						<customfield3 label="${c:l('bpm.processName') }" dataType="string" bind="@name" onChange="" maxLength="250" />
 						<customfield3 label="${c:l('bpm.processType') }" dataType="string" bind="type" onChange="" enumeration="com.soffid.iam.addons.bpm.common.WorkflowType" />

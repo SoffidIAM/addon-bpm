@@ -15,6 +15,7 @@ import org.zkoss.zk.ui.UiException;
 import com.soffid.iam.addons.bpm.common.Attribute;
 import com.soffid.iam.addons.bpm.common.Field;
 import com.soffid.iam.addons.bpm.common.Filter;
+import com.soffid.iam.addons.bpm.common.InvocationField;
 import com.soffid.iam.addons.bpm.common.Node;
 import com.soffid.iam.addons.bpm.common.NodeType;
 import com.soffid.iam.addons.bpm.common.Process;
@@ -42,6 +43,7 @@ public class ProcessSerializer {
 		builder2.add("type", "ProcessDefinition");
 		builder2.add("version", 1);
 		builder2.add("data", builder);
+		builder2.add("diagram", def.getDiagram());
 
 		JsonObject json = builder2.build();
 		
@@ -52,29 +54,44 @@ public class ProcessSerializer {
 		JsonArrayBuilder builder = Json.createArrayBuilder();
 		for (Node node: nodes)
 		{
-			JsonObjectBuilder builder2 = Json.createObjectBuilder();
-			if (node.getApplyEntitlements() != null) builder2.add("applyEntitlements", node.getApplyEntitlements());
-			if (node.getApplyUserChanges() != null) builder2.add("applyUserChanges", node.getApplyUserChanges());
-			if (node.getCustomScript() != null) builder2.add("customScript", node.getCustomScript());
-			if (node.getDescription() != null) builder2.add("description", node.getDescription());
-			if (node.getFields() != null) builder2.add("fields", fieldsToJson( node.getFields()) );
-			if (node.getFilters() != null) builder2.add("filters", filtersToJson( node.getFilters()) );
-			if (node.getGrantScreenType() != null) builder2.add("grantScreenType", node.getGrantScreenType());
-			if (node.getMailActor() != null) builder2.add("mailActor", node.getMailActor());
-			if (node.getMailAddress() != null) builder2.add("mailAddress", node.getMailAddress());
-			if (node.getMailMessage() != null) builder2.add("mailMesage", node.getMailMessage());
-			if (node.getMailSubject() != null) builder2.add("mailSubject", node.getMailSubject());
-			if (node.getName() != null) builder2.add("name", node.getName());
-			if (node.getOutTransitions() != null) builder2.add("outTransitions", transitionsToJson( node.getOutTransitions()));
-			if (node.getTriggers() != null) builder2.add("triggers", triggersToJson( node.getTriggers()));
-			if (node.getType() != null) builder2.add("type", node.getType().toString());
-			if (node.getTaskName() != null) builder2.add("taskName", node.getTaskName().toString());
-			if (node.getMatchThreshold() != null) builder2.add("matchThreshold", node.getMatchThreshold());
-			if (node.getGrantScreenType() != null) builder2.add("grantScreentype", node.getGrantScreenType());
-			if (node.getMailShortcut() != null) builder2.add("mailShortcut", node.getMailShortcut());
-			if (node.getApproveTransition() != null) builder2.add("approveTransition", node.getApproveTransition());
-			if (node.getDenyTransition() != null) builder2.add("denyTransition", node.getDenyTransition());
-			builder.add(builder2);
+			if (!node.isToRemove()) {
+				JsonObjectBuilder builder2 = Json.createObjectBuilder();
+				if (node.getApplyEntitlements() != null) builder2.add("applyEntitlements", node.getApplyEntitlements());
+				if (node.getApplyUserChanges() != null) builder2.add("applyUserChanges", node.getApplyUserChanges());
+				if (node.getCustomScript() != null) builder2.add("customScript", node.getCustomScript());
+				if (node.getDescription() != null) builder2.add("description", node.getDescription());
+				if (node.getFields() != null) builder2.add("fields", fieldsToJson( node.getFields()) );
+				if (node.getFilters() != null) builder2.add("filters", filtersToJson( node.getFilters()) );
+				if (node.getGrantScreenType() != null) builder2.add("grantScreenType", node.getGrantScreenType());
+				if (node.getMailActor() != null) builder2.add("mailActor", node.getMailActor());
+				if (node.getMailAddress() != null) builder2.add("mailAddress", node.getMailAddress());
+				if (node.getMailMessage() != null) builder2.add("mailMesage", node.getMailMessage());
+				if (node.getMailSubject() != null) builder2.add("mailSubject", node.getMailSubject());
+				if (node.getName() != null) builder2.add("name", node.getName());
+				if (node.getOutTransitions() != null) builder2.add("outTransitions", transitionsToJson( node.getOutTransitions()));
+				if (node.getTriggers() != null) builder2.add("triggers", triggersToJson( node.getTriggers()));
+				if (node.getType() != null) builder2.add("type", node.getType().toString());
+				if (node.getTaskName() != null) builder2.add("taskName", node.getTaskName().toString());
+				if (node.getMatchThreshold() != null) builder2.add("matchThreshold", node.getMatchThreshold());
+				if (node.getGrantScreenType() != null) builder2.add("grantScreentype", node.getGrantScreenType());
+				if (node.getMailShortcut() != null) builder2.add("mailShortcut", node.getMailShortcut());
+				if (node.getApproveTransition() != null) builder2.add("approveTransition", node.getApproveTransition());
+				if (node.getDenyTransition() != null) builder2.add("denyTransition", node.getDenyTransition());
+				if (node.getDiagramId() != null) builder2.add("diagramId", node.getDiagramId());
+				if (node.getDiagramParentId() != null) builder2.add("diagramParentId", node.getDiagramParentId());
+				if (node.getTransition() != null) builder2.add("transition", node.getTransition());
+				if (node.getSystem() != null) builder2.add("system", node.getSystem());
+				if (node.getMethod() != null) builder2.add("method", node.getMethod());
+				if (node.getPath() != null) builder2.add("path", node.getPath());
+				if (node.getReturnVariable() != null) builder2.add("returnVariable", node.getReturnVariable());
+				if (node.getRepeat() != null) builder2.add("repeat", node.getRepeat());
+				if (node.getTime() != null) builder2.add("time", node.getTime());
+				if (node.getUploadDocuments() != null) builder2.add("uploadDocuments", node.getUploadDocuments());
+				if (node.getAsync() != null) builder2.add("async", node.getAsync());
+				if (node.getUploadDocuments() != null) builder2.add("uploadDocuments", node.getUploadDocuments());
+				if (node.getInvocationFields() != null) builder2.add("invocationFields", invocationFieldsToJson(node.getInvocationFields()));
+				builder.add(builder2);
+			}
 		}
 		return builder;
 	}
@@ -114,6 +131,19 @@ public class ProcessSerializer {
 			if (transition.getSource() != null && transition.getSource().getName() != null) builder2.add("source", transition.getSource().getName());
 			if (transition.getScript() != null) builder2.add("script", transition.getScript());
 			if (transition.getTarget() != null && transition.getTarget().getName() != null) builder2.add("target", transition.getTarget().getName());
+			if (transition.getDiagramId() != null && transition.getTarget().getName() != null) builder2.add("diagramId", transition.getDiagramId());
+			builder.add(builder2);
+		}
+		return builder;
+	}
+
+	private static JsonArrayBuilder invocationFieldsToJson(List<InvocationField> fields) {
+		JsonArrayBuilder builder = Json.createArrayBuilder();
+		for (InvocationField field:fields)
+		{
+			JsonObjectBuilder builder2 = Json.createObjectBuilder();
+			if (field.getField() != null) builder2.add("field", field.getField());
+			if (field.getExpression() != null) builder2.add("expression", field.getExpression());
 			builder.add(builder2);
 		}
 		return builder;
@@ -184,6 +214,7 @@ public class ProcessSerializer {
 		p.setName(data.getString("name", null));
 		p.setType( WorkflowType.fromString( data.getString("type", WorkflowType.WT_USER.toString())));
 		p.setNodes( loadNodes (data.getJsonArray("nodes")));
+		p.setDiagram(data.getString("diagram", null));
 	
 		return p;
 	}
@@ -223,6 +254,20 @@ public class ProcessSerializer {
 				else
 					target.setTaskName(src.getString("taskName"));
 				target.setType( NodeType.fromString( src.getString("type", NodeType.NT_END.toString())));
+				target.setDiagramId(src.getString("diagramId", null));
+				target.setDiagramParentId(src.getString("diagramParentId", null));
+				target.setTransition(src.getString("transition", null));
+				target.setSystem(src.getString("system", null));
+				target.setMethod(src.getString("method", null));
+				target.setPath(src.getString("path", null));
+				target.setReturnVariable(src.getString("returnVariable", null));
+				target.setRepeat(src.getBoolean("repeat", false));
+				target.setTime(src.getString("time", null));
+				target.setUploadDocuments(src.getBoolean("uploadDocuments", false));
+				target.setAsync(src.getBoolean("async", false));
+				if (src.containsKey("invocationFields"))
+					target.setInvocationFields(loadInvocationFields(src.getJsonArray("invocationFields")));
+
 				l.add(target);
 			}
 		}
@@ -287,6 +332,23 @@ public class ProcessSerializer {
 				target.setAction( src.getString("action", null));
 				target.setField(src.getString("field", null));
 				target.setName(src.getString("name", null));
+				l.add(target);
+			}
+		}
+		return l;
+	}
+
+	private static List<InvocationField> loadInvocationFields(JsonArray jsonArray) {
+		if (jsonArray == null)
+			return null;
+		List<InvocationField> l = new LinkedList<InvocationField>();
+		for (JsonValue obj: jsonArray)
+		{
+			if (obj instanceof JsonObject) {
+				JsonObject src = (JsonObject) obj;
+				InvocationField target = new InvocationField();
+				target.setField(src.getString("field", null));
+				target.setExpression(src.getString("expression", null));
 				l.add(target);
 			}
 		}

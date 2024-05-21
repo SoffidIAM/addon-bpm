@@ -116,7 +116,6 @@
     <module>common</module>
     <module>core</module>
     <module>web</module>
-    <module>selfservice</module>
     <module>bpm-web-common</module>
     <module>addon</module>
   </modules>

@@ -98,8 +98,7 @@ zkMxGraph.updateLabel = function(ed, id, label) {
 zkMxGraph.updateImg = function(ed) {
 	var graph = document.getElementById(ed.id+'!graph');
 	var svg = document.getElementById(ed.id+'!graph').firstElementChild;
-	var img = document.getElementById(ed.id+"!img");
-	var canvas = document.getElementById(ed.id+'!canvas');
+	var img = document.createElement("img");
 	
 	// get svg data
 	var xml = new XMLSerializer().serializeToString(svg);
@@ -115,8 +114,14 @@ zkMxGraph.updateImg = function(ed) {
 		var cr = svg.getClientRects()[0];
 	    canvas.width = cr.width;
 	    canvas.height = cr.height;
-	    canvas.getContext('2d').drawImage(img, 0, 0);
-	    var v = canvas.toDataURL();
+		canvas.style.backgroundColor = "#ffffff";
+	    var ctx = canvas.getContext('2d');
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+		ctx.rect(0, 0, canvas.width, canvas.height);
+		ctx.fillStyle = '#ffffff';
+		ctx.fill();
+		ctx.drawImage(img, 0, 0);
+	    var v = canvas.toDataURL("image/jpeg");
 		var req = {uuid: ed.id, cmd: "onImage", data : [v], ignorable: false};
 		zkau.send (req, 5);
 	}

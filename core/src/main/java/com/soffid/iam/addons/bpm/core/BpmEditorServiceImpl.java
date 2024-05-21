@@ -303,7 +303,7 @@ public class BpmEditorServiceImpl extends BpmEditorServiceBase {
 	}
 
 	@Override
-	protected void handlePublish(Process process) throws Exception {
+	protected void handlePublish(Process process, byte[] image) throws Exception {
 		Deployer d = new Deployer();
 		d.setAuditEntityDao(getAuditEntityDao());
 		d.setNodeDao(getNodeEntityDao());
@@ -317,7 +317,7 @@ public class BpmEditorServiceImpl extends BpmEditorServiceBase {
 			pe.setVersion( pe.getVersion().longValue() + 1);
 		getProcessEntityDao().update(pe);
 		
-		d.deploy(pe, process);
+		d.deploy(pe, process, image);
 		
 	}
 

@@ -3,7 +3,6 @@ package com.soffid.addons.bpm.web.mxgraph;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.util.EventListener;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -14,6 +13,8 @@ import org.zkoss.zk.au.Command;
 import org.zkoss.zk.au.out.AuInvoke;
 import org.zkoss.zk.ui.Executions;
 import org.zkoss.zk.ui.UiException;
+import org.zkoss.zk.ui.event.Event;
+import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zk.ui.event.Events;
 import org.zkoss.zul.impl.XulElement;
 
@@ -64,6 +65,15 @@ public class MxGraph extends XulElement {
 			image = image.substring(image.indexOf(",")+1);
 			g.image = Base64.getDecoder().decode(image.getBytes(StandardCharsets.UTF_8));
 			Events.postEvent("onImage", g, g.image);
+			if (g.imageListener != null) {
+				try {
+					g.imageListener.onEvent(new Event ("onImage", g, g.image));
+				} catch (Exception e) {
+					throw new UiException(e);
+				} finally {
+					g.imageListener = null;
+				}
+			}
 		}
 	};
 

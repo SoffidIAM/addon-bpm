@@ -61,16 +61,6 @@ public class ProcessListbox extends DataTable {
 		Missatgebox.confirmaOK_CANCEL( String.format("Please, confirm to remove business process definition: %s", name), onConfirmRemove);
 	}
 	
-	public void export(Event event) throws IOException {
-		ctxToRemove = XPathUtils.getComponentContext(event.getTarget());
-		DataNode dn = (DataNode) XPathUtils.getValue(event.getTarget(), ".");
-		Process p = (Process) dn.getInstance();
-		JsonObject json = ProcessSerializer.toJson(p);
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		Json.createWriter(out).writeObject(json);
-		Filedownload.save(out.toByteArray(), "application/octet-stream", p.getName()+".pardef");
-	}
-	
 	private EventListener onConfirmRemove = new EventListener() {
 		@Override
 		public void onEvent(Event event) throws Exception {

@@ -1,6 +1,7 @@
 package com.soffid.iam.addons.bpm.web;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
@@ -15,6 +16,8 @@ import java.util.List;
 import java.util.Set;
 
 import javax.ejb.CreateException;
+import javax.json.Json;
+import javax.json.JsonObject;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -39,6 +42,7 @@ import org.zkoss.zk.ui.event.DropEvent;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zk.ui.event.Events;
+import org.zkoss.zul.Filedownload;
 import org.zkoss.zul.Grid;
 import org.zkoss.zul.Listbox;
 import org.zkoss.zul.Listitem;
@@ -100,12 +104,21 @@ public class ProcessWindow extends Form2 {
 	private EventListener onPublish = new EventListener() {
 		@Override
 		public void onEvent(Event event) throws Exception {
+			MxGraph graph = (MxGraph) getFellow("graph");
+			graph.getImage(	onImage );
+		}
+	};
+	
+	private EventListener onImage = new EventListener() {
+		@Override
+		public void onEvent(Event ev) throws Exception {
+			byte[] image = (byte[]) ev.getData();
 			DataNode dataNode =  (DataNode) XPathUtils.eval( ProcessWindow.this, "/");
 			dataNode.update();
 			getDataModel().commit();
 			com.soffid.iam.addons.bpm.common.Process process = (Process) dataNode.getInstance();
 			BpmEditorService svc = (BpmEditorService) new InitialContext().lookup(BpmEditorServiceHome.JNDI_NAME);
-			svc.publish(process);
+			svc.publish(process, image);
 			((EditorHandler)getPage().getFellow("frame")).hideDetails();
 		}
 	};
@@ -905,4 +918,15 @@ public class ProcessWindow extends Form2 {
 		MxGraph graph = (MxGraph) getFellow("graph");
 		graph.setModel(result);
 	}
+	
+	public void export(Event event) throws IOException {
+		DataNode dn = (DataNode) XPathUtils.eval(this, ".");
+		Process p = (Process) dn.getInstance();
+		JsonObject json = ProcessSerializer.toJson(p);
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		Json.createWriter(out).writeObject(json);
+		Filedownload.save(out.toByteArray(), "application/octet-stream", p.getName()+".pardef");
+	}
+	
+
 }

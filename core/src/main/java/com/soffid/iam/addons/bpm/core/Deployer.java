@@ -5,8 +5,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.io.PrintStream;
+import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -16,6 +19,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
@@ -42,6 +52,9 @@ import org.jbpm.taskmgmt.def.Task;
 import org.jbpm.taskmgmt.def.TaskMgmtDefinition;
 import org.jbpm.taskmgmt.exe.TaskInstance;
 import org.json.JSONObject;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 
 import com.soffid.iam.ServiceLocator;
 import com.soffid.iam.addons.bpm.common.Attribute;
@@ -95,7 +108,7 @@ public class Deployer {
 	AuditEntityDao auditEntityDao; 
 	int scriptNumber = 0;
 	
-	public void deploy ( ProcessEntity procEntity, com.soffid.iam.addons.bpm.common.Process proc ) throws InternalErrorException, IOException
+	public void deploy ( ProcessEntity procEntity, com.soffid.iam.addons.bpm.common.Process proc, byte[] image ) throws Exception
 	{
 		ctx = bpmEngine.getContext();
 		try {
@@ -124,6 +137,8 @@ public class Deployer {
 			{
 				throw new InternalErrorException ( "There is no starting node. Please, create one" );
 			}
+			if (image != null && procEntity.getDiagram() != null)
+				saveImage(def, procEntity, image);
 			ctx.getGraphSession().saveProcessDefinition(def);
 			saveTaskNodeInformation(nodesMap, proc, fd);
 			generateUiXml( fd, procEntity.getVersion() );
@@ -138,6 +153,51 @@ public class Deployer {
 			ctx.close();
 		}
 		updateMetadata(proc);
+	}
+
+	private void saveImage(ProcessDefinition def, ProcessEntity procEntity, byte[] image) throws Exception {
+		Document target = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+		Element targetRoot = target.createElement("root-container");
+		target.appendChild(targetRoot);
+
+		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(
+				new ByteArrayInputStream(procEntity.getDiagram().getBytes(StandardCharsets.UTF_8)));
+		NodeList roots = doc.getElementsByTagName("root");
+		Set<String> ids = new HashSet<>();
+		for (int i = 0; i < roots.getLength(); i++) {
+			Element root = (Element) roots.item(i);
+			for (org.w3c.dom.Node element = root.getFirstChild(); 
+					element != null;
+					element = element.getNextSibling()) {
+				if (element instanceof Element) {
+					final Element data = (Element) element;
+					for ( org.w3c.dom.Node e2 = data.getFirstChild(); e2 != null; e2 = e2.getNextSibling()) {
+						if (e2 instanceof Element && ((Element) e2).getTagName().equals("mxCell")) {
+							for ( org.w3c.dom.Node e3 = e2.getFirstChild(); e3 != null; e3 = e3.getNextSibling()) {
+								if (e3 instanceof Element && ((Element) e3).getTagName().equals("mxGeometry")) {
+									Element geo = (Element) e3;
+									Element node = target.createElement("node");
+									node.setAttribute("name", data.getAttribute("label"));
+									node.setAttribute("x",  geo.getAttribute("x"));
+									node.setAttribute("y",  geo.getAttribute("y"));
+									node.setAttribute("width",  geo.getAttribute("width"));
+									node.setAttribute("height",  geo.getAttribute("height"));
+									targetRoot.appendChild(node);
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		TransformerFactory transformerFactory = TransformerFactory.newInstance();
+		Transformer transformer = transformerFactory.newTransformer();
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		transformer.transform(new DOMSource(target), new StreamResult(out ));
+
+		def.getFileDefinition().addFile("gpd.xml", out.toByteArray());
+		def.getFileDefinition().addFile("processimage.jpg", image);
 	}
 
 	private void updateMetadata(Process proc) throws InternalErrorException {

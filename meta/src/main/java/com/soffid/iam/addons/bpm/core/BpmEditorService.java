@@ -48,7 +48,7 @@ public class BpmEditorService {
 	public void remove(Process process){ }
 
 	@Operation(grantees= {Publisher.class})
-	public void publish(Process process){ }
+	public void publish(Process process, byte[] image){ }
 
 	@Operation(grantees= {Tothom.class})
 	public Node getTaskNode(TaskInstance task){ return null; }
