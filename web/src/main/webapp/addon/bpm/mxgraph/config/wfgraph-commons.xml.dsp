@@ -248,7 +248,7 @@
 			<add as="verticalLabelPosition" value="bottom"/>
 			<add as="image" value="${s:includeImage('/addon/bpm/mxgraph/img/end.svg')}"/>
 		</add>
-		<add as="split">
+		<add as="fork">
 			<add as="shape" value="image"/>
 			<add as="perimeter" value="rectanglePerimeter"/>
 			<add as="labelBackgroundColor" value="white"/>

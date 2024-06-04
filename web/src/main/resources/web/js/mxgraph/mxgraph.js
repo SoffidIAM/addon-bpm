@@ -162,6 +162,7 @@ zkMxGraph.loadModel=function(ed, model) {
 	var doc = mxUtils.parseXml(model);
 	codec = new mxCodec(doc);
 	codec.decode(doc.documentElement, ed.editor.graph.getModel());
+	ed.editor.undoManager.clear();
 }
 
 zkMxGraph.refresh=function(ed) {

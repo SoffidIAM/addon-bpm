@@ -50,7 +50,7 @@
 		</add>
 		<add as="fork">
 			<Symbol label="Fork" description="" href="" type="fork">
-				<mxCell vertex="1" style="split">		
+				<mxCell vertex="1" style="fork">		
 					<mxGeometry as="geometry" width="64" height="64"/>
 				</mxCell>
 			</Symbol>

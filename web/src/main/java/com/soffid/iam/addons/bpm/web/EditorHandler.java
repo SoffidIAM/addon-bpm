@@ -10,6 +10,7 @@ import javax.json.JsonReader;
 import javax.servlet.http.HttpServletRequest;
 
 import org.zkoss.util.media.Media;
+import org.zkoss.util.resource.Labels;
 import org.zkoss.zk.ui.Component;
 import org.zkoss.zk.ui.Executions;
 import org.zkoss.zk.ui.UiException;
@@ -116,6 +117,27 @@ public class EditorHandler extends FrameHandler {
 
 	private DataSource getDataSource() {
 		return getModel();
+	}
+
+	public void deleteSelected(Event event0) {
+		Component b = event0.getTarget();
+		final Component lb = b.getParent().getPreviousSibling();
+		if (lb instanceof DataTable) {
+			final DataTable dt = (DataTable) lb;
+			if (dt.getSelectedIndexes() == null || dt.getSelectedIndexes().length == 0) return;
+			String msg = dt.getSelectedIndexes().length == 1 ? 
+					Labels.getLabel("common.delete") :
+					String.format(Labels.getLabel("common.deleteMulti"), dt.getSelectedIndexes().length);
+				
+			Missatgebox.confirmaOK_CANCEL(msg, 
+					(event) -> {
+						if (event.getName().equals("onOK")) {
+							dt.delete();
+							displayRemoveButton(lb, false);
+							getModel().commit();
+						}
+					});
+		}
 	}
 
 }

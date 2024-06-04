@@ -69,6 +69,7 @@ import com.soffid.iam.addons.bpm.core.ejb.BpmEditorServiceHome;
 import com.soffid.iam.api.DataType;
 import com.soffid.iam.api.User;
 import com.soffid.iam.web.component.CustomField3;
+import com.soffid.iam.web.popup.Editor;
 import com.sun.mail.imap.protocol.ListInfo;
 
 import es.caib.bpm.vo.PredefinedProcessType;
@@ -156,10 +157,10 @@ public class ProcessWindow extends Form2 {
 		NodeType.NT_CUSTOM, "Symbol", "decision",
 		NodeType.NT_END, "Symbol", "end", 
 		NodeType.NT_FORK, "Symbol", "fork",
-		NodeType.NT_GRANT_SCREEN, "Task", "taskgrant",
+		NodeType.NT_GRANT_SCREEN, "Task", "grant",
 		NodeType.NT_JOIN, "Symbol", "join",
 		NodeType.NT_MAIL, "Symbol", "mail",
-		NodeType.NT_MATCH_SCREEN, "Task", "taskmatch",
+		NodeType.NT_MATCH_SCREEN, "Task", "match",
 		NodeType.NT_SCREEN, "Task", "task",
 		NodeType.NT_START, "Symbol", "start",
 		NodeType.NT_SYSTEM_INVOCATION, "Symbol", "system",
@@ -622,17 +623,7 @@ public class ProcessWindow extends Form2 {
 	}
 
 	public void edit(Component component, String vars, String env ) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException {
-		if ("3".equals(version)) {
-			Class.forName("com.soffid.iam.web.popup.Editor")
-			.getMethod("edit", InputElement.class, String.class, String.class)
-			.invoke(null, component, vars, env);
-
-		} else {
-			Events.sendEvent(new Event ("onEdit", 
-					getDesktop().getPage("editor").getFellow("top"),
-					new Object[] { component, vars }
-					));
-		}
+		Editor.edit((InputElement) component, vars);
 	}
 	
 	public void updateMailShortcut (Event ev) {
@@ -874,10 +865,10 @@ public class ProcessWindow extends Form2 {
 			NodeType.NT_CUSTOM, "decision",
 			NodeType.NT_END, "end",
 			NodeType.NT_FORK, "fork",
-			NodeType.NT_GRANT_SCREEN, "taskgrant",
+			NodeType.NT_GRANT_SCREEN, "grant",
 			NodeType.NT_JOIN, "join",
 			NodeType.NT_MAIL, "mail",
-			NodeType.NT_MATCH_SCREEN, "taskmatch",
+			NodeType.NT_MATCH_SCREEN, "match",
 			NodeType.NT_SCREEN, "task",
 			NodeType.NT_START, "start",
 			NodeType.NT_TIMER, "timer",

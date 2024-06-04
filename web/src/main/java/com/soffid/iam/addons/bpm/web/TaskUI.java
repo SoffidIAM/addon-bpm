@@ -1,7 +1,6 @@
 package com.soffid.iam.addons.bpm.web;
 
 import java.io.IOException;
-import java.sql.SQLException;
 
 import javax.ejb.CreateException;
 import javax.naming.NamingException;
@@ -87,14 +86,14 @@ public class TaskUI extends com.soffid.iam.web.bpm.TaskUI implements AfterCompos
 		
 	}
 	
-	public void processShortcut(Event event) throws ClassNotFoundException, IOException, SQLException, Exception {
+	public void processShortcut(Event event) throws ClassNotFoundException, IOException, Exception {
 		Timer t = (Timer) getFellow("timer");
 		if (!t.isRunning()) return;
 		t.stop();
 		processShortcut2();
 	}
 	
-	public void processShortcut2() throws ClassNotFoundException, IOException, SQLException, Exception {
+	public void processShortcut2() throws ClassNotFoundException, IOException, Exception {
 		if (getCurrentTask().getEnd() != null) {
 			Missatgebox.avis(Labels.getLabel("bpm.alreadyClosed"));
 		} else {

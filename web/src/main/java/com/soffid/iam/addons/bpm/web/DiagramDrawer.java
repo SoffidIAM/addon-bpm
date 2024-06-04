@@ -100,7 +100,7 @@ public class DiagramDrawer {
 				.append(encodeValue(node.getName()))
 				.append("' id='")
 				.append(node.getDiagramId())
-				.append("' type='taskmatch'><mxCell style='match' vertex='1' parent='1'><mxGeometry x='10' y='")
+				.append("' type='match'><mxCell style='match' vertex='1' parent='1'><mxGeometry x='10' y='")
 				.append(pos += 128)
 				.append("' width='128' height='64' as='geometry'/></mxCell></Task>");
 		}
@@ -118,7 +118,7 @@ public class DiagramDrawer {
 				.append(encodeValue(node.getName()))
 				.append("' id='")
 				.append(node.getDiagramId())
-				.append("' type='taskgrant'><mxCell style='grant' vertex='1' parent='1'><mxGeometry x='10' y='")
+				.append("' type='grant'><mxCell style='grant' vertex='1' parent='1'><mxGeometry x='10' y='")
 				.append(pos += 128)
 				.append("' width='128' height='64' as='geometry'/></mxCell></Task>");
 		}

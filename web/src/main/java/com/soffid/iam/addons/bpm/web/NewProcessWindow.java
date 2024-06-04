@@ -103,7 +103,7 @@ public class NewProcessWindow extends Window {
 		att.setLabel(Labels.getLabel("com.soffid.iam.api.User.action"));
 		att.setName("action");
 		att.setType(TypeEnumeration.STRING_TYPE);
-		att.setValues(Arrays.asList("A:New%20user","M:Modify%20user","D:Disable%20user","E:Enable%20user"));
+		att.setValues(Arrays.asList("A:New user","M:Modify user","D:Disable user","E:Enable user"));
 		att.setOrder(1L);
 		p.getAttributes().add(att);
 
