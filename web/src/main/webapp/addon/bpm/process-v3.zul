@@ -78,7 +78,7 @@
 		}
 	}
 	</style>
-	<tabbox>
+	<tabbox id="tabbox">
 		<tabs>
 			<tab label="${c:l('bpm.steps') }"> </tab>
 			<tab label="${c:l('bpm.attributes') }"/>
@@ -318,7 +318,9 @@
 												<image src="/img/move.svg" draggable="true" style="margin-left: 8px; cursor: move; height: 24px"/>
 											</div>
 											<textbox bind="@label" width="100%"></textbox>
-											<combobox use="com.soffid.iam.addons.bpm.web.AttributesCombo" bind="@name" width="calc(100% - 24px)"
+											<combobox use="com.soffid.iam.addons.bpm.web.AttributesCombo" 
+												bind="@name" width="calc(100% - 24px)"
+												trigger="true"
 												image="/img/move-down.svg"/>
 											<checkbox bind="@readOnly"/>
 											<checkbox bind="@required"/>
@@ -379,7 +381,8 @@
 												<listitem value="onPrepareTransition" label="onPrepareTransition"/>
 												<listitem value="onChange" label="onChange"/>
 											</listbox>
-											<combobox use="com.soffid.iam.addons.bpm.web.AttributesCombo" bind="@field" width="300px"/>
+											<combobox use="com.soffid.iam.addons.bpm.web.AttributesCombo" bind="@field" 
+												trigger="false" width="300px"/>
 											<div>
 												<textbox bind="@action" visible="false" multiline="true"/>
 												<imageclic src="/img/pencil.svg" onClick="ref:w.editTriggerScript(event)"/>

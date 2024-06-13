@@ -105,6 +105,8 @@ public class ProcessWindow extends Form2 {
 	private EventListener onPublish = new EventListener() {
 		@Override
 		public void onEvent(Event event) throws Exception {
+			Tabbox tb = (Tabbox) getFellow("tabbox");
+			tb.setSelectedIndex(0);
 			MxGraph graph = (MxGraph) getFellow("graph");
 			graph.getImage(	onImage );
 		}

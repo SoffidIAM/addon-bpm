@@ -74,6 +74,7 @@ import com.soffid.iam.addons.bpm.handler.CustomActionHandler;
 import com.soffid.iam.addons.bpm.handler.GrantTaskNodeHandler;
 import com.soffid.iam.addons.bpm.handler.StartAccountHandler;
 import com.soffid.iam.addons.bpm.handler.StartHandler;
+import com.soffid.iam.addons.bpm.handler.SystemInvocationHandler;
 import com.soffid.iam.addons.bpm.model.InvocationFieldEntity;
 import com.soffid.iam.addons.bpm.model.NodeEntity;
 import com.soffid.iam.addons.bpm.model.NodeEntityDao;
@@ -409,7 +410,10 @@ public class Deployer {
 			Node jbpmNode = nodesMap.get(nodeEntity);
 			for ( com.soffid.iam.addons.bpm.common.Node node: proc.getNodes())
 			{
-				if (node.getId().equals(nodeEntity.getId()))
+				// Skip timers
+				if (node.getDiagramParentId() != null && !node.getDiagramParentId().equals("1"))
+					continue;
+				if (node.getId() != null && node.getId().equals(nodeEntity.getId()))
 				{
 					addFields(processFields, node.getFields());
 					PageInfo pageInfo = new PageInfo();
@@ -563,7 +567,7 @@ public class Deployer {
 			{
 				n = new Node();
 				Delegation d = new Delegation();
-				d.setClassName(CustomActionHandler.class.getName());
+				d.setClassName(SystemInvocationHandler.class.getName());
 				d.setConfigType("bean");
 				JSONObject json = new JSONObject();
 				for (InvocationFieldEntity f: node.getInvocationFields()) {
@@ -836,7 +840,7 @@ public class Deployer {
 			if (timerNode.getDiagramParentId() != null &&
 					timerNode.getDiagramParentId().equals(node.getDiagramId())) {
 				
-				Event e  = new Event(Event.EVENTTYPE_NODE_ENTER);
+				Event e  = new Event(Event.EVENTTYPE_TASK_CREATE);
 				n.addEvent(e);
 				
 				CreateTimerAction ta = new CreateTimerAction();

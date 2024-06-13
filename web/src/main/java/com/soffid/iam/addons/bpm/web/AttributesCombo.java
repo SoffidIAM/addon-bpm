@@ -25,6 +25,8 @@ import es.caib.zkib.datamodel.DataNode;
 import es.caib.zkib.datasource.XPathUtils;
 
 public class AttributesCombo extends DataCombobox {
+	public boolean trigger = false;
+	
 	public static EventListener onFocus = new EventListener() {
 		@Override
 		public void onEvent(Event event) throws Exception {
@@ -40,8 +42,10 @@ public class AttributesCombo extends DataCombobox {
 		@Override
 		public void onEvent(Event event) throws Exception {
 			AttributesCombo c = (AttributesCombo) event.getTarget();
-			ProcessWindow w = (ProcessWindow) c.getFellow("w");
-			w.addField((Row) c.getParent());
+			if (c.trigger) {
+				ProcessWindow w = (ProcessWindow) c.getFellow("w");
+				w.addField((Row) c.getParent());
+			}
 		}
 	};
 	
@@ -84,5 +88,13 @@ public class AttributesCombo extends DataCombobox {
 			item.setValue(item.getLabel());
 			getItems().add(item);
 		}
+	}
+
+	public boolean isTrigger() {
+		return trigger;
+	}
+
+	public void setTrigger(boolean trigger) {
+		this.trigger = trigger;
 	}
 }
