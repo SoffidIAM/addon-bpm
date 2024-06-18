@@ -765,7 +765,7 @@ public class ProcessWindow extends Form2 {
 		boolean found = false;
 		nodes: for (Node node: process.getNodes()) {
 			for (Transition tran: node.getOutTransitions()) {
-				if (tran.getDiagramId().equals(id)) {
+				if (tran.getDiagramId() != null && tran.getDiagramId().equals(id)) {
 					found = true;
 					if (sourceNode == null || targetNode == null) {
 						tran.getSource().getOutTransitions().remove(tran);

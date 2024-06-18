@@ -16,7 +16,6 @@ public class Process {
 	@Column(name="PRO_TYPE")
 	WorkflowType type;
 	
-	@Nullable
 	@Column(name="PRO_NAME")
 	String name;
 	

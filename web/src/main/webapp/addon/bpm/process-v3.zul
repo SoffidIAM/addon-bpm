@@ -98,7 +98,7 @@
 						</menu2>
 					</div>						
 					<div style="width:100%;" id="processDiv">
-						<customfield3 label="${c:l('bpm.processName') }" dataType="string" bind="@name" onChange="" maxLength="250" />
+						<customfield3 label="${c:l('bpm.processName') }" dataType="string" bind="@name" onChange="" maxLength="250" required="true" />
 						<customfield3 label="${c:l('bpm.processType') }" dataType="string" bind="type" onChange="" enumeration="com.soffid.iam.addons.bpm.common.WorkflowType" />
 						<customfield3 label="${c:l('bpm.processDescription') }" dataType="string" bind="@description" multiline="true" onChange="" maxLength="4000" />
 						<customfield3 label="${c:l('bpm.initiators') }" dataType="string" bind="@initiators" onChange="" maxLength="100" />

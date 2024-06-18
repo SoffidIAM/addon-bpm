@@ -214,7 +214,7 @@ public class ProcessSerializer {
 		p.setName(data.getString("name", null));
 		p.setType( WorkflowType.fromString( data.getString("type", WorkflowType.WT_USER.toString())));
 		p.setNodes( loadNodes (data.getJsonArray("nodes")));
-		p.setDiagram(data.getString("diagram", null));
+		p.setDiagram(obj.getString("diagram", null));
 	
 		return p;
 	}
@@ -297,6 +297,7 @@ public class ProcessSerializer {
 				Transition t = new Transition();
 				t.setName(src.getString("action", null));
 				t.setScript(src.getString("script", null));
+				t.setDiagramId(src.getString("diagramId", null));
 				Node source = findNode (l, src.getString("source", null));
 				if (source != null)
 				{

@@ -127,6 +127,7 @@ public class Deployer {
 			def.addDefinition(fd);
 			TenantModuleDefinition td = new TenantModuleDefinition();
 			td.setTenantId(Security.getCurrentTenantId());
+			td.setProcessDefinition(def);
 			def.addDefinition(td);
 			TaskMgmtDefinition tmd = new TaskMgmtDefinition();
 			def.addDefinition(tmd);
@@ -540,28 +541,28 @@ public class Deployer {
 				ta.setTransitionName(node.getTransition());
 				ta.setDueDate(node.getTime());
 				ta.setProcessDefinition(def);
-				ta.setRepeat(node.getRepeat() == null? null: node.getRepeat().toString());
+				ta.setRepeat(Boolean.TRUE.equals(node.getRepeat())? null: 
+					node.getTime());
 
-				if (node.getCustomScript() != null && 
-						!node.getCustomScript().trim().isEmpty()) {
-					Delegation d = new Delegation();
-					d.setClassName(CustomActionHandler.class.getName());
-					d.setConfigType("bean");
-					String s = escape (node.getCustomScript());
-					if (s.length() > 3500) {
-						String fileName = "script-"+(++scriptNumber);
-						def.getFileDefinition().addFile(fileName, new ByteArrayInputStream(node.getCustomScript().getBytes("UTF-8")));
-						d.setConfiguration("<noLeave>true</noLeave><file>" +fileName+"</file>");
-					} else {
-						d.setConfiguration("<noLeave>true</noLeave><script>" +s+ "</script>");
-					}
-	
-					Action a = new Action();
-					a.setName(node.getName());
-					a.setActionDelegation( d );
-					a.setPropagationAllowed(true);
-					ta.setTimerAction(a);
+				final String customScript = node.getCustomScript() == null ? "":
+					node.getCustomScript();
+				Delegation d = new Delegation();
+				d.setClassName(CustomActionHandler.class.getName());
+				d.setConfigType("bean");
+				String s = escape (customScript);
+				if (s.length() > 3500) {
+					String fileName = "script-"+(++scriptNumber);
+					def.getFileDefinition().addFile(fileName, new ByteArrayInputStream(customScript.getBytes("UTF-8")));
+					d.setConfiguration("<noLeave>true</noLeave><file>" +fileName+"</file>");
+				} else {
+					d.setConfiguration("<noLeave>true</noLeave><script>" +s+ "</script>");
 				}
+
+				Action a = new Action();
+				a.setName(node.getName());
+				a.setActionDelegation( d );
+				a.setPropagationAllowed(true);
+				ta.setTimerAction(a);
 			}
 			else if (node.getType().equals( NodeType.NT_SYSTEM_INVOCATION))
 			{
@@ -585,7 +586,7 @@ public class Deployer {
 							new ByteArrayInputStream(json.toString().getBytes("UTF-8")));
 					d.setConfiguration(cfg+"<file>" +fileName+"</file>");
 				} else {
-					d.setConfiguration("cfg+<maps>" +maps+ "</maps>");
+					d.setConfiguration(cfg+"<maps>" +maps+ "</maps>");
 				}
 				Action a = new Action();
 				a.setName(node.getName());
@@ -849,29 +850,27 @@ public class Deployer {
 				ta.setTransitionName(timerNode.getTransition());
 				ta.setDueDate(timerNode.getTime());
 				ta.setProcessDefinition(def);
-				ta.setRepeat(timerNode.getRepeat() == null? null: timerNode.getRepeat().toString());
+				ta.setRepeat(Boolean.TRUE.equals(timerNode.getRepeat())? null: 
+					timerNode.getTime());
 
-				if (node.getCustomScript() != null && 
-						!node.getCustomScript().trim().isEmpty()) {
-					
-					Delegation d = new Delegation();
-					d.setClassName(CustomActionHandler.class.getName());
-					d.setConfigType("bean");
-					String s = escape (timerNode.getCustomScript());
-					if (s.length() > 3500) {
-						String fileName = "script-"+(++scriptNumber);
-						def.getFileDefinition().addFile(fileName, new ByteArrayInputStream(timerNode.getCustomScript().getBytes("UTF-8")));
-						d.setConfiguration("<noLeave>true</noLeave><file>" +fileName+"</file>");
-					} else {
-						d.setConfiguration("<noLeave>true</noLeave><script>" +s+ "</script>");
-					}
-	
-					Action a = new Action();
-					a.setName(timerNode.getName());
-					a.setActionDelegation( d );
-					a.setPropagationAllowed(true);
-					ta.setTimerAction(a);
+				Delegation d = new Delegation();
+				d.setClassName(CustomActionHandler.class.getName());
+				d.setConfigType("bean");
+				final String customScript = timerNode.getCustomScript() == null ? "" : timerNode.getCustomScript();
+				String s = escape (customScript);
+				if (s.length() > 3500) {
+					String fileName = "script-"+(++scriptNumber);
+					def.getFileDefinition().addFile(fileName, new ByteArrayInputStream(customScript.getBytes("UTF-8")));
+					d.setConfiguration("<noLeave>true</noLeave><file>" +fileName+"</file>");
+				} else {
+					d.setConfiguration("<noLeave>true</noLeave><script>" +s+ "</script>");
 				}
+
+				Action a = new Action();
+				a.setName(timerNode.getName());
+				a.setActionDelegation( d );
+				a.setPropagationAllowed(true);
+				ta.setTimerAction(a);
 			}
 		}
 	}

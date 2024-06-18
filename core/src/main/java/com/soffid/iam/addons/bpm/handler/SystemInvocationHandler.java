@@ -7,9 +7,12 @@ import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 import org.jbpm.graph.def.ActionHandler;
 import org.jbpm.graph.exe.ExecutionContext;
+import org.jbpm.jpdl.el.VariableResolver;
+import org.jbpm.jpdl.el.impl.JbpmExpressionEvaluator;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -17,6 +20,7 @@ import com.soffid.iam.ServiceLocator;
 import com.soffid.iam.addons.bpm.common.Constants;
 import com.soffid.iam.interp.Evaluator;
 import com.soffid.iam.service.impl.bshjail.SecureInterpreter;
+import com.soffid.iam.utils.ConfigurationCache;
 
 import bsh.EvalError;
 import bsh.ParseException;
@@ -59,8 +63,14 @@ public class SystemInvocationHandler implements ActionHandler {
 				m.put(key, Evaluator.instance().evaluate(value, map, "Attribute "+key));
 			}
 		}
+		VariableResolver variableResolver = JbpmExpressionEvaluator
+				.getUsedVariableResolver();
+		Object path2 = JbpmExpressionEvaluator.evaluate(path,
+				executionContext, variableResolver,
+				JbpmExpressionEvaluator.getUsedFunctionMapper());
+
 		Collection r = ServiceLocator.instance().getDispatcherService()
-			.invoke(system, verb, path, m);
+			.invoke(system, verb, path2 == null ? null: path2.toString(), m);
 		if (returnVar != null)
 			executionContext.setVariable(returnVar, r);
 		executionContext.leaveNode();

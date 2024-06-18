@@ -8,7 +8,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.jbpm.graph.def.ActionHandler;
+import org.jbpm.graph.def.Transition;
 import org.jbpm.graph.exe.ExecutionContext;
+import org.jbpm.taskmgmt.exe.TaskInstance;
 
 import com.soffid.iam.addons.bpm.common.Constants;
 import com.soffid.iam.interp.Evaluator;
@@ -28,6 +30,13 @@ public class CustomActionHandler implements ActionHandler {
 		loadFile(executionContext);
 		Map<String, Object> map = new HashMap<>();
 		
+		if (executionContext.getTimer() != null) {
+			if (executionContext.getNode() != executionContext.getToken().getNode()) {
+				executionContext.getTimer().setTransitionName(null);
+				return;
+			}
+		}
+		
 		if (executionContext.getContextInstance().getVariables() != null) {
 			for (Object var: executionContext.getContextInstance().getVariables().keySet()) {
 				map.put((String) var, executionContext.getVariable((String) var));
@@ -45,9 +54,20 @@ public class CustomActionHandler implements ActionHandler {
 					executionContext.getTransition() != null ? executionContext.getTransition().getName():
 				"";
 		try {
-			Object o = Evaluator.instance().evaluate(script, map, label);
+			Object o = null;
+			if (script != null && ! script.trim().isEmpty())
+				o = Evaluator.instance().evaluate(script, map, label);
 			if ("true".equals(noLeave)) {
 				// Nothing to do
+				if (executionContext.getTimer() != null && 
+						executionContext.getTimer().getTransitionName() != null &&
+						executionContext.getTaskInstance() != null) {
+					TaskInstance ti = executionContext.getTaskInstance();
+					if (!ti.hasEnded()) {
+						ti.setSignalling(false);
+						executionContext.getTaskInstance().cancel((Transition)null);
+					}
+				}
 			}
 			else if (executionContext.getNode() != null)
 			{
@@ -104,6 +124,14 @@ public class CustomActionHandler implements ActionHandler {
 
 	public void setFile(String file) {
 		this.file = file;
+	}
+
+	public String getNoLeave() {
+		return noLeave;
+	}
+
+	public void setNoLeave(String noLeave) {
+		this.noLeave = noLeave;
 	}
 	
 
