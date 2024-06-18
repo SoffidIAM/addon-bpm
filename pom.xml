@@ -128,7 +128,7 @@
     </dependency>
   </dependencies>
   <properties>
-    <console.version>3.0.0-SNAPSHOT</console.version>
+    <console.version>3.5.44</console.version>
   </properties>
   <pluginRepositories>
     <pluginRepository>
