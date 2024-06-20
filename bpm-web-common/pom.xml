@@ -3,7 +3,7 @@
   <parent>
     <groupId>com.soffid.iam.addon.bpm</groupId>
     <artifactId>bpm</artifactId>
-    <version>3.1.30-SNAPSHOT</version>
+    <version>3.2.1-SNAPSHOT</version>
   </parent>
   <artifactId>bpm-web-common</artifactId>
   <name>web-common</name>
