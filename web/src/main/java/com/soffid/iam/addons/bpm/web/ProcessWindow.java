@@ -4,7 +4,9 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
@@ -67,7 +69,11 @@ import com.soffid.iam.addons.bpm.common.WorkflowType;
 import com.soffid.iam.addons.bpm.core.ejb.BpmEditorService;
 import com.soffid.iam.addons.bpm.core.ejb.BpmEditorServiceHome;
 import com.soffid.iam.api.DataType;
+import com.soffid.iam.api.ObjectMapping;
+import com.soffid.iam.api.ObjectMappingProperty;
+import com.soffid.iam.api.System;
 import com.soffid.iam.api.User;
+import com.soffid.iam.service.ejb.DispatcherService;
 import com.soffid.iam.web.component.CustomField3;
 import com.soffid.iam.web.popup.Editor;
 import com.sun.mail.imap.protocol.ListInfo;
@@ -86,6 +92,7 @@ import es.caib.zkib.datamodel.DataNodeCollection;
 import es.caib.zkib.datasource.XPathUtils;
 import es.caib.zkib.events.XPathRerunEvent;
 import es.caib.zkib.jxpath.JXPathException;
+import es.caib.zkib.jxpath.JXPathNotFoundException;
 import es.caib.zkib.jxpath.Pointer;
 import es.caib.zkib.zkiblaf.Missatgebox;
 
@@ -509,7 +516,7 @@ public class ProcessWindow extends Form2 {
 		XPathUtils.removePath(ctx.getDataSource(), ctx.getXPath());
 	}
 	
-	private void enableStepDetails()
+	private void enableStepDetails() throws UnsupportedEncodingException, InternalErrorException, NamingException, CreateException
 	{
 		if ( typeListbox.getValue() != null &&
 				!"".equals(typeListbox.getValue()) &&
@@ -581,6 +588,7 @@ public class ProcessWindow extends Form2 {
 			}
 		}
 		updateMailShortcut(null);
+		onChangeSystem( );
 	}
 	
 	public void renumAttributes (DropEvent event)
@@ -653,7 +661,7 @@ public class ProcessWindow extends Form2 {
 		} catch (JXPathException e) {}
 	}
 
-	public void showPane() {
+	public void showPane() throws UnsupportedEncodingException, InternalErrorException, NamingException, CreateException {
 		MxGraph graph = (MxGraph) getFellow("graph");
 		String selected = graph.getSelected();
 		boolean found = false;
@@ -922,4 +930,60 @@ public class ProcessWindow extends Form2 {
 	}
 	
 
+	public void onChangeSystem() throws InternalErrorException, NamingException, CreateException, UnsupportedEncodingException {
+		Component container = getFellow("container");
+		try {
+			String system = (String) XPathUtils.eval(container, "system");
+			CustomField3 cf = (CustomField3) getFellow("path");
+			CustomField3 method = (CustomField3) getFellow("method");
+			List<String> values = new LinkedList<>();
+			if (system != null && !system.trim().isEmpty()) {
+				final DispatcherService dispatcherService = EJBLocator.getDispatcherService();
+				System d = dispatcherService.findDispatcherByName(system);
+				if (d != null && d.getClassName() != null) {
+					if (d.getClassName().contains(".JSONAgent")) {
+						method.setListOfValues(new String[] {"invoke", "GET", "POST", "PUT", "DELETE"});
+						method.updateMetadata();
+						if ("invoke".equals(method.getValue())) {
+							for (ObjectMapping object: dispatcherService.findObjectMappingsByDispatcher(d.getId())) {
+								for (ObjectMappingProperty prop: dispatcherService.findObjectMappingPropertiesByObject(object.getId())) {
+									if (prop.getProperty().endsWith("Path")) {
+										String tag = object.getSystemObject()+"."+prop.getProperty().substring(0, prop.getProperty().length()-4);
+										values.add(URLEncoder.encode(tag, "UTF-8")+":"+tag);
+									}
+								}
+							}
+						}
+					}
+					else if (d.getClassName().contains(".SQLAgent")) {
+						method.setListOfValues(new String[] {"select", "insert", "delete", "update"});
+						method.updateMetadata();
+					}
+					else if (d.getClassName().contains(".CustomizableActiveDirectoryAgent")) {
+						method.setListOfValues(new String[] {"add", "update", "delete", "query",
+								"rename", "get", "smb%3AcreateFolder: createFolder", 
+								"smb%3Aexist: test if file exist", 
+								"smb%3Arm: remove file", "smb%3Armdir: remove directory", 
+								"smb%3AlistShares: list shares", 
+								"smb%3Agetacl: get acl",
+								"smb%3Aaddacl: add acl", "smb%3AremoveAclInheritance: remove acl inheritance", 
+								"smb%3Asetowner: set owner",
+								"smb%3Aremoveacl: remove acl",
+								"smb%3AdiskSpace: check disk space"});
+						method.updateMetadata();
+					}
+					else {
+						method.setListOfValues((String[])null);
+						method.updateMetadata();
+					}
+				}
+				else {
+					method.setListOfValues((String[])null);
+					method.updateMetadata();
+				}
+			}
+			cf.setListOfValues(values.size() == 0? null: values.toArray(new String[0]));
+			cf.updateMetadata();
+		} catch (JXPathNotFoundException e) {}
+	}
 }

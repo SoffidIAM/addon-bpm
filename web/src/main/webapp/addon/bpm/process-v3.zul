@@ -273,10 +273,10 @@
 									</div>
 									<div id="systemType">
 										<customfield3 dataType="SYSTEM" bind="system" 
-											label="${c:l('bpm.system') }"/>
+											label="${c:l('bpm.system') }" onChange="ref:w.onChangeSystem"/>
 										<customfield3 dataType="STRING" bind="method" 
-											label="${c:l('bpm.verb') }"/>
-										<customfield3 dataType="STRING" bind="path" 
+											label="${c:l('bpm.verb') }" id="method" onChange="ref:w.onChangeSystem"/>
+										<customfield3 dataType="STRING" bind="path" id="path"
 											label="${c:l('bpm.path') }"/>
 										<grid dataPath="/invocationFields" fixedLayout="true" id="invocationFields" sclass="fieldsGrid">
 											<columns>
