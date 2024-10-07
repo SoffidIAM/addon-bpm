@@ -94,6 +94,12 @@ zkMxGraph.updateLabel = function(ed, id, label) {
 	}	
 }
 
+zkMxGraph.b64EncodeUnicode = function(str) {
+    return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
+        function toSolidBytes(match, p1) {
+            return String.fromCharCode('0x' + p1);
+    }));
+}
 
 zkMxGraph.updateImg = function(ed) {
 	var graph = document.getElementById(ed.id+'!graph');
@@ -104,7 +110,7 @@ zkMxGraph.updateImg = function(ed) {
 	var xml = new XMLSerializer().serializeToString(svg);
 	
 	// make it base64
-	var svg64 = btoa(xml);
+	var svg64 = zkMxGraph.b64EncodeUnicode(xml);
 	var image64 = 'data:image/svg+xml;base64,' + svg64;
 	
 	// set it as the source of the img element
