@@ -901,7 +901,7 @@ public class ProcessWindow extends Form2 {
 			for (org.w3c.dom.Node n = roots.item(i).getFirstChild(); n != null; n = n.getNextSibling()) {
 				if (n instanceof Element) {
 					Element e = (Element) n;
-					if (t.getDiagramId().equals(e.getAttribute("id")) ) {
+					if (t.getDiagramId() != null && t.getDiagramId().equals(e.getAttribute("id")) ) {
 						e.setAttribute("label", t.getName());
 						Element edge = (Element) e.getFirstChild();
 						edge.setAttribute("source", t.getSource().getDiagramId());
