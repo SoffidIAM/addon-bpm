@@ -50,11 +50,13 @@ zkMxGraph.createEditor = function(ed) {
 			var title = ed.getAttribute("title");
 			
 			editor.graph.getModel().addListener(mxEvent.CHANGE, (e)=> {
-				var enc = new mxCodec();
-				var data = enc.encode(editor.graph.getModel());
-				var xml = mxUtils.getXml(data);
-				var req = {uuid: ed.id, cmd: "onChange", data : [xml], ignorable: true};
-				zkau.send (req, 5);
+				if (!ed.serverGeneratedChange) {
+					var enc = new mxCodec();
+					var data = enc.encode(editor.graph.getModel());
+					var xml = mxUtils.getXml(data);
+					var req = {uuid: ed.id, cmd: "onChange", data : [xml], ignorable: true};
+					zkau.send (req, 5);
+				}
 			});
 
 			editor.graph.addListener(mxEvent.CLICK, (e, t)=> {
@@ -160,15 +162,19 @@ zkMxGraph.init = function (ed) {
 		
 		if (ed.getAttribute("z.model")) {
 			zkMxGraph.loadModel(ed, ed.getAttribute("z.model"));
-		}
-			
+		}			
 };
 
 zkMxGraph.loadModel=function(ed, model) {
 	var doc = mxUtils.parseXml(model);
 	codec = new mxCodec(doc);
-	codec.decode(doc.documentElement, ed.editor.graph.getModel());
-	ed.editor.undoManager.clear();
+	ed.serverGeneratedChange = true;
+	try {
+		codec.decode(doc.documentElement, ed.editor.graph.getModel());
+		ed.editor.undoManager.clear();	
+	} finally {
+		ed.serverGeneratedChange = false;	
+	}
 }
 
 zkMxGraph.refresh=function(ed) {

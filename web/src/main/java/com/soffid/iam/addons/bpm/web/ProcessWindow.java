@@ -221,6 +221,8 @@ public class ProcessWindow extends Form2 {
 			transformer.transform(new DOMSource(doc), new StreamResult(stringWriter));
 			String result = stringWriter.toString();
 			
+			XPathUtils.setValue(this, "diagram", result);
+
 			MxGraph graph = (MxGraph) getFellow("graph");
 			graph.setModel(result);
 		}
@@ -915,9 +917,13 @@ public class ProcessWindow extends Form2 {
 		StringWriter stringWriter = new StringWriter();
 		transformer.transform(new DOMSource(doc), new StreamResult(stringWriter));
 		String result = stringWriter.toString();
-		
+
+		XPathUtils.setValue(this, "diagram", result);
+
 		MxGraph graph = (MxGraph) getFellow("graph");
 		graph.setModel(result);
+		
+		
 	}
 	
 	public void export(Event event) throws IOException {

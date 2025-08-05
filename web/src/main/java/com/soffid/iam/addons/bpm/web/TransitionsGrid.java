@@ -92,6 +92,7 @@ public class TransitionsGrid extends DataGrid {
 					ctx.getDataSource().sendEvent( new XPathRerunEvent( ctx.getDataSource(), ctx.getXPath()));
 					ProcessWindow w = (ProcessWindow) getFellow("w");
 					w.updateTransition(t);
+					invalidate();
 				}
 			}
 		}
