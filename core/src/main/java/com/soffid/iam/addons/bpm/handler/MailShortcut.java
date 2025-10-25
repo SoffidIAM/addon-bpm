@@ -397,7 +397,8 @@ public class MailShortcut implements ActionHandler {
 			.append("</b>") //$NON-NLS-1$
 			.append("</td><td>"); //$NON-NLS-1$
 			List<RoleRequestInfo> grants = (List<RoleRequestInfo>) executionContext.getVariable(att.getName());
-			addGrants(buffer, user, grants);
+			if (grants != null)
+				addGrants(buffer, user, grants);
 		} else {
 			buffer.append("<tr><td style='color: #808080'>") //$NON-NLS-1$
 				.append(quote(att.getLabel()))
