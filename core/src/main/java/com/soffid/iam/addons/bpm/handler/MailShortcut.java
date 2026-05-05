@@ -236,6 +236,7 @@ public class MailShortcut implements ActionHandler {
 
 	private ThreadLocal<Object> recursiveLock = new ThreadLocal<Object>();
 
+	
 	private String buttonsText;
 
 	private String body;
@@ -616,7 +617,10 @@ public class MailShortcut implements ActionHandler {
 	}
 
 	private void addGrants(StringBuffer buffer, String user, List<RoleRequestInfo> value) throws InternalErrorException {
-		buffer.append("<table class='perms'><tr><th>User</th><th>Application</th><th>Permission</th></tr>"); //$NON-NLS-1$
+		buffer.append("<table class='perms'><tr><th>"
+				+Messages.getString("User")+
+				"</th><th>"+Messages.getString("Application")+
+				"</th><th>"+Messages.getString("Permission")+"</th></tr>"); //$NON-NLS-1$
 		for (RoleRequestInfo rri: value) {
 			if (rri.getTaskInstance() != null && 
 					rri.getTaskInstance().equals(executionContext.getTaskInstance().getId())) {
